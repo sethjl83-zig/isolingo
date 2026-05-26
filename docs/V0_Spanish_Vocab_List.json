@@ -1,0 +1,1004 @@
+[
+
+{ "id": "es_hombre", "targetLanguage": "es", "english": "man", "senseLabel": null, "lemma": "hombre", "partOfSpeech": "noun", "gender": "masculine", "plural": "hombres", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_mujer", "targetLanguage": "es", "english": "woman", "senseLabel": null, "lemma": "mujer", "partOfSpeech": "noun", "gender": "feminine", "plural": "mujeres", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_nino", "targetLanguage": "es", "english": "boy", "senseLabel": null, "lemma": "niño", "partOfSpeech": "noun", "gender": "masculine", "plural": "niños", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_nina", "targetLanguage": "es", "english": "girl", "senseLabel": null, "lemma": "niña", "partOfSpeech": "noun", "gender": "feminine", "plural": "niñas", "category": "people", "competencies": ["vocab","gender"] },
+
+{ "id": "es_casa", "targetLanguage": "es", "english": "house", "senseLabel": null, "lemma": "casa", "partOfSpeech": "noun", "gender": "feminine", "plural": "casas", "category": "home", "competencies": ["vocab","gender"] },
+{ "id": "es_comida", "targetLanguage": "es", "english": "food", "senseLabel": null, "lemma": "comida", "partOfSpeech": "noun", "gender": "feminine", "plural": "comidas", "category": "food", "competencies": ["vocab","gender"] },
+{ "id": "es_tiempo", "targetLanguage": "es", "english": "time", "senseLabel": null, "lemma": "tiempo", "partOfSpeech": "noun", "gender": "masculine", "plural": "tiempos", "category": "time", "competencies": ["vocab","gender"] },
+{ "id": "es_ciudad", "targetLanguage": "es", "english": "city", "senseLabel": null, "lemma": "ciudad", "partOfSpeech": "noun", "gender": "feminine", "plural": "ciudades", "category": "travel", "competencies": ["vocab","gender"] },
+
+{ "id": "es_comer", "targetLanguage": "es", "english": "to eat", "senseLabel": null, "lemma": "comer", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_beber", "targetLanguage": "es", "english": "to drink", "senseLabel": null, "lemma": "beber", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_ir", "targetLanguage": "es", "english": "to go", "senseLabel": null, "lemma": "ir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_venir", "targetLanguage": "es", "english": "to come", "senseLabel": null, "lemma": "venir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_ver", "targetLanguage": "es", "english": "to see", "senseLabel": null, "lemma": "ver", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_bueno", "targetLanguage": "es", "english": "good", "senseLabel": null, "lemma": "bueno", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_malo", "targetLanguage": "es", "english": "bad", "senseLabel": null, "lemma": "malo", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_grande", "targetLanguage": "es", "english": "big", "senseLabel": null, "lemma": "grande", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_pequeno", "targetLanguage": "es", "english": "small", "senseLabel": null, "lemma": "pequeño", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_hoy", "targetLanguage": "es", "english": "today", "senseLabel": null, "lemma": "hoy", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_padre", "targetLanguage": "es", "english": "father", "senseLabel": null, "lemma": "padre", "partOfSpeech": "noun", "gender": "masculine", "plural": "padres", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_madre", "targetLanguage": "es", "english": "mother", "senseLabel": null, "lemma": "madre", "partOfSpeech": "noun", "gender": "feminine", "plural": "madres", "category": "people", "competencies": ["vocab","gender"] },
+
+{ "id": "es_escuela", "targetLanguage": "es", "english": "school", "senseLabel": null, "lemma": "escuela", "partOfSpeech": "noun", "gender": "feminine", "plural": "escuelas", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_libro", "targetLanguage": "es", "english": "book", "senseLabel": null, "lemma": "libro", "partOfSpeech": "noun", "gender": "masculine", "plural": "libros", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_silla", "targetLanguage": "es", "english": "chair", "senseLabel": null, "lemma": "silla", "partOfSpeech": "noun", "gender": "feminine", "plural": "sillas", "category": "home", "competencies": ["vocab","gender"] },
+{ "id": "es_agua", "targetLanguage": "es", "english": "water", "senseLabel": null, "lemma": "agua", "partOfSpeech": "noun", "gender": "feminine", "plural": "aguas", "category": "food", "competencies": ["vocab","gender"] },
+
+{ "id": "es_tener", "targetLanguage": "es", "english": "to have", "senseLabel": null, "lemma": "tener", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_hablar", "targetLanguage": "es", "english": "to speak", "senseLabel": null, "lemma": "hablar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_decir", "targetLanguage": "es", "english": "to say", "senseLabel": null, "lemma": "decir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_hacer", "targetLanguage": "es", "english": "to do", "senseLabel": null, "lemma": "hacer", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_dar", "targetLanguage": "es", "english": "to give", "senseLabel": null, "lemma": "dar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_nuevo", "targetLanguage": "es", "english": "new", "senseLabel": null, "lemma": "nuevo", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_viejo", "targetLanguage": "es", "english": "old", "senseLabel": null, "lemma": "viejo", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_facil", "targetLanguage": "es", "english": "easy", "senseLabel": null, "lemma": "fácil", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_dificil", "targetLanguage": "es", "english": "difficult", "senseLabel": null, "lemma": "difícil", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_ayer", "targetLanguage": "es", "english": "yesterday", "senseLabel": null, "lemma": "ayer", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_hermano", "targetLanguage": "es", "english": "brother", "senseLabel": null, "lemma": "hermano", "partOfSpeech": "noun", "gender": "masculine", "plural": "hermanos", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_hermana", "targetLanguage": "es", "english": "sister", "senseLabel": null, "lemma": "hermana", "partOfSpeech": "noun", "gender": "feminine", "plural": "hermanas", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_maestro", "targetLanguage": "es", "english": "teacher", "senseLabel": null, "lemma": "maestro", "partOfSpeech": "noun", "gender": "masculine", "plural": "maestros", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_maestra", "targetLanguage": "es", "english": "teacher", "senseLabel": null, "lemma": "maestra", "partOfSpeech": "noun", "gender": "feminine", "plural": "maestras", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_estudiante", "targetLanguage": "es", "english": "student", "senseLabel": null, "lemma": "estudiante", "partOfSpeech": "noun", "gender": "masculine", "plural": "estudiantes", "category": "work", "competencies": ["vocab","gender"] },
+
+{ "id": "es_gato", "targetLanguage": "es", "english": "cat", "senseLabel": null, "lemma": "gato", "partOfSpeech": "noun", "gender": "masculine", "plural": "gatos", "category": "animals", "competencies": ["vocab","gender"] },
+{ "id": "es_ventana", "targetLanguage": "es", "english": "window", "senseLabel": null, "lemma": "ventana", "partOfSpeech": "noun", "gender": "feminine", "plural": "ventanas", "category": "home", "competencies": ["vocab","gender"] },
+{ "id": "es_pan", "targetLanguage": "es", "english": "bread", "senseLabel": null, "lemma": "pan", "partOfSpeech": "noun", "gender": "masculine", "plural": "panes", "category": "food", "competencies": ["vocab","gender"] },
+
+{ "id": "es_salir", "targetLanguage": "es", "english": "to leave", "senseLabel": null, "lemma": "salir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_entrar", "targetLanguage": "es", "english": "to enter", "senseLabel": null, "lemma": "entrar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_llegar", "targetLanguage": "es", "english": "to arrive", "senseLabel": null, "lemma": "llegar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_llevar", "targetLanguage": "es", "english": "to carry", "senseLabel": null, "lemma": "llevar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_traer", "targetLanguage": "es", "english": "to bring", "senseLabel": null, "lemma": "traer", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_bonito", "targetLanguage": "es", "english": "pretty", "senseLabel": null, "lemma": "bonito", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_feo", "targetLanguage": "es", "english": "ugly", "senseLabel": null, "lemma": "feo", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_lento", "targetLanguage": "es", "english": "slow", "senseLabel": null, "lemma": "lento", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_temprano", "targetLanguage": "es", "english": "early", "senseLabel": null, "lemma": "temprano", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_tarde", "targetLanguage": "es", "english": "late", "senseLabel": null, "lemma": "tarde", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_profesor", "targetLanguage": "es", "english": "teacher", "senseLabel": null, "lemma": "profesor", "partOfSpeech": "noun", "gender": "masculine", "plural": "profesores", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_profesora", "targetLanguage": "es", "english": "teacher", "senseLabel": null, "lemma": "profesora", "partOfSpeech": "noun", "gender": "feminine", "plural": "profesoras", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_jefe", "targetLanguage": "es", "english": "boss", "senseLabel": null, "lemma": "jefe", "partOfSpeech": "noun", "gender": "masculine", "plural": "jefes", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_jefa", "targetLanguage": "es", "english": "boss", "senseLabel": null, "lemma": "jefa", "partOfSpeech": "noun", "gender": "feminine", "plural": "jefas", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_oficina", "targetLanguage": "es", "english": "office", "senseLabel": null, "lemma": "oficina", "partOfSpeech": "noun", "gender": "feminine", "plural": "oficinas", "category": "work", "competencies": ["vocab","gender"] },
+
+{ "id": "es_coche", "targetLanguage": "es", "english": "car", "senseLabel": null, "lemma": "coche", "partOfSpeech": "noun", "gender": "masculine", "plural": "coches", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_tren", "targetLanguage": "es", "english": "train", "senseLabel": null, "lemma": "tren", "partOfSpeech": "noun", "gender": "masculine", "plural": "trenes", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_avion", "targetLanguage": "es", "english": "plane", "senseLabel": null, "lemma": "avión", "partOfSpeech": "noun", "gender": "masculine", "plural": "aviones", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_maleta", "targetLanguage": "es", "english": "suitcase", "senseLabel": null, "lemma": "maleta", "partOfSpeech": "noun", "gender": "feminine", "plural": "maletas", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_camino", "targetLanguage": "es", "english": "road", "senseLabel": null, "lemma": "camino", "partOfSpeech": "noun", "gender": "masculine", "plural": "caminos", "category": "travel", "competencies": ["vocab","gender"] },
+
+{ "id": "es_trabajar", "targetLanguage": "es", "english": "to work", "senseLabel": null, "lemma": "trabajar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_estudiar", "targetLanguage": "es", "english": "to study", "senseLabel": null, "lemma": "estudiar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_aprender", "targetLanguage": "es", "english": "to learn", "senseLabel": null, "lemma": "aprender", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_ensenar", "targetLanguage": "es", "english": "to teach", "senseLabel": null, "lemma": "enseñar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_pensar", "targetLanguage": "es", "english": "to think", "senseLabel": null, "lemma": "pensar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_feliz", "targetLanguage": "es", "english": "happy", "senseLabel": null, "lemma": "feliz", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_triste", "targetLanguage": "es", "english": "sad", "senseLabel": null, "lemma": "triste", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_caro", "targetLanguage": "es", "english": "expensive", "senseLabel": null, "lemma": "caro", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_barato", "targetLanguage": "es", "english": "cheap", "senseLabel": null, "lemma": "barato", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_siempres", "targetLanguage": "es", "english": "always", "senseLabel": null, "lemma": "siempre", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_ano", "targetLanguage": "es", "english": "year", "senseLabel": null, "lemma": "año", "partOfSpeech": "noun", "gender": "masculine", "plural": "años", "category": "time", "competencies": ["vocab","gender"] },
+{ "id": "es_hora", "targetLanguage": "es", "english": "hour", "senseLabel": null, "lemma": "hora", "partOfSpeech": "noun", "gender": "feminine", "plural": "horas", "category": "time", "competencies": ["vocab","gender"] },
+{ "id": "es_minuto", "targetLanguage": "es", "english": "minute", "senseLabel": null, "lemma": "minuto", "partOfSpeech": "noun", "gender": "masculine", "plural": "minutos", "category": "time", "competencies": ["vocab","gender"] },
+
+{ "id": "es_cuerpo", "targetLanguage": "es", "english": "body", "senseLabel": null, "lemma": "cuerpo", "partOfSpeech": "noun", "gender": "masculine", "plural": "cuerpos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_cabeza", "targetLanguage": "es", "english": "head", "senseLabel": null, "lemma": "cabeza", "partOfSpeech": "noun", "gender": "feminine", "plural": "cabezas", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_ojos", "targetLanguage": "es", "english": "eyes", "senseLabel": null, "lemma": "ojo", "partOfSpeech": "noun", "gender": "masculine", "plural": "ojos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_corazon", "targetLanguage": "es", "english": "heart", "senseLabel": null, "lemma": "corazón", "partOfSpeech": "noun", "gender": "masculine", "plural": "corazones", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_saber", "targetLanguage": "es", "english": "to know (a fact)", "senseLabel": null, "lemma": "saber", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_conocer", "targetLanguage": "es", "english": "to know (be familiar with)", "senseLabel": null, "lemma": "conocer", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_encontrar", "targetLanguage": "es", "english": "to find", "senseLabel": null, "lemma": "encontrar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_buscar", "targetLanguage": "es", "english": "to search", "senseLabel": null, "lemma": "buscar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_quedar", "targetLanguage": "es", "english": "to stay", "senseLabel": null, "lemma": "quedar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_largo", "targetLanguage": "es", "english": "long", "senseLabel": null, "lemma": "largo", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_corto", "targetLanguage": "es", "english": "short", "senseLabel": null, "lemma": "corto", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_debil", "targetLanguage": "es", "english": "weak", "senseLabel": null, "lemma": "débil", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_aqui", "targetLanguage": "es", "english": "here", "senseLabel": null, "lemma": "aquí", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_mundo", "targetLanguage": "es", "english": "world", "senseLabel": null, "lemma": "mundo", "partOfSpeech": "noun", "gender": "masculine", "plural": "mundos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_lugar", "targetLanguage": "es", "english": "place", "senseLabel": null, "lemma": "lugar", "partOfSpeech": "noun", "gender": "masculine", "plural": "lugares", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_calle", "targetLanguage": "es", "english": "street", "senseLabel": null, "lemma": "calle", "partOfSpeech": "noun", "gender": "feminine", "plural": "calles", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_habitacion", "targetLanguage": "es", "english": "room", "senseLabel": null, "lemma": "habitación", "partOfSpeech": "noun", "gender": "feminine", "plural": "habitaciones", "category": "home", "competencies": ["vocab","gender"] },
+
+{ "id": "es_cocina", "targetLanguage": "es", "english": "kitchen", "senseLabel": null, "lemma": "cocina", "partOfSpeech": "noun", "gender": "feminine", "plural": "cocinas", "category": "home", "competencies": ["vocab","gender"] },
+{ "id": "es_bano", "targetLanguage": "es", "english": "bathroom", "senseLabel": null, "lemma": "baño", "partOfSpeech": "noun", "gender": "masculine", "plural": "baños", "category": "home", "competencies": ["vocab","gender"] },
+{ "id": "es_llave", "targetLanguage": "es", "english": "key", "senseLabel": null, "lemma": "llave", "partOfSpeech": "noun", "gender": "feminine", "plural": "llaves", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_telefono", "targetLanguage": "es", "english": "telephone", "senseLabel": null, "lemma": "teléfono", "partOfSpeech": "noun", "gender": "masculine", "plural": "teléfonos", "category": "objects", "competencies": ["vocab","gender"] },
+
+{ "id": "es_vender", "targetLanguage": "es", "english": "to sell", "senseLabel": null, "lemma": "vender", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_pagar", "targetLanguage": "es", "english": "to pay", "senseLabel": null, "lemma": "pagar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_abrir", "targetLanguage": "es", "english": "to open", "senseLabel": null, "lemma": "abrir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_claro", "targetLanguage": "es", "english": "clear", "senseLabel": null, "lemma": "claro", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_oscuro", "targetLanguage": "es", "english": "dark", "senseLabel": null, "lemma": "oscuro", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_facilmente", "targetLanguage": "es", "english": "easily", "senseLabel": null, "lemma": "fácilmente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_lentamente", "targetLanguage": "es", "english": "slowly", "senseLabel": null, "lemma": "lentamente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_puerto", "targetLanguage": "es", "english": "port", "senseLabel": null, "lemma": "puerto", "partOfSpeech": "noun", "gender": "masculine", "plural": "puertos", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_aeropuerto", "targetLanguage": "es", "english": "airport", "senseLabel": null, "lemma": "aeropuerto", "partOfSpeech": "noun", "gender": "masculine", "plural": "aeropuertos", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_estacion", "targetLanguage": "es", "english": "station", "senseLabel": null, "lemma": "estación", "partOfSpeech": "noun", "gender": "feminine", "plural": "estaciones", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_boleto", "targetLanguage": "es", "english": "ticket", "senseLabel": null, "lemma": "boleto", "partOfSpeech": "noun", "gender": "masculine", "plural": "boletos", "category": "travel", "competencies": ["vocab","gender"] },
+
+{ "id": "es_mercado", "targetLanguage": "es", "english": "market", "senseLabel": null, "lemma": "mercado", "partOfSpeech": "noun", "gender": "masculine", "plural": "mercados", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_precio", "targetLanguage": "es", "english": "price", "senseLabel": null, "lemma": "precio", "partOfSpeech": "noun", "gender": "masculine", "plural": "precios", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_dinero", "targetLanguage": "es", "english": "money", "senseLabel": null, "lemma": "dinero", "partOfSpeech": "noun", "gender": "masculine", "plural": "dineros", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_cuenta", "targetLanguage": "es", "english": "account", "senseLabel": null, "lemma": "cuenta", "partOfSpeech": "noun", "gender": "feminine", "plural": "cuentas", "category": "work", "competencies": ["vocab","gender"] },
+
+{ "id": "es_escuchar", "targetLanguage": "es", "english": "to listen", "senseLabel": null, "lemma": "escuchar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_jugar", "targetLanguage": "es", "english": "to play", "senseLabel": null, "lemma": "jugar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_hermoso", "targetLanguage": "es", "english": "beautiful", "senseLabel": null, "lemma": "hermoso", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_simple", "targetLanguage": "es", "english": "simple", "senseLabel": null, "lemma": "simple", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_despacio", "targetLanguage": "es", "english": "slowly", "senseLabel": null, "lemma": "despacio", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_bien", "targetLanguage": "es", "english": "well", "senseLabel": null, "lemma": "bien", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_mal", "targetLanguage": "es", "english": "badly", "senseLabel": null, "lemma": "mal", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_parque", "targetLanguage": "es", "english": "park", "senseLabel": null, "lemma": "parque", "partOfSpeech": "noun", "gender": "masculine", "plural": "parques", "category": "nature", "competencies": ["vocab","gender"] },
+{ "id": "es_arbol", "targetLanguage": "es", "english": "tree", "senseLabel": null, "lemma": "árbol", "partOfSpeech": "noun", "gender": "masculine", "plural": "árboles", "category": "nature", "competencies": ["vocab","gender"] },
+{ "id": "es_flor", "targetLanguage": "es", "english": "flower", "senseLabel": null, "lemma": "flor", "partOfSpeech": "noun", "gender": "feminine", "plural": "flores", "category": "nature", "competencies": ["vocab","gender"] },
+{ "id": "es_lluvia", "targetLanguage": "es", "english": "rain", "senseLabel": null, "lemma": "lluvia", "partOfSpeech": "noun", "gender": "feminine", "plural": "lluvias", "category": "nature", "competencies": ["vocab","gender"] },
+
+{ "id": "es_nieve", "targetLanguage": "es", "english": "snow", "senseLabel": null, "lemma": "nieve", "partOfSpeech": "noun", "gender": "feminine", "plural": "nieves", "category": "nature", "competencies": ["vocab","gender"] },
+{ "id": "es_viento", "targetLanguage": "es", "english": "wind", "senseLabel": null, "lemma": "viento", "partOfSpeech": "noun", "gender": "masculine", "plural": "vientos", "category": "nature", "competencies": ["vocab","gender"] },
+{ "id": "es_clima", "targetLanguage": "es", "english": "weather", "senseLabel": null, "lemma": "clima", "partOfSpeech": "noun", "gender": "masculine", "plural": "climas", "category": "nature", "competencies": ["vocab","gender"] },
+{ "id": "es_tierra", "targetLanguage": "es", "english": "earth", "senseLabel": null, "lemma": "tierra", "partOfSpeech": "noun", "gender": "feminine", "plural": "tierras", "category": "nature", "competencies": ["vocab","gender"] },
+{ "id": "es_mar", "targetLanguage": "es", "english": "sea", "senseLabel": null, "lemma": "mar", "partOfSpeech": "noun", "gender": "masculine", "plural": "mares", "category": "nature", "competencies": ["vocab","gender"] },
+
+{ "id": "es_correr", "targetLanguage": "es", "english": "to run", "senseLabel": null, "lemma": "correr", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_caminar", "targetLanguage": "es", "english": "to walk", "senseLabel": null, "lemma": "caminar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_sentarse", "targetLanguage": "es", "english": "to sit", "senseLabel": null, "lemma": "sentarse", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_levantarse", "targetLanguage": "es", "english": "to stand up", "senseLabel": null, "lemma": "levantarse", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_dormir", "targetLanguage": "es", "english": "to sleep", "senseLabel": null, "lemma": "dormir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_aburrido", "targetLanguage": "es", "english": "boring", "senseLabel": null, "lemma": "aburrido", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_interesante", "targetLanguage": "es", "english": "interesting", "senseLabel": null, "lemma": "interesante", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_alli", "targetLanguage": "es", "english": "there", "senseLabel": null, "lemma": "allí", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+{ "id": "es_idea", "targetLanguage": "es", "english": "idea", "senseLabel": null, "lemma": "idea", "partOfSpeech": "noun", "gender": "feminine", "plural": "ideas", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_problema", "targetLanguage": "es", "english": "problem", "senseLabel": null, "lemma": "problema", "partOfSpeech": "noun", "gender": "masculine", "plural": "problemas", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_solucion", "targetLanguage": "es", "english": "solution", "senseLabel": null, "lemma": "solución", "partOfSpeech": "noun", "gender": "feminine", "plural": "soluciones", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_historia", "targetLanguage": "es", "english": "story", "senseLabel": null, "lemma": "historia", "partOfSpeech": "noun", "gender": "feminine", "plural": "historias", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_palabra", "targetLanguage": "es", "english": "word", "senseLabel": null, "lemma": "palabra", "partOfSpeech": "noun", "gender": "feminine", "plural": "palabras", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_mensaje", "targetLanguage": "es", "english": "message", "senseLabel": null, "lemma": "mensaje", "partOfSpeech": "noun", "gender": "masculine", "plural": "mensajes", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_pregunta", "targetLanguage": "es", "english": "question", "senseLabel": null, "lemma": "pregunta", "partOfSpeech": "noun", "gender": "feminine", "plural": "preguntas", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_respuesta", "targetLanguage": "es", "english": "answer", "senseLabel": null, "lemma": "respuesta", "partOfSpeech": "noun", "gender": "feminine", "plural": "respuestas", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_ejemplo", "targetLanguage": "es", "english": "example", "senseLabel": null, "lemma": "ejemplo", "partOfSpeech": "noun", "gender": "masculine", "plural": "ejemplos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_texto", "targetLanguage": "es", "english": "text", "senseLabel": null, "lemma": "texto", "partOfSpeech": "noun", "gender": "masculine", "plural": "textos", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_recordar", "targetLanguage": "es", "english": "to remember", "senseLabel": null, "lemma": "recordar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_olvidar", "targetLanguage": "es", "english": "to forget", "senseLabel": null, "lemma": "olvidar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_comenzar", "targetLanguage": "es", "english": "to begin", "senseLabel": null, "lemma": "comenzar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_terminar", "targetLanguage": "es", "english": "to finish", "senseLabel": null, "lemma": "terminar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_intentar", "targetLanguage": "es", "english": "to try", "senseLabel": null, "lemma": "intentar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_posible", "targetLanguage": "es", "english": "possible", "senseLabel": null, "lemma": "posible", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_necesario", "targetLanguage": "es", "english": "necessary", "senseLabel": null, "lemma": "necesario", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_generalmente", "targetLanguage": "es", "english": "generally", "senseLabel": null, "lemma": "generalmente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_normalmente", "targetLanguage": "es", "english": "normally", "senseLabel": null, "lemma": "normalmente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_juego", "targetLanguage": "es", "english": "game", "senseLabel": null, "lemma": "juego", "partOfSpeech": "noun", "gender": "masculine", "plural": "juegos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_equipo", "targetLanguage": "es", "english": "team", "senseLabel": null, "lemma": "equipo", "partOfSpeech": "noun", "gender": "masculine", "plural": "equipos", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_decidir", "targetLanguage": "es", "english": "to decide", "senseLabel": null, "lemma": "decidir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_elegir", "targetLanguage": "es", "english": "to choose", "senseLabel": null, "lemma": "elegir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_planear", "targetLanguage": "es", "english": "to plan", "senseLabel": null, "lemma": "planear", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_preparar", "targetLanguage": "es", "english": "to prepare", "senseLabel": null, "lemma": "preparar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_esperar", "targetLanguage": "es", "english": "to wait", "senseLabel": null, "lemma": "esperar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_creer", "targetLanguage": "es", "english": "to believe", "senseLabel": null, "lemma": "creer", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_sentir", "targetLanguage": "es", "english": "to feel", "senseLabel": null, "lemma": "sentir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_comparar", "targetLanguage": "es", "english": "to compare", "senseLabel": null, "lemma": "comparar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_reconocer", "targetLanguage": "es", "english": "to recognize", "senseLabel": null, "lemma": "reconocer", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_continuar", "targetLanguage": "es", "english": "to continue", "senseLabel": null, "lemma": "continuar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_mismo", "targetLanguage": "es", "english": "same", "senseLabel": null, "lemma": "mismo", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_diferente", "targetLanguage": "es", "english": "different", "senseLabel": null, "lemma": "diferente", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_igual", "targetLanguage": "es", "english": "equal", "senseLabel": null, "lemma": "igual", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_cerca", "targetLanguage": "es", "english": "near", "senseLabel": null, "lemma": "cerca", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_lejos", "targetLanguage": "es", "english": "far", "senseLabel": null, "lemma": "lejos", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_familia", "targetLanguage": "es", "english": "family", "senseLabel": null, "lemma": "familia", "partOfSpeech": "noun", "gender": "feminine", "plural": "familias", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_persona", "targetLanguage": "es", "english": "person", "senseLabel": null, "lemma": "persona", "partOfSpeech": "noun", "gender": "feminine", "plural": "personas", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_vecino", "targetLanguage": "es", "english": "neighbor", "senseLabel": null, "lemma": "vecino", "partOfSpeech": "noun", "gender": "masculine", "plural": "vecinos", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_vecina", "targetLanguage": "es", "english": "neighbor", "senseLabel": null, "lemma": "vecina", "partOfSpeech": "noun", "gender": "feminine", "plural": "vecinas", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_nombre", "targetLanguage": "es", "english": "name", "senseLabel": null, "lemma": "nombre", "partOfSpeech": "noun", "gender": "masculine", "plural": "nombres", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_cosa", "targetLanguage": "es", "english": "thing", "senseLabel": null, "lemma": "cosa", "partOfSpeech": "noun", "gender": "feminine", "plural": "cosas", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_papel", "targetLanguage": "es", "english": "paper", "senseLabel": null, "lemma": "papel", "partOfSpeech": "noun", "gender": "masculine", "plural": "papeles", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_bolsa", "targetLanguage": "es", "english": "bag", "senseLabel": null, "lemma": "bolsa", "partOfSpeech": "noun", "gender": "feminine", "plural": "bolsas", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_reloj", "targetLanguage": "es", "english": "clock", "senseLabel": null, "lemma": "reloj", "partOfSpeech": "noun", "gender": "masculine", "plural": "relojes", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_pais", "targetLanguage": "es", "english": "country", "senseLabel": null, "lemma": "país", "partOfSpeech": "noun", "gender": "masculine", "plural": "países", "category": "travel", "competencies": ["vocab","gender"] },
+
+{ "id": "es_leer", "targetLanguage": "es", "english": "to read", "senseLabel": null, "lemma": "leer", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_escribir", "targetLanguage": "es", "english": "to write", "senseLabel": null, "lemma": "escribir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_vivir", "targetLanguage": "es", "english": "to live", "senseLabel": null, "lemma": "vivir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_morir", "targetLanguage": "es", "english": "to die", "senseLabel": null, "lemma": "morir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_ayudar", "targetLanguage": "es", "english": "to help", "senseLabel": null, "lemma": "ayudar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_caliente", "targetLanguage": "es", "english": "hot", "senseLabel": null, "lemma": "caliente", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_alto", "targetLanguage": "es", "english": "tall", "senseLabel": null, "lemma": "alto", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_bajo", "targetLanguage": "es", "english": "low", "senseLabel": null, "lemma": "bajo", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_nunca", "targetLanguage": "es", "english": "never", "senseLabel": null, "lemma": "nunca", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_cuarto", "targetLanguage": "es", "english": "room", "senseLabel": null, "lemma": "cuarto", "partOfSpeech": "noun", "gender": "masculine", "plural": "cuartos", "category": "home", "competencies": ["vocab","gender"] },
+{ "id": "es_piso", "targetLanguage": "es", "english": "floor", "senseLabel": null, "lemma": "piso", "partOfSpeech": "noun", "gender": "masculine", "plural": "pisos", "category": "home", "competencies": ["vocab","gender"] },
+{ "id": "es_pared", "targetLanguage": "es", "english": "wall", "senseLabel": null, "lemma": "pared", "partOfSpeech": "noun", "gender": "feminine", "plural": "paredes", "category": "home", "competencies": ["vocab","gender"] },
+{ "id": "es_techo", "targetLanguage": "es", "english": "ceiling", "senseLabel": null, "lemma": "techo", "partOfSpeech": "noun", "gender": "masculine", "plural": "techos", "category": "home", "competencies": ["vocab","gender"] },
+{ "id": "es_luz", "targetLanguage": "es", "english": "light", "senseLabel": null, "lemma": "luz", "partOfSpeech": "noun", "gender": "feminine", "plural": "luces", "category": "home", "competencies": ["vocab","gender"] },
+
+{ "id": "es_ventilador", "targetLanguage": "es", "english": "fan", "senseLabel": null, "lemma": "ventilador", "partOfSpeech": "noun", "gender": "masculine", "plural": "ventiladores", "category": "home", "competencies": ["vocab","gender"] },
+{ "id": "es_aire", "targetLanguage": "es", "english": "air", "senseLabel": null, "lemma": "aire", "partOfSpeech": "noun", "gender": "masculine", "plural": "aires", "category": "nature", "competencies": ["vocab","gender"] },
+{ "id": "es_ruido", "targetLanguage": "es", "english": "noise", "senseLabel": null, "lemma": "ruido", "partOfSpeech": "noun", "gender": "masculine", "plural": "ruidos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_silencio", "targetLanguage": "es", "english": "silence", "senseLabel": null, "lemma": "silencio", "partOfSpeech": "noun", "gender": "masculine", "plural": "silencios", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_voz", "targetLanguage": "es", "english": "voice", "senseLabel": null, "lemma": "voz", "partOfSpeech": "noun", "gender": "feminine", "plural": "voces", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_reir", "targetLanguage": "es", "english": "to laugh", "senseLabel": null, "lemma": "reír", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_llorar", "targetLanguage": "es", "english": "to cry", "senseLabel": null, "lemma": "llorar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_sonreir", "targetLanguage": "es", "english": "to smile", "senseLabel": null, "lemma": "sonreír", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_duro", "targetLanguage": "es", "english": "hard", "senseLabel": null, "lemma": "duro", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_suave", "targetLanguage": "es", "english": "soft", "senseLabel": null, "lemma": "suave", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_limpio", "targetLanguage": "es", "english": "clean", "senseLabel": null, "lemma": "limpio", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_sucio", "targetLanguage": "es", "english": "dirty", "senseLabel": null, "lemma": "sucio", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_ahora", "targetLanguage": "es", "english": "now", "senseLabel": null, "lemma": "ahora", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_manzana", "targetLanguage": "es", "english": "apple", "senseLabel": null, "lemma": "manzana", "partOfSpeech": "noun", "gender": "feminine", "plural": "manzanas", "category": "food", "competencies": ["vocab","gender"] },
+{ "id": "es_platano", "targetLanguage": "es", "english": "banana", "senseLabel": null, "lemma": "plátano", "partOfSpeech": "noun", "gender": "masculine", "plural": "plátanos", "category": "food", "competencies": ["vocab","gender"] },
+{ "id": "es_fruta", "targetLanguage": "es", "english": "fruit", "senseLabel": null, "lemma": "fruta", "partOfSpeech": "noun", "gender": "feminine", "plural": "frutas", "category": "food", "competencies": ["vocab","gender"] },
+{ "id": "es_cafe", "targetLanguage": "es", "english": "coffee", "senseLabel": null, "lemma": "café", "partOfSpeech": "noun", "gender": "masculine", "plural": "cafés", "category": "food", "competencies": ["vocab","gender"] },
+{ "id": "es_te", "targetLanguage": "es", "english": "tea", "senseLabel": null, "lemma": "té", "partOfSpeech": "noun", "gender": "masculine", "plural": "tés", "category": "food", "competencies": ["vocab","gender"] },
+
+{ "id": "es_jardin", "targetLanguage": "es", "english": "garden", "senseLabel": null, "lemma": "jardín", "partOfSpeech": "noun", "gender": "masculine", "plural": "jardines", "category": "nature", "competencies": ["vocab","gender"] },
+{ "id": "es_montana", "targetLanguage": "es", "english": "mountain", "senseLabel": null, "lemma": "montaña", "partOfSpeech": "noun", "gender": "feminine", "plural": "montañas", "category": "nature", "competencies": ["vocab","gender"] },
+{ "id": "es_rio", "targetLanguage": "es", "english": "river", "senseLabel": null, "lemma": "río", "partOfSpeech": "noun", "gender": "masculine", "plural": "ríos", "category": "nature", "competencies": ["vocab","gender"] },
+{ "id": "es_lago", "targetLanguage": "es", "english": "lake", "senseLabel": null, "lemma": "lago", "partOfSpeech": "noun", "gender": "masculine", "plural": "lagos", "category": "nature", "competencies": ["vocab","gender"] },
+{ "id": "es_bosque", "targetLanguage": "es", "english": "forest", "senseLabel": null, "lemma": "bosque", "partOfSpeech": "noun", "gender": "masculine", "plural": "bosques", "category": "nature", "competencies": ["vocab","gender"] },
+
+{ "id": "es_tomar", "targetLanguage": "es", "english": "to take", "senseLabel": null, "lemma": "tomar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_dejar", "targetLanguage": "es", "english": "to leave", "senseLabel": null, "lemma": "dejar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_recibir", "targetLanguage": "es", "english": "to receive", "senseLabel": null, "lemma": "recibir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_mostrar", "targetLanguage": "es", "english": "to show", "senseLabel": null, "lemma": "mostrar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_usar", "targetLanguage": "es", "english": "to use", "senseLabel": null, "lemma": "usar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_rico", "targetLanguage": "es", "english": "delicious", "senseLabel": null, "lemma": "rico", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_vacio", "targetLanguage": "es", "english": "empty", "senseLabel": null, "lemma": "vacío", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_lleno", "targetLanguage": "es", "english": "full", "senseLabel": null, "lemma": "lleno", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_dentro", "targetLanguage": "es", "english": "inside", "senseLabel": null, "lemma": "dentro", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_fuera", "targetLanguage": "es", "english": "outside", "senseLabel": null, "lemma": "fuera", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_carta", "targetLanguage": "es", "english": "letter", "senseLabel": null, "lemma": "carta", "partOfSpeech": "noun", "gender": "feminine", "plural": "cartas", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_correo", "targetLanguage": "es", "english": "mail", "senseLabel": null, "lemma": "correo", "partOfSpeech": "noun", "gender": "masculine", "plural": "correos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_llamada", "targetLanguage": "es", "english": "call", "senseLabel": null, "lemma": "llamada", "partOfSpeech": "noun", "gender": "feminine", "plural": "llamadas", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_reunion", "targetLanguage": "es", "english": "meeting", "senseLabel": null, "lemma": "reunión", "partOfSpeech": "noun", "gender": "feminine", "plural": "reuniones", "category": "work", "competencies": ["vocab","gender"] },
+
+{ "id": "es_empresa", "targetLanguage": "es", "english": "company", "senseLabel": null, "lemma": "empresa", "partOfSpeech": "noun", "gender": "feminine", "plural": "empresas", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_cliente", "targetLanguage": "es", "english": "client", "senseLabel": null, "lemma": "cliente", "partOfSpeech": "noun", "gender": "masculine", "plural": "clientes", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_servicio", "targetLanguage": "es", "english": "service", "senseLabel": null, "lemma": "servicio", "partOfSpeech": "noun", "gender": "masculine", "plural": "servicios", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_producto", "targetLanguage": "es", "english": "product", "senseLabel": null, "lemma": "producto", "partOfSpeech": "noun", "gender": "masculine", "plural": "productos", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_oferta", "targetLanguage": "es", "english": "offer", "senseLabel": null, "lemma": "oferta", "partOfSpeech": "noun", "gender": "feminine", "plural": "ofertas", "category": "work", "competencies": ["vocab","gender"] },
+
+{ "id": "es_enviar", "targetLanguage": "es", "english": "to send", "senseLabel": null, "lemma": "enviar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_confirmar", "targetLanguage": "es", "english": "to confirm", "senseLabel": null, "lemma": "confirmar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_cancelar", "targetLanguage": "es", "english": "to cancel", "senseLabel": null, "lemma": "cancelar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_aceptar", "targetLanguage": "es", "english": "to accept", "senseLabel": null, "lemma": "aceptar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_seguro", "targetLanguage": "es", "english": "safe", "senseLabel": null, "lemma": "seguro", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_peligroso", "targetLanguage": "es", "english": "dangerous", "senseLabel": null, "lemma": "peligroso", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+
+
+{ "id": "es_ropa", "targetLanguage": "es", "english": "clothing", "senseLabel": null, "lemma": "ropa", "partOfSpeech": "noun", "gender": "feminine", "plural": "ropas", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_camisa", "targetLanguage": "es", "english": "shirt", "senseLabel": null, "lemma": "camisa", "partOfSpeech": "noun", "gender": "feminine", "plural": "camisas", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_pantalon", "targetLanguage": "es", "english": "pants", "senseLabel": null, "lemma": "pantalón", "partOfSpeech": "noun", "gender": "masculine", "plural": "pantalones", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_zapato", "targetLanguage": "es", "english": "shoe", "senseLabel": null, "lemma": "zapato", "partOfSpeech": "noun", "gender": "masculine", "plural": "zapatos", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_sombrero", "targetLanguage": "es", "english": "hat", "senseLabel": null, "lemma": "sombrero", "partOfSpeech": "noun", "gender": "masculine", "plural": "sombreros", "category": "objects", "competencies": ["vocab","gender"] },
+
+{ "id": "es_invierno", "targetLanguage": "es", "english": "winter", "senseLabel": null, "lemma": "invierno", "partOfSpeech": "noun", "gender": "masculine", "plural": "inviernos", "category": "time", "competencies": ["vocab","gender"] },
+{ "id": "es_verano", "targetLanguage": "es", "english": "summer", "senseLabel": null, "lemma": "verano", "partOfSpeech": "noun", "gender": "masculine", "plural": "veranos", "category": "time", "competencies": ["vocab","gender"] },
+{ "id": "es_primavera", "targetLanguage": "es", "english": "spring", "senseLabel": null, "lemma": "primavera", "partOfSpeech": "noun", "gender": "feminine", "plural": "primaveras", "category": "time", "competencies": ["vocab","gender"] },
+{ "id": "es_otono", "targetLanguage": "es", "english": "autumn", "senseLabel": null, "lemma": "otoño", "partOfSpeech": "noun", "gender": "masculine", "plural": "otoños", "category": "time", "competencies": ["vocab","gender"] },
+{ "id": "es_noche", "targetLanguage": "es", "english": "night", "senseLabel": null, "lemma": "noche", "partOfSpeech": "noun", "gender": "feminine", "plural": "noches", "category": "time", "competencies": ["vocab","gender"] },
+
+{ "id": "es_seguir", "targetLanguage": "es", "english": "to follow", "senseLabel": null, "lemma": "seguir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_cambiar", "targetLanguage": "es", "english": "to change", "senseLabel": null, "lemma": "cambiar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_famoso", "targetLanguage": "es", "english": "famous", "senseLabel": null, "lemma": "famoso", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_importante", "targetLanguage": "es", "english": "important", "senseLabel": null, "lemma": "importante", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_totalmente", "targetLanguage": "es", "english": "completely", "senseLabel": null, "lemma": "totalmente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_realmente", "targetLanguage": "es", "english": "really", "senseLabel": null, "lemma": "realmente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_casi", "targetLanguage": "es", "english": "almost", "senseLabel": null, "lemma": "casi", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+{ "id": "es_cuchillo", "targetLanguage": "es", "english": "knife", "senseLabel": null, "lemma": "cuchillo", "partOfSpeech": "noun", "gender": "masculine", "plural": "cuchillos", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_tenedor", "targetLanguage": "es", "english": "fork", "senseLabel": null, "lemma": "tenedor", "partOfSpeech": "noun", "gender": "masculine", "plural": "tenedores", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_cuchara", "targetLanguage": "es", "english": "spoon", "senseLabel": null, "lemma": "cuchara", "partOfSpeech": "noun", "gender": "feminine", "plural": "cucharas", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_plato", "targetLanguage": "es", "english": "plate", "senseLabel": null, "lemma": "plato", "partOfSpeech": "noun", "gender": "masculine", "plural": "platos", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_vaso", "targetLanguage": "es", "english": "glass", "senseLabel": null, "lemma": "vaso", "partOfSpeech": "noun", "gender": "masculine", "plural": "vasos", "category": "objects", "competencies": ["vocab","gender"] },
+
+{ "id": "es_mapa", "targetLanguage": "es", "english": "map", "senseLabel": null, "lemma": "mapa", "partOfSpeech": "noun", "gender": "masculine", "plural": "mapas", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_guia", "targetLanguage": "es", "english": "guide", "senseLabel": null, "lemma": "guía", "partOfSpeech": "noun", "gender": "feminine", "plural": "guías", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_reserva", "targetLanguage": "es", "english": "reservation", "senseLabel": null, "lemma": "reserva", "partOfSpeech": "noun", "gender": "feminine", "plural": "reservas", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_hotel", "targetLanguage": "es", "english": "hotel", "senseLabel": null, "lemma": "hotel", "partOfSpeech": "noun", "gender": "masculine", "plural": "hoteles", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_vuelo", "targetLanguage": "es", "english": "flight", "senseLabel": null, "lemma": "vuelo", "partOfSpeech": "noun", "gender": "masculine", "plural": "vuelos", "category": "travel", "competencies": ["vocab","gender"] },
+
+{ "id": "es_empezar", "targetLanguage": "es", "english": "to start", "senseLabel": null, "lemma": "empezar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_acabar", "targetLanguage": "es", "english": "to finish", "senseLabel": null, "lemma": "acabar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_lograr", "targetLanguage": "es", "english": "to achieve", "senseLabel": null, "lemma": "lograr", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_crecer", "targetLanguage": "es", "english": "to grow", "senseLabel": null, "lemma": "crecer", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_reducir", "targetLanguage": "es", "english": "to reduce", "senseLabel": null, "lemma": "reducir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_profundo", "targetLanguage": "es", "english": "deep", "senseLabel": null, "lemma": "profundo", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_superficial", "targetLanguage": "es", "english": "shallow", "senseLabel": null, "lemma": "superficial", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_exactamente", "targetLanguage": "es", "english": "exactly", "senseLabel": null, "lemma": "exactamente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_apenas", "targetLanguage": "es", "english": "barely", "senseLabel": null, "lemma": "apenas", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_juntos", "targetLanguage": "es", "english": "together", "senseLabel": null, "lemma": "juntos", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_enfermero", "targetLanguage": "es", "english": "nurse", "senseLabel": null, "lemma": "enfermero", "partOfSpeech": "noun", "gender": "masculine", "plural": "enfermeros", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_enfermera", "targetLanguage": "es", "english": "nurse", "senseLabel": null, "lemma": "enfermera", "partOfSpeech": "noun", "gender": "feminine", "plural": "enfermeras", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_hospital", "targetLanguage": "es", "english": "hospital", "senseLabel": null, "lemma": "hospital", "partOfSpeech": "noun", "gender": "masculine", "plural": "hospitales", "category": "work", "competencies": ["vocab","gender"] },
+
+{ "id": "es_dolor", "targetLanguage": "es", "english": "pain", "senseLabel": null, "lemma": "dolor", "partOfSpeech": "noun", "gender": "masculine", "plural": "dolores", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_sangre", "targetLanguage": "es", "english": "blood", "senseLabel": null, "lemma": "sangre", "partOfSpeech": "noun", "gender": "feminine", "plural": "sangres", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_sanar", "targetLanguage": "es", "english": "to heal", "senseLabel": null, "lemma": "sanar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_tratar", "targetLanguage": "es", "english": "to treat", "senseLabel": null, "lemma": "tratar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_examinar", "targetLanguage": "es", "english": "to examine", "senseLabel": null, "lemma": "examinar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_recetar", "targetLanguage": "es", "english": "to prescribe", "senseLabel": null, "lemma": "recetar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_sano", "targetLanguage": "es", "english": "healthy", "senseLabel": null, "lemma": "sano", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_enfermo", "targetLanguage": "es", "english": "sick", "senseLabel": null, "lemma": "enfermo", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+
+
+{ "id": "es_musico", "targetLanguage": "es", "english": "musician", "senseLabel": null, "lemma": "músico", "partOfSpeech": "noun", "gender": "masculine", "plural": "músicos", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_musica_persona", "targetLanguage": "es", "english": "musician", "senseLabel": null, "lemma": "música", "partOfSpeech": "noun", "gender": "feminine", "plural": "músicas", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_actor", "targetLanguage": "es", "english": "actor", "senseLabel": null, "lemma": "actor", "partOfSpeech": "noun", "gender": "masculine", "plural": "actores", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_actriz", "targetLanguage": "es", "english": "actress", "senseLabel": null, "lemma": "actriz", "partOfSpeech": "noun", "gender": "feminine", "plural": "actrices", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_escena", "targetLanguage": "es", "english": "scene", "senseLabel": null, "lemma": "escena", "partOfSpeech": "noun", "gender": "feminine", "plural": "escenas", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_cancion", "targetLanguage": "es", "english": "song", "senseLabel": null, "lemma": "canción", "partOfSpeech": "noun", "gender": "feminine", "plural": "canciones", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_teatro", "targetLanguage": "es", "english": "theater", "senseLabel": null, "lemma": "teatro", "partOfSpeech": "noun", "gender": "masculine", "plural": "teatros", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_publico", "targetLanguage": "es", "english": "audience", "senseLabel": null, "lemma": "público", "partOfSpeech": "noun", "gender": "masculine", "plural": "públicos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_entrada", "targetLanguage": "es", "english": "ticket", "senseLabel": null, "lemma": "entrada", "partOfSpeech": "noun", "gender": "feminine", "plural": "entradas", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_serie", "targetLanguage": "es", "english": "series", "senseLabel": null, "lemma": "serie", "partOfSpeech": "noun", "gender": "feminine", "plural": "series", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_actuar", "targetLanguage": "es", "english": "to act", "senseLabel": null, "lemma": "actuar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_grabar", "targetLanguage": "es", "english": "to record", "senseLabel": null, "lemma": "grabar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_tocar", "targetLanguage": "es", "english": "to play (instrument)", "senseLabel": null, "lemma": "tocar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_aplaudir", "targetLanguage": "es", "english": "to applaud", "senseLabel": null, "lemma": "aplaudir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_artistico", "targetLanguage": "es", "english": "artistic", "senseLabel": null, "lemma": "artístico", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_creativo", "targetLanguage": "es", "english": "creative", "senseLabel": null, "lemma": "creativo", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_publicamente", "targetLanguage": "es", "english": "publicly", "senseLabel": null, "lemma": "públicamente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_silenciosamente", "targetLanguage": "es", "english": "silently", "senseLabel": null, "lemma": "silenciosamente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_alrededor", "targetLanguage": "es", "english": "around", "senseLabel": null, "lemma": "alrededor", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_deporte", "targetLanguage": "es", "english": "sport", "senseLabel": null, "lemma": "deporte", "partOfSpeech": "noun", "gender": "masculine", "plural": "deportes", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_jugador", "targetLanguage": "es", "english": "player", "senseLabel": null, "lemma": "jugador", "partOfSpeech": "noun", "gender": "masculine", "plural": "jugadores", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_jugadora", "targetLanguage": "es", "english": "player", "senseLabel": null, "lemma": "jugadora", "partOfSpeech": "noun", "gender": "feminine", "plural": "jugadoras", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_partido", "targetLanguage": "es", "english": "match", "senseLabel": null, "lemma": "partido", "partOfSpeech": "noun", "gender": "masculine", "plural": "partidos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_gol", "targetLanguage": "es", "english": "goal", "senseLabel": null, "lemma": "gol", "partOfSpeech": "noun", "gender": "masculine", "plural": "goles", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_pelota", "targetLanguage": "es", "english": "ball", "senseLabel": null, "lemma": "pelota", "partOfSpeech": "noun", "gender": "feminine", "plural": "pelotas", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_cancha", "targetLanguage": "es", "english": "field", "senseLabel": null, "lemma": "cancha", "partOfSpeech": "noun", "gender": "feminine", "plural": "canchas", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_entrenador", "targetLanguage": "es", "english": "coach", "senseLabel": null, "lemma": "entrenador", "partOfSpeech": "noun", "gender": "masculine", "plural": "entrenadores", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_entrenadora", "targetLanguage": "es", "english": "coach", "senseLabel": null, "lemma": "entrenadora", "partOfSpeech": "noun", "gender": "feminine", "plural": "entrenadoras", "category": "people", "competencies": ["vocab","gender"] },
+
+{ "id": "es_competir", "targetLanguage": "es", "english": "to compete", "senseLabel": null, "lemma": "competir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_entrenar", "targetLanguage": "es", "english": "to train", "senseLabel": null, "lemma": "entrenar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_marcar", "targetLanguage": "es", "english": "to score", "senseLabel": null, "lemma": "marcar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_fuertemente", "targetLanguage": "es", "english": "strongly", "senseLabel": null, "lemma": "fuertemente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_debilmente", "targetLanguage": "es", "english": "weakly", "senseLabel": null, "lemma": "débilmente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_puente", "targetLanguage": "es", "english": "bridge", "senseLabel": null, "lemma": "puente", "partOfSpeech": "noun", "gender": "masculine", "plural": "puentes", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_semáforo", "targetLanguage": "es", "english": "traffic light", "senseLabel": null, "lemma": "semáforo", "partOfSpeech": "noun", "gender": "masculine", "plural": "semáforos", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_acera", "targetLanguage": "es", "english": "sidewalk", "senseLabel": null, "lemma": "acera", "partOfSpeech": "noun", "gender": "feminine", "plural": "aceras", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_trafico", "targetLanguage": "es", "english": "traffic", "senseLabel": null, "lemma": "tráfico", "partOfSpeech": "noun", "gender": "masculine", "plural": "tráficos", "category": "travel", "competencies": ["vocab","gender"] },
+
+{ "id": "es_conductor", "targetLanguage": "es", "english": "driver", "senseLabel": null, "lemma": "conductor", "partOfSpeech": "noun", "gender": "masculine", "plural": "conductores", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_conductora", "targetLanguage": "es", "english": "driver", "senseLabel": null, "lemma": "conductora", "partOfSpeech": "noun", "gender": "feminine", "plural": "conductoras", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_pasajero", "targetLanguage": "es", "english": "passenger", "senseLabel": null, "lemma": "pasajero", "partOfSpeech": "noun", "gender": "masculine", "plural": "pasajeros", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_pasajera", "targetLanguage": "es", "english": "passenger", "senseLabel": null, "lemma": "pasajera", "partOfSpeech": "noun", "gender": "feminine", "plural": "pasajeras", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_bicicleta", "targetLanguage": "es", "english": "bicycle", "senseLabel": null, "lemma": "bicicleta", "partOfSpeech": "noun", "gender": "feminine", "plural": "bicicletas", "category": "travel", "competencies": ["vocab","gender"] },
+
+{ "id": "es_conducir", "targetLanguage": "es", "english": "to drive", "senseLabel": null, "lemma": "conducir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_parar", "targetLanguage": "es", "english": "to stop", "senseLabel": null, "lemma": "parar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_cruzar", "targetLanguage": "es", "english": "to cross", "senseLabel": null, "lemma": "cruzar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_girar", "targetLanguage": "es", "english": "to turn", "senseLabel": null, "lemma": "girar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_avanzar", "targetLanguage": "es", "english": "to move forward", "senseLabel": null, "lemma": "avanzar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_cuidadosamente", "targetLanguage": "es", "english": "carefully", "senseLabel": null, "lemma": "cuidadosamente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_directamente", "targetLanguage": "es", "english": "directly", "senseLabel": null, "lemma": "directamente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_rey", "targetLanguage": "es", "english": "king", "senseLabel": null, "lemma": "rey", "partOfSpeech": "noun", "gender": "masculine", "plural": "reyes", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_reina", "targetLanguage": "es", "english": "queen", "senseLabel": null, "lemma": "reina", "partOfSpeech": "noun", "gender": "feminine", "plural": "reinas", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_principe", "targetLanguage": "es", "english": "prince", "senseLabel": null, "lemma": "príncipe", "partOfSpeech": "noun", "gender": "masculine", "plural": "príncipes", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_princesa", "targetLanguage": "es", "english": "princess", "senseLabel": null, "lemma": "princesa", "partOfSpeech": "noun", "gender": "feminine", "plural": "princesas", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_gobierno", "targetLanguage": "es", "english": "government", "senseLabel": null, "lemma": "gobierno", "partOfSpeech": "noun", "gender": "masculine", "plural": "gobiernos", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_ciudadano", "targetLanguage": "es", "english": "citizen", "senseLabel": null, "lemma": "ciudadano", "partOfSpeech": "noun", "gender": "masculine", "plural": "ciudadanos", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_ciudadana", "targetLanguage": "es", "english": "citizen", "senseLabel": null, "lemma": "ciudadana", "partOfSpeech": "noun", "gender": "feminine", "plural": "ciudadanas", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_ley", "targetLanguage": "es", "english": "law", "senseLabel": null, "lemma": "ley", "partOfSpeech": "noun", "gender": "feminine", "plural": "leyes", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_policia", "targetLanguage": "es", "english": "police officer", "senseLabel": null, "lemma": "policía", "partOfSpeech": "noun", "gender": "masculine", "plural": "policías", "category": "people", "competencies": ["vocab","gender"] },
+
+{ "id": "es_proteger", "targetLanguage": "es", "english": "to protect", "senseLabel": null, "lemma": "proteger", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_atacar", "targetLanguage": "es", "english": "to attack", "senseLabel": null, "lemma": "atacar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_defender", "targetLanguage": "es", "english": "to defend", "senseLabel": null, "lemma": "defender", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_gobernar", "targetLanguage": "es", "english": "to govern", "senseLabel": null, "lemma": "gobernar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_votar", "targetLanguage": "es", "english": "to vote", "senseLabel": null, "lemma": "votar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_legal", "targetLanguage": "es", "english": "legal", "senseLabel": null, "lemma": "legal", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_ilegal", "targetLanguage": "es", "english": "illegal", "senseLabel": null, "lemma": "ilegal", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_oficialmente", "targetLanguage": "es", "english": "officially", "senseLabel": null, "lemma": "oficialmente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_secretamente", "targetLanguage": "es", "english": "secretly", "senseLabel": null, "lemma": "secretamente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+{ "id": "es_puerta_principal", "targetLanguage": "es", "english": "main door", "senseLabel": null, "lemma": "puerta principal", "partOfSpeech": "noun", "gender": "feminine", "plural": "puertas principales", "category": "home", "competencies": ["vocab","gender"] },
+{ "id": "es_jardinero", "targetLanguage": "es", "english": "gardener", "senseLabel": null, "lemma": "jardinero", "partOfSpeech": "noun", "gender": "masculine", "plural": "jardineros", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_jardinera", "targetLanguage": "es", "english": "gardener", "senseLabel": null, "lemma": "jardinera", "partOfSpeech": "noun", "gender": "feminine", "plural": "jardineras", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_cocinero", "targetLanguage": "es", "english": "cook", "senseLabel": null, "lemma": "cocinero", "partOfSpeech": "noun", "gender": "masculine", "plural": "cocineros", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_cocinera", "targetLanguage": "es", "english": "cook", "senseLabel": null, "lemma": "cocinera", "partOfSpeech": "noun", "gender": "feminine", "plural": "cocineras", "category": "people", "competencies": ["vocab","gender"] },
+
+{ "id": "es_pescado", "targetLanguage": "es", "english": "fish", "senseLabel": null, "lemma": "pescado", "partOfSpeech": "noun", "gender": "masculine", "plural": "pescados", "category": "food", "competencies": ["vocab","gender"] },
+{ "id": "es_carne", "targetLanguage": "es", "english": "meat", "senseLabel": null, "lemma": "carne", "partOfSpeech": "noun", "gender": "feminine", "plural": "carnes", "category": "food", "competencies": ["vocab","gender"] },
+{ "id": "es_verdura", "targetLanguage": "es", "english": "vegetable", "senseLabel": null, "lemma": "verdura", "partOfSpeech": "noun", "gender": "feminine", "plural": "verduras", "category": "food", "competencies": ["vocab","gender"] },
+{ "id": "es_ensalada", "targetLanguage": "es", "english": "salad", "senseLabel": null, "lemma": "ensalada", "partOfSpeech": "noun", "gender": "feminine", "plural": "ensaladas", "category": "food", "competencies": ["vocab","gender"] },
+{ "id": "es_sopa", "targetLanguage": "es", "english": "soup", "senseLabel": null, "lemma": "sopa", "partOfSpeech": "noun", "gender": "feminine", "plural": "sopas", "category": "food", "competencies": ["vocab","gender"] },
+
+{ "id": "es_cocinar", "targetLanguage": "es", "english": "to cook", "senseLabel": null, "lemma": "cocinar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_freir", "targetLanguage": "es", "english": "to fry", "senseLabel": null, "lemma": "freír", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_hornear", "targetLanguage": "es", "english": "to bake", "senseLabel": null, "lemma": "hornear", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_servir", "targetLanguage": "es", "english": "to serve", "senseLabel": null, "lemma": "servir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_probar", "targetLanguage": "es", "english": "to taste", "senseLabel": null, "lemma": "probar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_delicioso", "targetLanguage": "es", "english": "delicious", "senseLabel": null, "lemma": "delicioso", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_salado", "targetLanguage": "es", "english": "salty", "senseLabel": null, "lemma": "salado", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_dulce", "targetLanguage": "es", "english": "sweet", "senseLabel": null, "lemma": "dulce", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_suficientemente", "targetLanguage": "es", "english": "enough", "senseLabel": null, "lemma": "suficientemente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_demasiado", "targetLanguage": "es", "english": "too much", "senseLabel": null, "lemma": "demasiado", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_marido", "targetLanguage": "es", "english": "husband", "senseLabel": null, "lemma": "marido", "partOfSpeech": "noun", "gender": "masculine", "plural": "maridos", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_esposa", "targetLanguage": "es", "english": "wife", "senseLabel": null, "lemma": "esposa", "partOfSpeech": "noun", "gender": "feminine", "plural": "esposas", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_bebe", "targetLanguage": "es", "english": "baby", "senseLabel": null, "lemma": "bebé", "partOfSpeech": "noun", "gender": "masculine", "plural": "bebés", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_adulto", "targetLanguage": "es", "english": "adult", "senseLabel": null, "lemma": "adulto", "partOfSpeech": "noun", "gender": "masculine", "plural": "adultos", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_novio", "targetLanguage": "es", "english": "boyfriend", "senseLabel": null, "lemma": "novio", "partOfSpeech": "noun", "gender": "masculine", "plural": "novios", "category": "people", "competencies": ["vocab","gender"] },
+
+{ "id": "es_novia", "targetLanguage": "es", "english": "girlfriend", "senseLabel": null, "lemma": "novia", "partOfSpeech": "noun", "gender": "feminine", "plural": "novias", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_relacion", "targetLanguage": "es", "english": "relationship", "senseLabel": null, "lemma": "relación", "partOfSpeech": "noun", "gender": "feminine", "plural": "relaciones", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_cita", "targetLanguage": "es", "english": "date", "senseLabel": null, "lemma": "cita", "partOfSpeech": "noun", "gender": "feminine", "plural": "citas", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_beso", "targetLanguage": "es", "english": "kiss", "senseLabel": null, "lemma": "beso", "partOfSpeech": "noun", "gender": "masculine", "plural": "besos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_amor", "targetLanguage": "es", "english": "love", "senseLabel": null, "lemma": "amor", "partOfSpeech": "noun", "gender": "masculine", "plural": "amores", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_amar", "targetLanguage": "es", "english": "to love", "senseLabel": null, "lemma": "amar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_querer", "targetLanguage": "es", "english": "to want", "senseLabel": null, "lemma": "querer", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_abrazar", "targetLanguage": "es", "english": "to hug", "senseLabel": null, "lemma": "abrazar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_besar", "targetLanguage": "es", "english": "to kiss", "senseLabel": null, "lemma": "besar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_confiar", "targetLanguage": "es", "english": "to trust", "senseLabel": null, "lemma": "confiar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_romantico", "targetLanguage": "es", "english": "romantic", "senseLabel": null, "lemma": "romántico", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_fiel", "targetLanguage": "es", "english": "faithful", "senseLabel": null, "lemma": "fiel", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_sinceramente", "targetLanguage": "es", "english": "sincerely", "senseLabel": null, "lemma": "sinceramente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_profundamente", "targetLanguage": "es", "english": "deeply", "senseLabel": null, "lemma": "profundamente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+{ "id": "es_oficial", "targetLanguage": "es", "english": "officer", "senseLabel": null, "lemma": "oficial", "partOfSpeech": "noun", "gender": "masculine", "plural": "oficiales", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_guardia", "targetLanguage": "es", "english": "guard", "senseLabel": null, "lemma": "guardia", "partOfSpeech": "noun", "gender": "feminine", "plural": "guardias", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_prision", "targetLanguage": "es", "english": "prison", "senseLabel": null, "lemma": "prisión", "partOfSpeech": "noun", "gender": "feminine", "plural": "prisiones", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_juicio", "targetLanguage": "es", "english": "trial", "senseLabel": null, "lemma": "juicio", "partOfSpeech": "noun", "gender": "masculine", "plural": "juicios", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_castigo", "targetLanguage": "es", "english": "punishment", "senseLabel": null, "lemma": "castigo", "partOfSpeech": "noun", "gender": "masculine", "plural": "castigos", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_justicia", "targetLanguage": "es", "english": "justice", "senseLabel": null, "lemma": "justicia", "partOfSpeech": "noun", "gender": "feminine", "plural": "justicias", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_orden", "targetLanguage": "es", "english": "order", "senseLabel": null, "lemma": "orden", "partOfSpeech": "noun", "gender": "feminine", "plural": "órdenes", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_regla", "targetLanguage": "es", "english": "rule", "senseLabel": null, "lemma": "regla", "partOfSpeech": "noun", "gender": "feminine", "plural": "reglas", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_control", "targetLanguage": "es", "english": "control", "senseLabel": null, "lemma": "control", "partOfSpeech": "noun", "gender": "masculine", "plural": "controles", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_poder", "targetLanguage": "es", "english": "power", "senseLabel": null, "lemma": "poder", "partOfSpeech": "noun", "gender": "masculine", "plural": "poderes", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_arrestar", "targetLanguage": "es", "english": "to arrest", "senseLabel": null, "lemma": "arrestar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_juzgar", "targetLanguage": "es", "english": "to judge", "senseLabel": null, "lemma": "juzgar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_obedecer", "targetLanguage": "es", "english": "to obey", "senseLabel": null, "lemma": "obedecer", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_controlar", "targetLanguage": "es", "english": "to control", "senseLabel": null, "lemma": "controlar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_escapar", "targetLanguage": "es", "english": "to escape", "senseLabel": null, "lemma": "escapar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_culpable", "targetLanguage": "es", "english": "guilty", "senseLabel": null, "lemma": "culpable", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_inocente", "targetLanguage": "es", "english": "innocent", "senseLabel": null, "lemma": "inocente", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_violentamente", "targetLanguage": "es", "english": "violently", "senseLabel": null, "lemma": "violentamente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_pacificamente", "targetLanguage": "es", "english": "peacefully", "senseLabel": null, "lemma": "pacíficamente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_libremente", "targetLanguage": "es", "english": "freely", "senseLabel": null, "lemma": "libremente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_ciencia", "targetLanguage": "es", "english": "science", "senseLabel": null, "lemma": "ciencia", "partOfSpeech": "noun", "gender": "feminine", "plural": "ciencias", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_experimento", "targetLanguage": "es", "english": "experiment", "senseLabel": null, "lemma": "experimento", "partOfSpeech": "noun", "gender": "masculine", "plural": "experimentos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_resultado", "targetLanguage": "es", "english": "result", "senseLabel": null, "lemma": "resultado", "partOfSpeech": "noun", "gender": "masculine", "plural": "resultados", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_dato", "targetLanguage": "es", "english": "data", "senseLabel": null, "lemma": "dato", "partOfSpeech": "noun", "gender": "masculine", "plural": "datos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_teoria", "targetLanguage": "es", "english": "theory", "senseLabel": null, "lemma": "teoría", "partOfSpeech": "noun", "gender": "feminine", "plural": "teorías", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_metodo", "targetLanguage": "es", "english": "method", "senseLabel": null, "lemma": "método", "partOfSpeech": "noun", "gender": "masculine", "plural": "métodos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_energia", "targetLanguage": "es", "english": "energy", "senseLabel": null, "lemma": "energía", "partOfSpeech": "noun", "gender": "feminine", "plural": "energías", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_fuerza", "targetLanguage": "es", "english": "force", "senseLabel": null, "lemma": "fuerza", "partOfSpeech": "noun", "gender": "feminine", "plural": "fuerzas", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_movimiento", "targetLanguage": "es", "english": "movement", "senseLabel": null, "lemma": "movimiento", "partOfSpeech": "noun", "gender": "masculine", "plural": "movimientos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_velocidad", "targetLanguage": "es", "english": "speed", "senseLabel": null, "lemma": "velocidad", "partOfSpeech": "noun", "gender": "feminine", "plural": "velocidades", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_medir", "targetLanguage": "es", "english": "to measure", "senseLabel": null, "lemma": "medir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_calcular", "targetLanguage": "es", "english": "to calculate", "senseLabel": null, "lemma": "calcular", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_probar_ciencia", "targetLanguage": "es", "english": "to test", "senseLabel": null, "lemma": "probar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_demostrar", "targetLanguage": "es", "english": "to demonstrate", "senseLabel": null, "lemma": "demostrar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_analizar", "targetLanguage": "es", "english": "to analyze", "senseLabel": null, "lemma": "analizar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_cientifico", "targetLanguage": "es", "english": "scientific", "senseLabel": null, "lemma": "científico", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_tecnico", "targetLanguage": "es", "english": "technical", "senseLabel": null, "lemma": "técnico", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_precisamente", "targetLanguage": "es", "english": "precisely", "senseLabel": null, "lemma": "precisamente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_aproximadamente", "targetLanguage": "es", "english": "approximately", "senseLabel": null, "lemma": "aproximadamente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_constantemente", "targetLanguage": "es", "english": "constantly", "senseLabel": null, "lemma": "constantemente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_mesero", "targetLanguage": "es", "english": "waiter", "senseLabel": null, "lemma": "mesero", "partOfSpeech": "noun", "gender": "masculine", "plural": "meseros", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_mesera", "targetLanguage": "es", "english": "waitress", "senseLabel": null, "lemma": "mesera", "partOfSpeech": "noun", "gender": "feminine", "plural": "meseras", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_camarero", "targetLanguage": "es", "english": "waiter", "senseLabel": null, "lemma": "camarero", "partOfSpeech": "noun", "gender": "masculine", "plural": "camareros", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_camarera", "targetLanguage": "es", "english": "waitress", "senseLabel": null, "lemma": "camarera", "partOfSpeech": "noun", "gender": "feminine", "plural": "camareras", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_abogado", "targetLanguage": "es", "english": "lawyer", "senseLabel": null, "lemma": "abogado", "partOfSpeech": "noun", "gender": "masculine", "plural": "abogados", "category": "people", "competencies": ["vocab","gender"] },
+
+{ "id": "es_abogada", "targetLanguage": "es", "english": "female lawyer", "senseLabel": null, "lemma": "abogada", "partOfSpeech": "noun", "gender": "feminine", "plural": "abogadas", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_ingeniero", "targetLanguage": "es", "english": "engineer", "senseLabel": null, "lemma": "ingeniero", "partOfSpeech": "noun", "gender": "masculine", "plural": "ingenieros", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_ingeniera", "targetLanguage": "es", "english": "female engineer", "senseLabel": null, "lemma": "ingeniera", "partOfSpeech": "noun", "gender": "feminine", "plural": "ingenieras", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_pintor", "targetLanguage": "es", "english": "painter", "senseLabel": null, "lemma": "pintor", "partOfSpeech": "noun", "gender": "masculine", "plural": "pintores", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_pintora", "targetLanguage": "es", "english": "female painter", "senseLabel": null, "lemma": "pintora", "partOfSpeech": "noun", "gender": "feminine", "plural": "pintoras", "category": "work", "competencies": ["vocab","gender"] },
+
+{ "id": "es_granjero", "targetLanguage": "es", "english": "farmer", "senseLabel": null, "lemma": "granjero", "partOfSpeech": "noun", "gender": "masculine", "plural": "granjeros", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_granjera", "targetLanguage": "es", "english": "female farmer", "senseLabel": null, "lemma": "granjera", "partOfSpeech": "noun", "gender": "feminine", "plural": "granjeras", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_albanil", "targetLanguage": "es", "english": "builder", "senseLabel": null, "lemma": "albañil", "partOfSpeech": "noun", "gender": "masculine", "plural": "albañiles", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_secretario", "targetLanguage": "es", "english": "secretary", "senseLabel": null, "lemma": "secretario", "partOfSpeech": "noun", "gender": "masculine", "plural": "secretarios", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_secretaria", "targetLanguage": "es", "english": "female secretary", "senseLabel": null, "lemma": "secretaria", "partOfSpeech": "noun", "gender": "feminine", "plural": "secretarias", "category": "work", "competencies": ["vocab","gender"] },
+
+{ "id": "es_alcalde", "targetLanguage": "es", "english": "mayor", "senseLabel": null, "lemma": "alcalde", "partOfSpeech": "noun", "gender": "masculine", "plural": "alcaldes", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_alcaldesa", "targetLanguage": "es", "english": "female mayor", "senseLabel": null, "lemma": "alcaldesa", "partOfSpeech": "noun", "gender": "feminine", "plural": "alcaldesas", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_juez", "targetLanguage": "es", "english": "judge", "senseLabel": null, "lemma": "juez", "partOfSpeech": "noun", "gender": "masculine", "plural": "jueces", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_jueza", "targetLanguage": "es", "english": "female judge", "senseLabel": null, "lemma": "jueza", "partOfSpeech": "noun", "gender": "feminine", "plural": "juezas", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_testigo", "targetLanguage": "es", "english": "witness", "senseLabel": null, "lemma": "testigo", "partOfSpeech": "noun", "gender": "masculine", "plural": "testigos", "category": "people", "competencies": ["vocab","gender"] },
+
+{ "id": "es_perro", "targetLanguage": "es", "english": "dog", "senseLabel": null, "lemma": "perro", "partOfSpeech": "noun", "gender": "masculine", "plural": "perros", "category": "animals", "competencies": ["vocab","gender"] },
+{ "id": "es_perra", "targetLanguage": "es", "english": "female dog", "senseLabel": null, "lemma": "perra", "partOfSpeech": "noun", "gender": "feminine", "plural": "perras", "category": "animals", "competencies": ["vocab","gender"] },
+{ "id": "es_gata", "targetLanguage": "es", "english": "female cat", "senseLabel": null, "lemma": "gata", "partOfSpeech": "noun", "gender": "feminine", "plural": "gatas", "category": "animals", "competencies": ["vocab","gender"] },
+{ "id": "es_pajaro", "targetLanguage": "es", "english": "bird", "senseLabel": null, "lemma": "pájaro", "partOfSpeech": "noun", "gender": "masculine", "plural": "pájaros", "category": "animals", "competencies": ["vocab","gender"] },
+
+{ "id": "es_pez", "targetLanguage": "es", "english": "fish", "senseLabel": null, "lemma": "pez", "partOfSpeech": "noun", "gender": "masculine", "plural": "peces", "category": "animals", "competencies": ["vocab","gender"] },
+{ "id": "es_caballo", "targetLanguage": "es", "english": "horse", "senseLabel": null, "lemma": "caballo", "partOfSpeech": "noun", "gender": "masculine", "plural": "caballos", "category": "animals", "competencies": ["vocab","gender"] },
+{ "id": "es_vaca", "targetLanguage": "es", "english": "cow", "senseLabel": null, "lemma": "vaca", "partOfSpeech": "noun", "gender": "feminine", "plural": "vacas", "category": "animals", "competencies": ["vocab","gender"] },
+{ "id": "es_oveja", "targetLanguage": "es", "english": "sheep", "senseLabel": null, "lemma": "oveja", "partOfSpeech": "noun", "gender": "feminine", "plural": "ovejas", "category": "animals", "competencies": ["vocab","gender"] },
+{ "id": "es_cerdo", "targetLanguage": "es", "english": "pig", "senseLabel": null, "lemma": "cerdo", "partOfSpeech": "noun", "gender": "masculine", "plural": "cerdos", "category": "animals", "competencies": ["vocab","gender"] },
+
+{ "id": "es_cazar", "targetLanguage": "es", "english": "to hunt", "senseLabel": null, "lemma": "cazar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_pescar", "targetLanguage": "es", "english": "to fish", "senseLabel": null, "lemma": "pescar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_alimentar", "targetLanguage": "es", "english": "to feed", "senseLabel": null, "lemma": "alimentar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_cuidar", "targetLanguage": "es", "english": "to take care of", "senseLabel": null, "lemma": "cuidar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_domesticar", "targetLanguage": "es", "english": "to domesticate", "senseLabel": null, "lemma": "domesticar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_salvaje", "targetLanguage": "es", "english": "wild", "senseLabel": null, "lemma": "salvaje", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_domestico", "targetLanguage": "es", "english": "domestic", "senseLabel": null, "lemma": "doméstico", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+
+
+{ "id": "es_isla", "targetLanguage": "es", "english": "island", "senseLabel": null, "lemma": "isla", "partOfSpeech": "noun", "gender": "feminine", "plural": "islas", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_playa", "targetLanguage": "es", "english": "beach", "senseLabel": null, "lemma": "playa", "partOfSpeech": "noun", "gender": "feminine", "plural": "playas", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_desierto", "targetLanguage": "es", "english": "desert", "senseLabel": null, "lemma": "desierto", "partOfSpeech": "noun", "gender": "masculine", "plural": "desiertos", "category": "nature", "competencies": ["vocab","gender"] },
+{ "id": "es_valle", "targetLanguage": "es", "english": "valley", "senseLabel": null, "lemma": "valle", "partOfSpeech": "noun", "gender": "masculine", "plural": "valles", "category": "nature", "competencies": ["vocab","gender"] },
+{ "id": "es_campo", "targetLanguage": "es", "english": "countryside", "senseLabel": null, "lemma": "campo", "partOfSpeech": "noun", "gender": "masculine", "plural": "campos", "category": "nature", "competencies": ["vocab","gender"] },
+
+{ "id": "es_sendero", "targetLanguage": "es", "english": "path", "senseLabel": null, "lemma": "sendero", "partOfSpeech": "noun", "gender": "masculine", "plural": "senderos", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_pasaporte", "targetLanguage": "es", "english": "passport", "senseLabel": null, "lemma": "pasaporte", "partOfSpeech": "noun", "gender": "masculine", "plural": "pasaportes", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_frontera", "targetLanguage": "es", "english": "border", "senseLabel": null, "lemma": "frontera", "partOfSpeech": "noun", "gender": "feminine", "plural": "fronteras", "category": "travel", "competencies": ["vocab","gender"] },
+
+{ "id": "es_navegar", "targetLanguage": "es", "english": "to sail", "senseLabel": null, "lemma": "navegar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_explorar", "targetLanguage": "es", "english": "to explore", "senseLabel": null, "lemma": "explorar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_descansar", "targetLanguage": "es", "english": "to rest", "senseLabel": null, "lemma": "descansar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_subir", "targetLanguage": "es", "english": "to go up", "senseLabel": null, "lemma": "subir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_bajar", "targetLanguage": "es", "english": "to go down", "senseLabel": null, "lemma": "bajar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_lejano", "targetLanguage": "es", "english": "distant", "senseLabel": null, "lemma": "lejano", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_cercano", "targetLanguage": "es", "english": "nearby", "senseLabel": null, "lemma": "cercano", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_arriba", "targetLanguage": "es", "english": "upstairs", "senseLabel": null, "lemma": "arriba", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_abajo", "targetLanguage": "es", "english": "downstairs", "senseLabel": null, "lemma": "abajo", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_adelante", "targetLanguage": "es", "english": "forward", "senseLabel": null, "lemma": "adelante", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_pintura", "targetLanguage": "es", "english": "painting", "senseLabel": null, "lemma": "pintura", "partOfSpeech": "noun", "gender": "feminine", "plural": "pinturas", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_dibujo", "targetLanguage": "es", "english": "drawing", "senseLabel": null, "lemma": "dibujo", "partOfSpeech": "noun", "gender": "masculine", "plural": "dibujos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_fotografia", "targetLanguage": "es", "english": "photograph", "senseLabel": null, "lemma": "fotografía", "partOfSpeech": "noun", "gender": "feminine", "plural": "fotografías", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_color", "targetLanguage": "es", "english": "color", "senseLabel": null, "lemma": "color", "partOfSpeech": "noun", "gender": "masculine", "plural": "colores", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_forma", "targetLanguage": "es", "english": "shape", "senseLabel": null, "lemma": "forma", "partOfSpeech": "noun", "gender": "feminine", "plural": "formas", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_linea", "targetLanguage": "es", "english": "line", "senseLabel": null, "lemma": "línea", "partOfSpeech": "noun", "gender": "feminine", "plural": "líneas", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_imagen", "targetLanguage": "es", "english": "image", "senseLabel": null, "lemma": "imagen", "partOfSpeech": "noun", "gender": "feminine", "plural": "imágenes", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_estilo", "targetLanguage": "es", "english": "style", "senseLabel": null, "lemma": "estilo", "partOfSpeech": "noun", "gender": "masculine", "plural": "estilos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_detalle", "targetLanguage": "es", "english": "detail", "senseLabel": null, "lemma": "detalle", "partOfSpeech": "noun", "gender": "masculine", "plural": "detalles", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_diseno", "targetLanguage": "es", "english": "design", "senseLabel": null, "lemma": "diseño", "partOfSpeech": "noun", "gender": "masculine", "plural": "diseños", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_pintar", "targetLanguage": "es", "english": "to paint", "senseLabel": null, "lemma": "pintar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_dibujar", "targetLanguage": "es", "english": "to draw", "senseLabel": null, "lemma": "dibujar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_fotografiar", "targetLanguage": "es", "english": "to photograph", "senseLabel": null, "lemma": "fotografiar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_crear", "targetLanguage": "es", "english": "to create", "senseLabel": null, "lemma": "crear", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_decorar", "targetLanguage": "es", "english": "to decorate", "senseLabel": null, "lemma": "decorar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_colorido", "targetLanguage": "es", "english": "colorful", "senseLabel": null, "lemma": "colorido", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_detalladamente", "targetLanguage": "es", "english": "in detail", "senseLabel": null, "lemma": "detalladamente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_creativamente", "targetLanguage": "es", "english": "creatively", "senseLabel": null, "lemma": "creativamente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_visualmente", "targetLanguage": "es", "english": "visually", "senseLabel": null, "lemma": "visualmente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+{ "id": "es_clase", "targetLanguage": "es", "english": "class", "senseLabel": null, "lemma": "clase", "partOfSpeech": "noun", "gender": "feminine", "plural": "clases", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_leccion", "targetLanguage": "es", "english": "lesson", "senseLabel": null, "lemma": "lección", "partOfSpeech": "noun", "gender": "feminine", "plural": "lecciones", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_examen", "targetLanguage": "es", "english": "exam", "senseLabel": null, "lemma": "examen", "partOfSpeech": "noun", "gender": "masculine", "plural": "exámenes", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_tarea", "targetLanguage": "es", "english": "homework", "senseLabel": null, "lemma": "tarea", "partOfSpeech": "noun", "gender": "feminine", "plural": "tareas", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_revisar", "targetLanguage": "es", "english": "to review", "senseLabel": null, "lemma": "revisar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_claramente", "targetLanguage": "es", "english": "clearly", "senseLabel": null, "lemma": "claramente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_correctamente", "targetLanguage": "es", "english": "correctly", "senseLabel": null, "lemma": "correctamente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_queso", "targetLanguage": "es", "english": "cheese", "senseLabel": null, "lemma": "queso", "partOfSpeech": "noun", "gender": "masculine", "plural": "quesos", "category": "food", "competencies": ["vocab","gender"] },
+{ "id": "es_leche", "targetLanguage": "es", "english": "milk", "senseLabel": null, "lemma": "leche", "partOfSpeech": "noun", "gender": "feminine", "plural": "leches", "category": "food", "competencies": ["vocab","gender"] },
+{ "id": "es_huevo", "targetLanguage": "es", "english": "egg", "senseLabel": null, "lemma": "huevo", "partOfSpeech": "noun", "gender": "masculine", "plural": "huevos", "category": "food", "competencies": ["vocab","gender"] },
+{ "id": "es_arroz", "targetLanguage": "es", "english": "rice", "senseLabel": null, "lemma": "arroz", "partOfSpeech": "noun", "gender": "masculine", "plural": "arroces", "category": "food", "competencies": ["vocab","gender"] },
+
+{ "id": "es_azucar", "targetLanguage": "es", "english": "sugar", "senseLabel": null, "lemma": "azúcar", "partOfSpeech": "noun", "gender": "masculine", "plural": "azúcares", "category": "food", "competencies": ["vocab","gender"] },
+{ "id": "es_sal", "targetLanguage": "es", "english": "salt", "senseLabel": null, "lemma": "sal", "partOfSpeech": "noun", "gender": "feminine", "plural": "sales", "category": "food", "competencies": ["vocab","gender"] },
+{ "id": "es_mantequilla", "targetLanguage": "es", "english": "butter", "senseLabel": null, "lemma": "mantequilla", "partOfSpeech": "noun", "gender": "feminine", "plural": "mantequillas", "category": "food", "competencies": ["vocab","gender"] },
+{ "id": "es_aceite", "targetLanguage": "es", "english": "oil", "senseLabel": null, "lemma": "aceite", "partOfSpeech": "noun", "gender": "masculine", "plural": "aceites", "category": "food", "competencies": ["vocab","gender"] },
+{ "id": "es_salsa", "targetLanguage": "es", "english": "sauce", "senseLabel": null, "lemma": "salsa", "partOfSpeech": "noun", "gender": "feminine", "plural": "salsas", "category": "food", "competencies": ["vocab","gender"] },
+
+{ "id": "es_hervir", "targetLanguage": "es", "english": "to boil", "senseLabel": null, "lemma": "hervir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_mezclar", "targetLanguage": "es", "english": "to mix", "senseLabel": null, "lemma": "mezclar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_cortar", "targetLanguage": "es", "english": "to cut", "senseLabel": null, "lemma": "cortar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_sabroso", "targetLanguage": "es", "english": "tasty", "senseLabel": null, "lemma": "sabroso", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_amargo", "targetLanguage": "es", "english": "bitter", "senseLabel": null, "lemma": "amargo", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+
+
+{ "id": "es_ropa_interior", "targetLanguage": "es", "english": "underwear", "senseLabel": null, "lemma": "ropa interior", "partOfSpeech": "noun", "gender": "feminine", "plural": "ropas interiores", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_abrigo", "targetLanguage": "es", "english": "coat", "senseLabel": null, "lemma": "abrigo", "partOfSpeech": "noun", "gender": "masculine", "plural": "abrigos", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_chaqueta", "targetLanguage": "es", "english": "jacket", "senseLabel": null, "lemma": "chaqueta", "partOfSpeech": "noun", "gender": "feminine", "plural": "chaquetas", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_falda", "targetLanguage": "es", "english": "skirt", "senseLabel": null, "lemma": "falda", "partOfSpeech": "noun", "gender": "feminine", "plural": "faldas", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_calcetin", "targetLanguage": "es", "english": "sock", "senseLabel": null, "lemma": "calcetín", "partOfSpeech": "noun", "gender": "masculine", "plural": "calcetines", "category": "objects", "competencies": ["vocab","gender"] },
+
+{ "id": "es_bota", "targetLanguage": "es", "english": "boot", "senseLabel": null, "lemma": "bota", "partOfSpeech": "noun", "gender": "feminine", "plural": "botas", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_sandalia", "targetLanguage": "es", "english": "sandal", "senseLabel": null, "lemma": "sandalia", "partOfSpeech": "noun", "gender": "feminine", "plural": "sandalias", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_cinturon", "targetLanguage": "es", "english": "belt", "senseLabel": null, "lemma": "cinturón", "partOfSpeech": "noun", "gender": "masculine", "plural": "cinturones", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_bolso", "targetLanguage": "es", "english": "bag", "senseLabel": null, "lemma": "bolso", "partOfSpeech": "noun", "gender": "masculine", "plural": "bolsos", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_gorra", "targetLanguage": "es", "english": "cap", "senseLabel": null, "lemma": "gorra", "partOfSpeech": "noun", "gender": "feminine", "plural": "gorras", "category": "objects", "competencies": ["vocab","gender"] },
+
+{ "id": "es_vestirse", "targetLanguage": "es", "english": "to get dressed", "senseLabel": null, "lemma": "vestirse", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_quitarse", "targetLanguage": "es", "english": "to take off", "senseLabel": null, "lemma": "quitarse", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_probarse", "targetLanguage": "es", "english": "to try on", "senseLabel": null, "lemma": "probarse", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_lavar", "targetLanguage": "es", "english": "to wash", "senseLabel": null, "lemma": "lavar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_secar", "targetLanguage": "es", "english": "to dry", "senseLabel": null, "lemma": "secar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_comodo", "targetLanguage": "es", "english": "comfortable", "senseLabel": null, "lemma": "cómodo", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_elegante", "targetLanguage": "es", "english": "elegant", "senseLabel": null, "lemma": "elegante", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+
+
+{ "id": "es_computadora", "targetLanguage": "es", "english": "computer", "senseLabel": null, "lemma": "computadora", "partOfSpeech": "noun", "gender": "feminine", "plural": "computadoras", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_ordenador", "targetLanguage": "es", "english": "computer", "senseLabel": null, "lemma": "ordenador", "partOfSpeech": "noun", "gender": "masculine", "plural": "ordenadores", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_pantalla", "targetLanguage": "es", "english": "screen", "senseLabel": null, "lemma": "pantalla", "partOfSpeech": "noun", "gender": "feminine", "plural": "pantallas", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_teclado", "targetLanguage": "es", "english": "keyboard", "senseLabel": null, "lemma": "teclado", "partOfSpeech": "noun", "gender": "masculine", "plural": "teclados", "category": "objects", "competencies": ["vocab","gender"] },
+{ "id": "es_raton", "targetLanguage": "es", "english": "mouse", "senseLabel": null, "lemma": "ratón", "partOfSpeech": "noun", "gender": "masculine", "plural": "ratones", "category": "objects", "competencies": ["vocab","gender"] },
+
+{ "id": "es_archivo", "targetLanguage": "es", "english": "file", "senseLabel": null, "lemma": "archivo", "partOfSpeech": "noun", "gender": "masculine", "plural": "archivos", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_documento", "targetLanguage": "es", "english": "document", "senseLabel": null, "lemma": "documento", "partOfSpeech": "noun", "gender": "masculine", "plural": "documentos", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_programa", "targetLanguage": "es", "english": "program", "senseLabel": null, "lemma": "programa", "partOfSpeech": "noun", "gender": "masculine", "plural": "programas", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_datos", "targetLanguage": "es", "english": "data", "senseLabel": null, "lemma": "datos", "partOfSpeech": "noun", "gender": "masculine", "plural": "datos", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_red", "targetLanguage": "es", "english": "network", "senseLabel": null, "lemma": "red", "partOfSpeech": "noun", "gender": "feminine", "plural": "redes", "category": "work", "competencies": ["vocab","gender"] },
+
+{ "id": "es_encender", "targetLanguage": "es", "english": "to turn on", "senseLabel": null, "lemma": "encender", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_apagar", "targetLanguage": "es", "english": "to turn off", "senseLabel": null, "lemma": "apagar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_guardar", "targetLanguage": "es", "english": "to save", "senseLabel": null, "lemma": "guardar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_cargar", "targetLanguage": "es", "english": "to load", "senseLabel": null, "lemma": "cargar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_borrar", "targetLanguage": "es", "english": "to delete", "senseLabel": null, "lemma": "borrar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_digital", "targetLanguage": "es", "english": "digital", "senseLabel": null, "lemma": "digital", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_electronico", "targetLanguage": "es", "english": "electronic", "senseLabel": null, "lemma": "electrónico", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_automaticamente", "targetLanguage": "es", "english": "automatically", "senseLabel": null, "lemma": "automáticamente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_manualmente", "targetLanguage": "es", "english": "manually", "senseLabel": null, "lemma": "manualmente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_pueblo", "targetLanguage": "es", "english": "town", "senseLabel": null, "lemma": "pueblo", "partOfSpeech": "noun", "gender": "masculine", "plural": "pueblos", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_avenida", "targetLanguage": "es", "english": "avenue", "senseLabel": null, "lemma": "avenida", "partOfSpeech": "noun", "gender": "feminine", "plural": "avenidas", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_plaza", "targetLanguage": "es", "english": "square", "senseLabel": null, "lemma": "plaza", "partOfSpeech": "noun", "gender": "feminine", "plural": "plazas", "category": "travel", "competencies": ["vocab","gender"] },
+
+{ "id": "es_edificio", "targetLanguage": "es", "english": "building", "senseLabel": null, "lemma": "edificio", "partOfSpeech": "noun", "gender": "masculine", "plural": "edificios", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_barrio", "targetLanguage": "es", "english": "neighborhood", "senseLabel": null, "lemma": "barrio", "partOfSpeech": "noun", "gender": "masculine", "plural": "barrios", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_transporte", "targetLanguage": "es", "english": "transport", "senseLabel": null, "lemma": "transporte", "partOfSpeech": "noun", "gender": "masculine", "plural": "transportes", "category": "travel", "competencies": ["vocab","gender"] },
+
+{ "id": "es_construir", "targetLanguage": "es", "english": "to build", "senseLabel": null, "lemma": "construir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_demoler", "targetLanguage": "es", "english": "to demolish", "senseLabel": null, "lemma": "demoler", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_mover", "targetLanguage": "es", "english": "to move", "senseLabel": null, "lemma": "mover", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_viajar", "targetLanguage": "es", "english": "to travel", "senseLabel": null, "lemma": "viajar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_urbano", "targetLanguage": "es", "english": "urban", "senseLabel": null, "lemma": "urbano", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_rural", "targetLanguage": "es", "english": "rural", "senseLabel": null, "lemma": "rural", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+
+
+{ "id": "es_hijo", "targetLanguage": "es", "english": "son", "senseLabel": null, "lemma": "hijo", "partOfSpeech": "noun", "gender": "masculine", "plural": "hijos", "category": "people", "competencies": ["vocab","gender"] },
+
+{ "id": "es_hija", "targetLanguage": "es", "english": "daughter", "senseLabel": null, "lemma": "hija", "partOfSpeech": "noun", "gender": "feminine", "plural": "hijas", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_tio", "targetLanguage": "es", "english": "uncle", "senseLabel": null, "lemma": "tío", "partOfSpeech": "noun", "gender": "masculine", "plural": "tíos", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_tia", "targetLanguage": "es", "english": "aunt", "senseLabel": null, "lemma": "tía", "partOfSpeech": "noun", "gender": "feminine", "plural": "tías", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_primo", "targetLanguage": "es", "english": "male cousin", "senseLabel": null, "lemma": "primo", "partOfSpeech": "noun", "gender": "masculine", "plural": "primos", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_prima", "targetLanguage": "es", "english": "female cousin", "senseLabel": null, "lemma": "prima", "partOfSpeech": "noun", "gender": "feminine", "plural": "primas", "category": "people", "competencies": ["vocab","gender"] },
+
+{ "id": "es_criar", "targetLanguage": "es", "english": "to raise (a child)", "senseLabel": null, "lemma": "criar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_educar", "targetLanguage": "es", "english": "to educate", "senseLabel": null, "lemma": "educar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_nacer", "targetLanguage": "es", "english": "to be born", "senseLabel": null, "lemma": "nacer", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_crecer_persona", "targetLanguage": "es", "english": "to grow up", "senseLabel": null, "lemma": "crecer", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_familiar", "targetLanguage": "es", "english": "family-related", "senseLabel": null, "lemma": "familiar", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_cercano_familia", "targetLanguage": "es", "english": "close", "senseLabel": null, "lemma": "cercano", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_frecuentemente", "targetLanguage": "es", "english": "frequently", "senseLabel": null, "lemma": "frecuentemente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_ojo", "targetLanguage": "es", "english": "eye", "senseLabel": null, "lemma": "ojo", "partOfSpeech": "noun", "gender": "masculine", "plural": "ojos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_boca", "targetLanguage": "es", "english": "mouth", "senseLabel": null, "lemma": "boca", "partOfSpeech": "noun", "gender": "feminine", "plural": "bocas", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_nariz", "targetLanguage": "es", "english": "nose", "senseLabel": null, "lemma": "nariz", "partOfSpeech": "noun", "gender": "feminine", "plural": "narices", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_oreja", "targetLanguage": "es", "english": "ear", "senseLabel": null, "lemma": "oreja", "partOfSpeech": "noun", "gender": "feminine", "plural": "orejas", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_mano", "targetLanguage": "es", "english": "hand", "senseLabel": null, "lemma": "mano", "partOfSpeech": "noun", "gender": "feminine", "plural": "manos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_pie", "targetLanguage": "es", "english": "foot", "senseLabel": null, "lemma": "pie", "partOfSpeech": "noun", "gender": "masculine", "plural": "pies", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_pierna", "targetLanguage": "es", "english": "leg", "senseLabel": null, "lemma": "pierna", "partOfSpeech": "noun", "gender": "feminine", "plural": "piernas", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_brazo", "targetLanguage": "es", "english": "arm", "senseLabel": null, "lemma": "brazo", "partOfSpeech": "noun", "gender": "masculine", "plural": "brazos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_espalda", "targetLanguage": "es", "english": "back", "senseLabel": null, "lemma": "espalda", "partOfSpeech": "noun", "gender": "feminine", "plural": "espaldas", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_mirar", "targetLanguage": "es", "english": "to look", "senseLabel": null, "lemma": "mirar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_oir", "targetLanguage": "es", "english": "to hear", "senseLabel": null, "lemma": "oír", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_tocar_cuerpo", "targetLanguage": "es", "english": "to touch", "senseLabel": null, "lemma": "tocar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_fuerte", "targetLanguage": "es", "english": "strong", "senseLabel": null, "lemma": "fuerte", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+
+
+{ "id": "es_dia", "targetLanguage": "es", "english": "day", "senseLabel": null, "lemma": "día", "partOfSpeech": "noun", "gender": "masculine", "plural": "días", "category": "time", "competencies": ["vocab","gender"] },
+{ "id": "es_semana", "targetLanguage": "es", "english": "week", "senseLabel": null, "lemma": "semana", "partOfSpeech": "noun", "gender": "feminine", "plural": "semanas", "category": "time", "competencies": ["vocab","gender"] },
+{ "id": "es_mes", "targetLanguage": "es", "english": "month", "senseLabel": null, "lemma": "mes", "partOfSpeech": "noun", "gender": "masculine", "plural": "meses", "category": "time", "competencies": ["vocab","gender"] },
+
+{ "id": "es_segundo", "targetLanguage": "es", "english": "second", "senseLabel": null, "lemma": "segundo", "partOfSpeech": "noun", "gender": "masculine", "plural": "segundos", "category": "time", "competencies": ["vocab","gender"] },
+{ "id": "es_momento", "targetLanguage": "es", "english": "moment", "senseLabel": null, "lemma": "momento", "partOfSpeech": "noun", "gender": "masculine", "plural": "momentos", "category": "time", "competencies": ["vocab","gender"] },
+{ "id": "es_epoca", "targetLanguage": "es", "english": "era", "senseLabel": null, "lemma": "época", "partOfSpeech": "noun", "gender": "feminine", "plural": "épocas", "category": "time", "competencies": ["vocab","gender"] },
+
+{ "id": "es_empezar_tiempo", "targetLanguage": "es", "english": "to begin", "senseLabel": null, "lemma": "empezar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_durar", "targetLanguage": "es", "english": "to last", "senseLabel": null, "lemma": "durar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_pasar_tiempo", "targetLanguage": "es", "english": "to pass (time)", "senseLabel": null, "lemma": "pasar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_ocurrir", "targetLanguage": "es", "english": "to happen", "senseLabel": null, "lemma": "ocurrir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_pronto", "targetLanguage": "es", "english": "soon", "senseLabel": null, "lemma": "pronto", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_costo", "targetLanguage": "es", "english": "cost", "senseLabel": null, "lemma": "costo", "partOfSpeech": "noun", "gender": "masculine", "plural": "costos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_valor", "targetLanguage": "es", "english": "value", "senseLabel": null, "lemma": "valor", "partOfSpeech": "noun", "gender": "masculine", "plural": "valores", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_venta", "targetLanguage": "es", "english": "sale", "senseLabel": null, "lemma": "venta", "partOfSpeech": "noun", "gender": "feminine", "plural": "ventas", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_compra", "targetLanguage": "es", "english": "purchase", "senseLabel": null, "lemma": "compra", "partOfSpeech": "noun", "gender": "feminine", "plural": "compras", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_tienda", "targetLanguage": "es", "english": "shop", "senseLabel": null, "lemma": "tienda", "partOfSpeech": "noun", "gender": "feminine", "plural": "tiendas", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_cobrar", "targetLanguage": "es", "english": "to charge", "senseLabel": null, "lemma": "cobrar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_gastar", "targetLanguage": "es", "english": "to spend", "senseLabel": null, "lemma": "gastar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_ahorrar", "targetLanguage": "es", "english": "to save (money)", "senseLabel": null, "lemma": "ahorrar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_comprar", "targetLanguage": "es", "english": "to buy", "senseLabel": null, "lemma": "comprar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_mente", "targetLanguage": "es", "english": "mind", "senseLabel": null, "lemma": "mente", "partOfSpeech": "noun", "gender": "feminine", "plural": "mentes", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_pensamiento", "targetLanguage": "es", "english": "thought", "senseLabel": null, "lemma": "pensamiento", "partOfSpeech": "noun", "gender": "masculine", "plural": "pensamientos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_opinion", "targetLanguage": "es", "english": "opinion", "senseLabel": null, "lemma": "opinión", "partOfSpeech": "noun", "gender": "feminine", "plural": "opiniones", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_decision", "targetLanguage": "es", "english": "decision", "senseLabel": null, "lemma": "decisión", "partOfSpeech": "noun", "gender": "feminine", "plural": "decisiones", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_conocimiento", "targetLanguage": "es", "english": "knowledge", "senseLabel": null, "lemma": "conocimiento", "partOfSpeech": "noun", "gender": "masculine", "plural": "conocimientos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_memoria", "targetLanguage": "es", "english": "memory", "senseLabel": null, "lemma": "memoria", "partOfSpeech": "noun", "gender": "feminine", "plural": "memorias", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_sueno", "targetLanguage": "es", "english": "dream", "senseLabel": null, "lemma": "sueño", "partOfSpeech": "noun", "gender": "masculine", "plural": "sueños", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_sentimiento", "targetLanguage": "es", "english": "feeling", "senseLabel": null, "lemma": "sentimiento", "partOfSpeech": "noun", "gender": "masculine", "plural": "sentimientos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_verdad", "targetLanguage": "es", "english": "truth", "senseLabel": null, "lemma": "verdad", "partOfSpeech": "noun", "gender": "feminine", "plural": "verdades", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_imaginar", "targetLanguage": "es", "english": "to imagine", "senseLabel": null, "lemma": "imaginar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_confuso", "targetLanguage": "es", "english": "confused", "senseLabel": null, "lemma": "confuso", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_simplemente", "targetLanguage": "es", "english": "simply", "senseLabel": null, "lemma": "simplemente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_mesa", "targetLanguage": "es", "english": "table", "senseLabel": null, "lemma": "mesa", "partOfSpeech": "noun", "gender": "feminine", "plural": "mesas", "category": "home", "competencies": ["vocab","gender"] },
+{ "id": "es_puerta", "targetLanguage": "es", "english": "door", "senseLabel": null, "lemma": "puerta", "partOfSpeech": "noun", "gender": "feminine", "plural": "puertas", "category": "home", "competencies": ["vocab","gender"] },
+{ "id": "es_cama", "targetLanguage": "es", "english": "bed", "senseLabel": null, "lemma": "cama", "partOfSpeech": "noun", "gender": "feminine", "plural": "camas", "category": "home", "competencies": ["vocab","gender"] },
+
+{ "id": "es_sofa", "targetLanguage": "es", "english": "couch", "senseLabel": null, "lemma": "sofá", "partOfSpeech": "noun", "gender": "masculine", "plural": "sofás", "category": "home", "competencies": ["vocab","gender"] },
+{ "id": "es_espejo", "targetLanguage": "es", "english": "mirror", "senseLabel": null, "lemma": "espejo", "partOfSpeech": "noun", "gender": "masculine", "plural": "espejos", "category": "home", "competencies": ["vocab","gender"] },
+{ "id": "es_toalla", "targetLanguage": "es", "english": "towel", "senseLabel": null, "lemma": "toalla", "partOfSpeech": "noun", "gender": "feminine", "plural": "toallas", "category": "home", "competencies": ["vocab","gender"] },
+{ "id": "es_lampara", "targetLanguage": "es", "english": "lamp", "senseLabel": null, "lemma": "lámpara", "partOfSpeech": "noun", "gender": "feminine", "plural": "lámparas", "category": "home", "competencies": ["vocab","gender"] },
+{ "id": "es_armario", "targetLanguage": "es", "english": "closet", "senseLabel": null, "lemma": "armario", "partOfSpeech": "noun", "gender": "masculine", "plural": "armarios", "category": "home", "competencies": ["vocab","gender"] },
+
+{ "id": "es_cerrar", "targetLanguage": "es", "english": "to close", "senseLabel": null, "lemma": "cerrar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_limpiar", "targetLanguage": "es", "english": "to clean", "senseLabel": null, "lemma": "limpiar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_amplio", "targetLanguage": "es", "english": "spacious", "senseLabel": null, "lemma": "amplio", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_estrecho", "targetLanguage": "es", "english": "narrow", "senseLabel": null, "lemma": "estrecho", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_adentro", "targetLanguage": "es", "english": "inside", "senseLabel": null, "lemma": "adentro", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_afuera", "targetLanguage": "es", "english": "outside", "senseLabel": null, "lemma": "afuera", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_medio", "targetLanguage": "es", "english": "environment", "senseLabel": null, "lemma": "medio", "partOfSpeech": "noun", "gender": "masculine", "plural": "medios", "category": "nature", "competencies": ["vocab","gender"] },
+{ "id": "es_fuego", "targetLanguage": "es", "english": "fire", "senseLabel": null, "lemma": "fuego", "partOfSpeech": "noun", "gender": "masculine", "plural": "fuegos", "category": "nature", "competencies": ["vocab","gender"] },
+
+{ "id": "es_temperatura", "targetLanguage": "es", "english": "temperature", "senseLabel": null, "lemma": "temperatura", "partOfSpeech": "noun", "gender": "feminine", "plural": "temperaturas", "category": "nature", "competencies": ["vocab","gender"] },
+{ "id": "es_sol", "targetLanguage": "es", "english": "sun", "senseLabel": null, "lemma": "sol", "partOfSpeech": "noun", "gender": "masculine", "plural": "soles", "category": "nature", "competencies": ["vocab","gender"] },
+
+{ "id": "es_respirar", "targetLanguage": "es", "english": "to breathe", "senseLabel": null, "lemma": "respirar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_llover", "targetLanguage": "es", "english": "to rain", "senseLabel": null, "lemma": "llover", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_nevar", "targetLanguage": "es", "english": "to snow", "senseLabel": null, "lemma": "nevar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_calentar", "targetLanguage": "es", "english": "to heat", "senseLabel": null, "lemma": "calentar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_enfriar", "targetLanguage": "es", "english": "to cool", "senseLabel": null, "lemma": "enfriar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_calido", "targetLanguage": "es", "english": "warm", "senseLabel": null, "lemma": "cálido", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_frio", "targetLanguage": "es", "english": "cold", "senseLabel": null, "lemma": "frío", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_naturalmente", "targetLanguage": "es", "english": "naturally", "senseLabel": null, "lemma": "naturalmente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_musica", "targetLanguage": "es", "english": "music", "senseLabel": null, "lemma": "música", "partOfSpeech": "noun", "gender": "feminine", "plural": "músicas", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_pelicula", "targetLanguage": "es", "english": "movie", "senseLabel": null, "lemma": "película", "partOfSpeech": "noun", "gender": "feminine", "plural": "películas", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_revista", "targetLanguage": "es", "english": "magazine", "senseLabel": null, "lemma": "revista", "partOfSpeech": "noun", "gender": "feminine", "plural": "revistas", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_noticia", "targetLanguage": "es", "english": "news", "senseLabel": null, "lemma": "noticia", "partOfSpeech": "noun", "gender": "feminine", "plural": "noticias", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_radio", "targetLanguage": "es", "english": "radio", "senseLabel": null, "lemma": "radio", "partOfSpeech": "noun", "gender": "feminine", "plural": "radios", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_television", "targetLanguage": "es", "english": "television", "senseLabel": null, "lemma": "televisión", "partOfSpeech": "noun", "gender": "feminine", "plural": "televisiones", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_programa_tv", "targetLanguage": "es", "english": "show", "senseLabel": null, "lemma": "programa", "partOfSpeech": "noun", "gender": "masculine", "plural": "programas", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_canal", "targetLanguage": "es", "english": "channel", "senseLabel": null, "lemma": "canal", "partOfSpeech": "noun", "gender": "masculine", "plural": "canales", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_publicar", "targetLanguage": "es", "english": "to publish", "senseLabel": null, "lemma": "publicar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_ocasionalmente", "targetLanguage": "es", "english": "occasionally", "senseLabel": null, "lemma": "ocasionalmente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_regularmente", "targetLanguage": "es", "english": "regularly", "senseLabel": null, "lemma": "regularmente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_trabajo", "targetLanguage": "es", "english": "work", "senseLabel": null, "lemma": "trabajo", "partOfSpeech": "noun", "gender": "masculine", "plural": "trabajos", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_empleo", "targetLanguage": "es", "english": "job", "senseLabel": null, "lemma": "empleo", "partOfSpeech": "noun", "gender": "masculine", "plural": "empleos", "category": "work", "competencies": ["vocab","gender"] },
+{ "id": "es_proyecto", "targetLanguage": "es", "english": "project", "senseLabel": null, "lemma": "proyecto", "partOfSpeech": "noun", "gender": "masculine", "plural": "proyectos", "category": "work", "competencies": ["vocab","gender"] },
+
+{ "id": "es_responder", "targetLanguage": "es", "english": "to respond", "senseLabel": null, "lemma": "responder", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_rapido", "targetLanguage": "es", "english": "fast", "senseLabel": null, "lemma": "rápido", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_despues", "targetLanguage": "es", "english": "afterward", "senseLabel": null, "lemma": "después", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_antes", "targetLanguage": "es", "english": "before", "senseLabel": null, "lemma": "antes", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_carretera", "targetLanguage": "es", "english": "road", "senseLabel": null, "lemma": "carretera", "partOfSpeech": "noun", "gender": "feminine", "plural": "carreteras", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_autopista", "targetLanguage": "es", "english": "highway", "senseLabel": null, "lemma": "autopista", "partOfSpeech": "noun", "gender": "feminine", "plural": "autopistas", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_cruce", "targetLanguage": "es", "english": "intersection", "senseLabel": null, "lemma": "cruce", "partOfSpeech": "noun", "gender": "masculine", "plural": "cruces", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_senal", "targetLanguage": "es", "english": "sign", "senseLabel": null, "lemma": "señal", "partOfSpeech": "noun", "gender": "feminine", "plural": "señales", "category": "travel", "competencies": ["vocab","gender"] },
+
+{ "id": "es_parada", "targetLanguage": "es", "english": "stop", "senseLabel": null, "lemma": "parada", "partOfSpeech": "noun", "gender": "feminine", "plural": "paradas", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_ruta", "targetLanguage": "es", "english": "route", "senseLabel": null, "lemma": "ruta", "partOfSpeech": "noun", "gender": "feminine", "plural": "rutas", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_direccion", "targetLanguage": "es", "english": "direction", "senseLabel": null, "lemma": "dirección", "partOfSpeech": "noun", "gender": "feminine", "plural": "direcciones", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_destino", "targetLanguage": "es", "english": "destination", "senseLabel": null, "lemma": "destino", "partOfSpeech": "noun", "gender": "masculine", "plural": "destinos", "category": "travel", "competencies": ["vocab","gender"] },
+{ "id": "es_viaje", "targetLanguage": "es", "english": "trip", "senseLabel": null, "lemma": "viaje", "partOfSpeech": "noun", "gender": "masculine", "plural": "viajes", "category": "travel", "competencies": ["vocab","gender"] },
+
+{ "id": "es_seguir_carretera", "targetLanguage": "es", "english": "to continue", "senseLabel": null, "lemma": "seguir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_recto", "targetLanguage": "es", "english": "straight", "senseLabel": null, "lemma": "recto", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_curvo", "targetLanguage": "es", "english": "curved", "senseLabel": null, "lemma": "curvo", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+
+
+{ "id": "es_amigo", "targetLanguage": "es", "english": "friend", "senseLabel": null, "lemma": "amigo", "partOfSpeech": "noun", "gender": "masculine", "plural": "amigos", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_amiga", "targetLanguage": "es", "english": "female friend", "senseLabel": null, "lemma": "amiga", "partOfSpeech": "noun", "gender": "feminine", "plural": "amigas", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_colega", "targetLanguage": "es", "english": "colleague", "senseLabel": null, "lemma": "colega", "partOfSpeech": "noun", "gender": "masculine", "plural": "colegas", "category": "people", "competencies": ["vocab","gender"] },
+
+{ "id": "es_colega_f", "targetLanguage": "es", "english": "female colleague", "senseLabel": null, "lemma": "colega", "partOfSpeech": "noun", "gender": "feminine", "plural": "colegas", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_dueno", "targetLanguage": "es", "english": "owner", "senseLabel": null, "lemma": "dueño", "partOfSpeech": "noun", "gender": "masculine", "plural": "dueños", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_duena", "targetLanguage": "es", "english": "female owner", "senseLabel": null, "lemma": "dueña", "partOfSpeech": "noun", "gender": "feminine", "plural": "dueñas", "category": "people", "competencies": ["vocab","gender"] },
+
+{ "id": "es_saludar", "targetLanguage": "es", "english": "to greet", "senseLabel": null, "lemma": "saludar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_invitar", "targetLanguage": "es", "english": "to invite", "senseLabel": null, "lemma": "invitar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_visitar", "targetLanguage": "es", "english": "to visit", "senseLabel": null, "lemma": "visitar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_acompanar", "targetLanguage": "es", "english": "to accompany", "senseLabel": null, "lemma": "acompañar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_amable", "targetLanguage": "es", "english": "kind", "senseLabel": null, "lemma": "amable", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_antipatico", "targetLanguage": "es", "english": "unfriendly", "senseLabel": null, "lemma": "antipático", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_amablemente", "targetLanguage": "es", "english": "kindly", "senseLabel": null, "lemma": "amablemente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_salud", "targetLanguage": "es", "english": "health", "senseLabel": null, "lemma": "salud", "partOfSpeech": "noun", "gender": "feminine", "plural": "saludes", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_enfermedad", "targetLanguage": "es", "english": "illness", "senseLabel": null, "lemma": "enfermedad", "partOfSpeech": "noun", "gender": "feminine", "plural": "enfermedades", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_fiebre", "targetLanguage": "es", "english": "fever", "senseLabel": null, "lemma": "fiebre", "partOfSpeech": "noun", "gender": "feminine", "plural": "fiebres", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_herida", "targetLanguage": "es", "english": "wound", "senseLabel": null, "lemma": "herida", "partOfSpeech": "noun", "gender": "feminine", "plural": "heridas", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_medicina", "targetLanguage": "es", "english": "medicine", "senseLabel": null, "lemma": "medicina", "partOfSpeech": "noun", "gender": "feminine", "plural": "medicinas", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_doctor", "targetLanguage": "es", "english": "doctor", "senseLabel": null, "lemma": "doctor", "partOfSpeech": "noun", "gender": "masculine", "plural": "doctores", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_doctora", "targetLanguage": "es", "english": "female doctor", "senseLabel": null, "lemma": "doctora", "partOfSpeech": "noun", "gender": "feminine", "plural": "doctoras", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_clinica", "targetLanguage": "es", "english": "clinic", "senseLabel": null, "lemma": "clínica", "partOfSpeech": "noun", "gender": "feminine", "plural": "clínicas", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_curar", "targetLanguage": "es", "english": "to cure", "senseLabel": null, "lemma": "curar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_enfermar", "targetLanguage": "es", "english": "to get sick", "senseLabel": null, "lemma": "enfermar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_mejorar", "targetLanguage": "es", "english": "to improve", "senseLabel": null, "lemma": "mejorar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_empeorar", "targetLanguage": "es", "english": "to get worse", "senseLabel": null, "lemma": "empeorar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_gravemente", "targetLanguage": "es", "english": "seriously", "senseLabel": null, "lemma": "gravemente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_ligeramente", "targetLanguage": "es", "english": "slightly", "senseLabel": null, "lemma": "ligeramente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_seguridad", "targetLanguage": "es", "english": "security", "senseLabel": null, "lemma": "seguridad", "partOfSpeech": "noun", "gender": "feminine", "plural": "seguridades", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_crimen", "targetLanguage": "es", "english": "crime", "senseLabel": null, "lemma": "crimen", "partOfSpeech": "noun", "gender": "masculine", "plural": "crímenes", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_norma", "targetLanguage": "es", "english": "norm", "senseLabel": null, "lemma": "norma", "partOfSpeech": "noun", "gender": "feminine", "plural": "normas", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_orden_publico", "targetLanguage": "es", "english": "public order", "senseLabel": null, "lemma": "orden", "partOfSpeech": "noun", "gender": "feminine", "plural": "órdenes", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_proteccion", "targetLanguage": "es", "english": "protection", "senseLabel": null, "lemma": "protección", "partOfSpeech": "noun", "gender": "feminine", "plural": "protecciones", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_riesgo", "targetLanguage": "es", "english": "risk", "senseLabel": null, "lemma": "riesgo", "partOfSpeech": "noun", "gender": "masculine", "plural": "riesgos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_peligro", "targetLanguage": "es", "english": "danger", "senseLabel": null, "lemma": "peligro", "partOfSpeech": "noun", "gender": "masculine", "plural": "peligros", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_prevenir", "targetLanguage": "es", "english": "to prevent", "senseLabel": null, "lemma": "prevenir", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_evitar", "targetLanguage": "es", "english": "to avoid", "senseLabel": null, "lemma": "evitar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_supervisar", "targetLanguage": "es", "english": "to supervise", "senseLabel": null, "lemma": "supervisar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_inseguro", "targetLanguage": "es", "english": "unsafe", "senseLabel": null, "lemma": "inseguro", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+
+
+{ "id": "es_guerra", "targetLanguage": "es", "english": "war", "senseLabel": null, "lemma": "guerra", "partOfSpeech": "noun", "gender": "feminine", "plural": "guerras", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_paz", "targetLanguage": "es", "english": "peace", "senseLabel": null, "lemma": "paz", "partOfSpeech": "noun", "gender": "feminine", "plural": "paces", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_ejercito", "targetLanguage": "es", "english": "army", "senseLabel": null, "lemma": "ejército", "partOfSpeech": "noun", "gender": "masculine", "plural": "ejércitos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_soldado", "targetLanguage": "es", "english": "soldier", "senseLabel": null, "lemma": "soldado", "partOfSpeech": "noun", "gender": "masculine", "plural": "soldados", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_soldada", "targetLanguage": "es", "english": "female soldier", "senseLabel": null, "lemma": "soldada", "partOfSpeech": "noun", "gender": "feminine", "plural": "soldadas", "category": "people", "competencies": ["vocab","gender"] },
+
+{ "id": "es_batalla", "targetLanguage": "es", "english": "battle", "senseLabel": null, "lemma": "batalla", "partOfSpeech": "noun", "gender": "feminine", "plural": "batallas", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_conflicto", "targetLanguage": "es", "english": "conflict", "senseLabel": null, "lemma": "conflicto", "partOfSpeech": "noun", "gender": "masculine", "plural": "conflictos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_ataque", "targetLanguage": "es", "english": "attack", "senseLabel": null, "lemma": "ataque", "partOfSpeech": "noun", "gender": "masculine", "plural": "ataques", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_defensa", "targetLanguage": "es", "english": "defense", "senseLabel": null, "lemma": "defensa", "partOfSpeech": "noun", "gender": "feminine", "plural": "defensas", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_estrategia", "targetLanguage": "es", "english": "strategy", "senseLabel": null, "lemma": "estrategia", "partOfSpeech": "noun", "gender": "feminine", "plural": "estrategias", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_luchar", "targetLanguage": "es", "english": "to fight", "senseLabel": null, "lemma": "luchar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_ganar", "targetLanguage": "es", "english": "to win", "senseLabel": null, "lemma": "ganar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_perder", "targetLanguage": "es", "english": "to lose", "senseLabel": null, "lemma": "perder", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_pacifico", "targetLanguage": "es", "english": "peaceful", "senseLabel": null, "lemma": "pacífico", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_violento", "targetLanguage": "es", "english": "violent", "senseLabel": null, "lemma": "violento", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_valientemente", "targetLanguage": "es", "english": "bravely", "senseLabel": null, "lemma": "valientemente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+{ "id": "es_rapidamente", "targetLanguage": "es", "english": "quickly", "senseLabel": null, "lemma": "rápidamente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] },
+
+
+{ "id": "es_arte", "targetLanguage": "es", "english": "art", "senseLabel": null, "lemma": "arte", "partOfSpeech": "noun", "gender": "masculine", "plural": "artes", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_cultura", "targetLanguage": "es", "english": "culture", "senseLabel": null, "lemma": "cultura", "partOfSpeech": "noun", "gender": "feminine", "plural": "culturas", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_tradicion", "targetLanguage": "es", "english": "tradition", "senseLabel": null, "lemma": "tradición", "partOfSpeech": "noun", "gender": "feminine", "plural": "tradiciones", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_costumbre", "targetLanguage": "es", "english": "custom", "senseLabel": null, "lemma": "costumbre", "partOfSpeech": "noun", "gender": "feminine", "plural": "costumbres", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_fiesta", "targetLanguage": "es", "english": "festival", "senseLabel": null, "lemma": "fiesta", "partOfSpeech": "noun", "gender": "feminine", "plural": "fiestas", "category": "general", "competencies": ["vocab","gender"] },
+
+{ "id": "es_evento", "targetLanguage": "es", "english": "event", "senseLabel": null, "lemma": "evento", "partOfSpeech": "noun", "gender": "masculine", "plural": "eventos", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_celebracion", "targetLanguage": "es", "english": "celebration", "senseLabel": null, "lemma": "celebración", "partOfSpeech": "noun", "gender": "feminine", "plural": "celebraciones", "category": "general", "competencies": ["vocab","gender"] },
+{ "id": "es_musica_f", "targetLanguage": "es", "english": "female musician", "senseLabel": null, "lemma": "música", "partOfSpeech": "noun", "gender": "feminine", "plural": "músicas", "category": "people", "competencies": ["vocab","gender"] },
+{ "id": "es_artista", "targetLanguage": "es", "english": "artist", "senseLabel": null, "lemma": "artista", "partOfSpeech": "noun", "gender": "masculine", "plural": "artistas", "category": "people", "competencies": ["vocab","gender"] },
+
+{ "id": "es_celebrar", "targetLanguage": "es", "english": "to celebrate", "senseLabel": null, "lemma": "celebrar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_bailar", "targetLanguage": "es", "english": "to dance", "senseLabel": null, "lemma": "bailar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_cantar", "targetLanguage": "es", "english": "to sing", "senseLabel": null, "lemma": "cantar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+{ "id": "es_tocar_musica", "targetLanguage": "es", "english": "to play (music)", "senseLabel": null, "lemma": "tocar", "partOfSpeech": "verb", "gender": null, "plural": null, "category": "verbs", "competencies": ["vocab"] },
+
+{ "id": "es_tradicional", "targetLanguage": "es", "english": "traditional", "senseLabel": null, "lemma": "tradicional", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_moderno", "targetLanguage": "es", "english": "modern", "senseLabel": null, "lemma": "moderno", "partOfSpeech": "adjective", "gender": null, "plural": null, "category": "adjectives", "competencies": ["vocab"] },
+{ "id": "es_tradicionalmente", "targetLanguage": "es", "english": "traditionally", "senseLabel": null, "lemma": "tradicionalmente", "partOfSpeech": "adverb", "gender": null, "plural": null, "category": "adverbs", "competencies": ["vocab"] }
+
+]
+
