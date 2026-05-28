@@ -81,6 +81,7 @@ export async function loadPersistedState(): Promise<StoredState | null> {
 
     const parsed = JSON.parse(raw) as PersistedAppData & LegacyStoredState;
     if (!parsed.selectedLanguage) return null;
+    if (!parsed.onboardingComplete) return null;
 
     if ('modeBanks' in parsed && parsed.modeBanks) {
       return {

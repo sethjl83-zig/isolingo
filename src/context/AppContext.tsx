@@ -196,6 +196,7 @@ function toPersistedPayload(state: AppState) {
     selectedLanguage: state.languageSelected,
     modeBanks: state.modeBanks,
     directionMode: state.directionMode,
+    onboardingComplete: true as const,
   };
 }
 

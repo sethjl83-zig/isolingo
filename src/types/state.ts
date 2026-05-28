@@ -37,6 +37,8 @@ export interface PersistedAppData {
   selectedLanguage: Language;
   modeBanks: Record<StudyType, ModeBankData | null>;
   directionMode: DirectionMode;
+  /** Written only after the user explicitly picks a language. Absent in stale/legacy data. */
+  onboardingComplete?: boolean;
 }
 
 export const MIN_BANK_SIZE = 10;
