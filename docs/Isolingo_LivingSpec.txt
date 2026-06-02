@@ -1,0 +1,153 @@
+ISOLINGO — LIVING APP SPEC
+Last updated: current session
+
+WHAT THIS DOCUMENT IS
+This is a plain-language description of how the Isolingo app actually works right now. It is the source of truth for all future development. When asking Cursor to make changes, reference this document, not the original flowchart PDF.
+
+APP OVERVIEW
+Isolingo is a language learning flashcard app targeting users who are already learning a language on another platform and want to isolate and reinforce specific skills — primarily noun gender for V0. It supports German, French, and Spanish.
+
+USER TYPES
+New user: No saved data exists. Must go through language selection and vocab bank setup before studying.
+Returning user: Has saved language and at least one vocab bank. Goes directly to the dashboard on open.
+
+DATA THAT PERSISTS BETWEEN SESSIONS
+
+Selected language
+General Vocab bank (mixed words)
+Gender bank (nouns only)
+Per-word frequency settings for each bank
+Direction mode preference
+onboardingComplete flag (distinguishes real returning users from stale dev data)
+
+
+SCREEN FLOW — NEW USER
+
+Language Selection
+Dashboard
+Vocab bank setup (triggered automatically because no bank exists yet for the selected mode)
+Study session
+
+SCREEN FLOW — RETURNING USER
+
+Dashboard (loads immediately with saved data)
+Study session (if they tap a mode with a saved bank)
+OR
+Vocab bank setup (if they tap a mode with no saved bank yet)
+
+
+SCREENS
+Language Selection
+
+Shown only to new users or users who tap "Change Language" from the dashboard
+Three buttons: German, French, Spanish, each with national flag
+Tapping a language saves it and proceeds
+Must only require one tap to proceed
+
+Dashboard (TO BE BUILT)
+
+Shows selected language with flag
+Two study mode buttons: General Vocab, Gender
+Access to both vocab banks for viewing and editing
+Change Language button
+This screen is the home base the app always returns to
+
+List Setup
+
+Reached when a user has no saved bank for a selected mode
+Also reachable from the dashboard for editing
+Two options: System Generated or Choose Your Own
+System Generated: user picks 10, 15, 20, or 25 words from a dropdown; system selects randomly from master list filtered by mode (nouns only for Gender mode, all words for General Vocab)
+After generation, a confirmation popup shows the generated words; user can adjust per-word frequency or remove/replace individual words before confirming
+Choose Your Own: user sees full master list filtered by mode, with search bar; selects 10–25 words; counter shows current selection count; keyboard is dismissable
+All words display with no POS label; nouns are color-coded by gender; no gender label shown
+Bank size: minimum 10, maximum 25 words
+
+Mode Select / Study Type (BEING REPLACED BY DASHBOARD)
+
+Currently shows General Vocab and Gender buttons
+Direction mode selector: Target to Native, Native to Target, Mixed
+This screen's functionality will move into the dashboard
+
+Study Session
+
+Infinite loop of flashcards
+Card types for V0: Card 1001 (Matching), Card 1002 (Relationship Judgment), Card 1006 (Noun Production)
+Card distribution: 1006 dominant (40-50% General Vocab, 60-75% Gender), 1002 and 1001 support
+Direction mode controls prompt/answer direction
+Each card has: Exit Study (top left), Home (top right), Flip (bottom, always visible)
+Flip reveals answer, disables input, shows Next button, no penalty
+No session end — infinite loop until user exits
+
+Vocab Bank Manager
+
+Accessible from dashboard
+Shows all words in current bank with color-coded gender for nouns
+Search bar at top
+Static column headers: Word (left), Frequency (right)
+Per-word frequency: three-position snap slider (Low, Medium, High)
+Slider indicator color: red (Low), yellow (Medium), green (High)
+No POS label, no gender label — color coding handles gender
+Counter showing current bank size
+Save and Cancel buttons: centered, same size
+No automatic word replacement when words are removed
+
+Add Custom Word
+
+Accessible from Vocab Bank Manager
+Fields: target language word, English translation, additional accepted English meanings (optional), additional accepted target language answers (optional), part of speech (dropdown), gender (if applicable), plural (if applicable), category (optional)
+Bare lemma only — no articles or determiners
+Part of speech is a dropdown menu
+
+
+CARD RULES
+Card 1001 — Matching (Gender Anchoring)
+
+Direction neutral — eligible in mixed mode only
+Shows 3-5 nouns; user matches each to a gender color tile
+German: bare noun, color-coded, no article
+French/Spanish: definite article + noun; only noun is color-coded
+Gender tiles: masculine #4da3ff, feminine #d66aa6, neuter #A4922D (German only)
+
+Card 1002 — Vocab Relationship Judgment
+
+Direction neutral — eligible in mixed mode only
+Shows one English word and one target language word
+User selects relationship: same meaning, same category, similar form, no clear relationship
+German nouns: capitalized, no article, color-coded
+French/Spanish nouns: shown with article, only noun color-coded
+
+Card 1006 — Noun Production (Primary Card)
+
+Direction sensitive
+Native to Target (German): English prompt, user types bare German noun, selects gender tile; both validated together; typed noun changes to selected gender color
+Native to Target (French/Spanish): English determiner + noun prompt, user types determiner + noun; no gender tile
+Target to Native: target language prompt, user types English translation; no gender tile required
+Max 2 attempts; Flip available at all times
+Input clears between cards
+Flip state resets between cards
+
+
+VALIDATION RULES
+
+German nouns must be capitalized
+Accents and diacritics required — no anglicized substitutions
+English verb answers accept both bare form and infinitive form
+Identical or near-identical target-to-native cards excluded (e.g. Hand → hand)
+
+
+GENDER COLOR SYSTEM (GLOBAL)
+
+Masculine: #4da3ff
+Feminine: #d66aa6
+Neuter (German only): #A4922D
+Color applies to noun only, never to articles or determiners
+
+
+WHAT IS NOT IN V0
+
+Drills, challenges, assessments
+Scoring or streaks
+Progress tracking
+Any competency beyond vocab and gender
+Automatic word replacement in vocab bank

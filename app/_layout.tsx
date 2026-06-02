@@ -14,13 +14,16 @@ export default function RootLayout() {
         <AppProvider>
           <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
           <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="list-setup" />
-        <Stack.Screen name="study-type" />
-        <Stack.Screen name="session" />
-        <Stack.Screen name="vocab-bank" />
-        <Stack.Screen name="add-word" />
-        </Stack>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="dashboard" />
+            <Stack.Screen name="direction" />
+            <Stack.Screen name="word-banks" />
+            <Stack.Screen name="stats" />
+            <Stack.Screen name="list-setup" />
+            <Stack.Screen name="session" />
+            <Stack.Screen name="vocab-bank" />
+            <Stack.Screen name="add-word" />
+          </Stack>
         </AppProvider>
       </ErrorBoundary>
     </SafeAreaProvider>

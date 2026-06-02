@@ -31,7 +31,7 @@ import {
 type Action =
   | { type: 'HYDRATE'; payload: Partial<AppState> }
   | { type: 'SELECT_LANGUAGE'; language: Language }
-  | { type: 'SET_VOCAB_BANK'; bank: VocabItem[]; frequencySettings?: Record<string, WordFrequencySetting> }
+  | { type: 'SET_VOCAB_BANK'; bank: VocabItem[]; frequencySettings?: Record<string, WordFrequencySetting>; studyType?: StudyType }
   | { type: 'SELECT_STUDY_TYPE'; studyType: StudyType }
   | { type: 'SET_DIRECTION_MODE'; mode: DirectionMode }
   | { type: 'RECORD_CARD_RESULT'; vocabId: string; correct: boolean }
@@ -89,8 +89,15 @@ function reducer(state: AppState, action: Action): AppState {
     case 'SET_VOCAB_BANK': {
       const frequencySettings =
         action.frequencySettings ?? buildFrequencySettings(action.bank);
+      // Prefer the studyType carried in the action (supplied by list-setup) so that
+      // syncModeBank can correctly write to modeBanks[studyType] even when the
+      // SELECT_STUDY_TYPE dispatch hasn't committed to the reducer state yet.
+      const effectiveStudyType = action.studyType ?? state.studyTypeSelected;
+      const stateForSync: AppState = effectiveStudyType
+        ? { ...state, studyTypeSelected: effectiveStudyType }
+        : state;
       return {
-        ...syncModeBank(state, action.bank, frequencySettings),
+        ...syncModeBank(stateForSync, action.bank, frequencySettings),
         wordStats: {},
         sessionCardIndex: 0,
       };
@@ -175,7 +182,7 @@ interface AppContextValue {
   showLanguagePicker: boolean;
   requestLanguageChange: () => void;
   selectLanguage: (language: Language) => void;
-  setVocabBank: (bank: VocabItem[], frequencySettings?: Record<string, WordFrequencySetting>) => void;
+  setVocabBank: (bank: VocabItem[], frequencySettings?: Record<string, WordFrequencySetting>, studyType?: StudyType) => void;
   selectStudyType: (studyType: StudyType) => void;
   setDirectionMode: (mode: DirectionMode) => void;
   recordCardResult: (vocabId: string, correct: boolean) => void;
@@ -208,6 +215,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     loadPersistedState().then(stored => {
+      console.log('[AppContext] loadPersistedState result:', JSON.stringify(stored, null, 2));
       if (stored) {
         dispatch({
           type: 'HYDRATE',
@@ -228,6 +236,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!hasHydrated.current || !isReady) return;
     const payload = toPersistedPayload(state);
+    console.log('[AppContext] savePersistedState payload:', JSON.stringify(payload, null, 2));
     if (payload) savePersistedState(payload);
   }, [isReady, state.languageSelected, state.modeBanks, state.directionMode]);
 
@@ -242,8 +251,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setVocabBank = useCallback(
-    (bank: VocabItem[], frequencySettings?: Record<string, WordFrequencySetting>) =>
-      dispatch({ type: 'SET_VOCAB_BANK', bank, frequencySettings }),
+    (bank: VocabItem[], frequencySettings?: Record<string, WordFrequencySetting>, studyType?: StudyType) =>
+      dispatch({ type: 'SET_VOCAB_BANK', bank, frequencySettings, studyType }),
     [],
   );
 

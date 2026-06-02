@@ -90,7 +90,7 @@ export default function VocabBankScreen() {
 
     if (!studyType) {
 
-      router.replace('/study-type');
+      router.replace('/dashboard');
 
     }
 

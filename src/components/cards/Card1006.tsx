@@ -32,7 +32,8 @@ interface Props {
   onFlip: () => void;
   onExit: () => void;
   onHome: () => void;
-  onSubmit: (correct: boolean) => void;
+  /** `isFirstAttempt` is true when the user answered correctly on their very first submit. */
+  onSubmit: (correct: boolean, isFirstAttempt: boolean) => void;
 }
 
 type CardState =
@@ -106,11 +107,11 @@ export default function Card1006({
     if (result.correct) {
       setCardState('correct');
       setAlsoCorrect(result.alsoCorrect);
-      onSubmit(true);
+      onSubmit(true, attemptRef.current === 1);
     } else {
       if (attemptRef.current >= 2) {
         setCardState('incorrect_final');
-        onSubmit(false);
+        onSubmit(false, false);
       } else {
         setCardState('incorrect_1');
       }

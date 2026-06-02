@@ -84,7 +84,7 @@ export default function HomeScreen() {
 
       hasAutoRouted.current = true;
 
-      router.replace('/study-type');
+      router.replace('/dashboard');
 
     }
 
@@ -96,7 +96,7 @@ export default function HomeScreen() {
 
     selectLanguage(lang);
 
-    router.replace('/study-type');
+    router.replace('/dashboard');
 
   };
 

@@ -82,7 +82,7 @@ export default function ListSetupScreen() {
       return;
     }
     if (!studyType) {
-      router.replace('/study-type');
+      router.replace('/dashboard');
     }
   }, [language, studyType, router]);
 
@@ -155,9 +155,11 @@ export default function ListSetupScreen() {
       bank,
       Object.fromEntries(draftWords.map(entry => [entry.item.id, entry.frequency])),
     );
-    setVocabBank(bank, frequencySettings);
+    // Pass studyType explicitly so SET_VOCAB_BANK can write to modeBanks[studyType]
+    // without relying on state.studyTypeSelected being committed in the reducer.
+    setVocabBank(bank, frequencySettings, studyType ?? undefined);
     setReviewVisible(false);
-    router.replace('/session');
+    router.replace('/dashboard');
   };
 
   const handleSaveCustom = () => {
@@ -169,12 +171,13 @@ export default function ListSetupScreen() {
       return;
     }
     const bank = masterList.filter(w => selectedIds.has(w.id));
-    setVocabBank(bank);
-    router.replace('/session');
+    // Pass studyType explicitly — same reason as above.
+    setVocabBank(bank, undefined, studyType ?? undefined);
+    router.replace('/dashboard');
   };
 
   const goBackToModeSelect = () => {
-    router.replace('/study-type');
+    router.replace('/dashboard');
   };
 
   const renderCustomItem = ({ item }: { item: VocabItem }) => {

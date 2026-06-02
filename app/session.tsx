@@ -22,6 +22,8 @@ import Card1002 from '@/src/components/cards/Card1002';
 import Card1006 from '@/src/components/cards/Card1006';
 import ErrorBoundary from '@/src/components/ErrorBoundary';
 import StudyButton from '@/src/components/ui/StudyButton';
+import { loadStatsForLanguage, saveStatsForLanguage, type LangStats } from '@/src/storage/statsStorage';
+import { updateWordStats } from '@/src/types/stats';
 
 function getCardKey(card: CardData, index: number): string {
   switch (card.type) {
@@ -41,11 +43,22 @@ export default function SessionScreen() {
   const palette = Colors[scheme];
 
   const sessionRef = useRef<SessionState>(makeSessionState());
+  const statsRef = useRef<LangStats>({});
   const [currentCard, setCurrentCard] = useState<CardData | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
 
   const language = state.languageSelected;
+
+  // Load existing stats for this language at session start
+  useEffect(() => {
+    if (language) {
+      loadStatsForLanguage(language).then(stats => {
+        statsRef.current = stats;
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const loadCard = useCallback(
     (stateOverride?: typeof state) => {
@@ -87,19 +100,38 @@ export default function SessionScreen() {
   }, [state, incrementCardIndex, loadCard]);
 
   const handleSubmit = useCallback(
-    (vocabId: string | null, correct: boolean, cardType: CardData['type'], direction: string) => {
+    (
+      vocabId: string | null,
+      correct: boolean,
+      cardType: CardData['type'],
+      direction: string,
+      isFirstAttempt?: boolean,
+    ) => {
       if (vocabId) recordCardResult(vocabId, correct);
       sessionRef.current = advanceSession(sessionRef.current, cardType, direction);
+
+      // Record detailed stats for Card1006 results
+      if (cardType === 'CARD_1006' && vocabId && language && isFirstAttempt !== undefined) {
+        const updated = updateWordStats(
+          statsRef.current[vocabId],
+          vocabId,
+          language,
+          correct,
+          isFirstAttempt,
+        );
+        statsRef.current = { ...statsRef.current, [vocabId]: updated };
+        saveStatsForLanguage(language, statsRef.current);
+      }
     },
-    [recordCardResult],
+    [recordCardResult, language],
   );
 
   const handleExit = useCallback(() => {
-    router.replace('/study-type');
+    router.replace('/dashboard');
   }, [router]);
 
   const handleHome = useCallback(() => {
-    router.replace('/');
+    router.replace('/dashboard');
   }, [router]);
 
   if (!language) {
@@ -214,12 +246,13 @@ export default function SessionScreen() {
             onFlip={() => {}}
             onExit={handleExit}
             onHome={handleHome}
-            onSubmit={correct =>
+            onSubmit={(correct, isFirstAttempt) =>
               handleSubmit(
                 currentCard.item.id,
                 correct,
                 'CARD_1006',
                 currentCard.direction,
+                isFirstAttempt,
               )
             }
           />
