@@ -1,9 +1,10 @@
 /**
  * SCREEN — DASHBOARD
  * Returning-user home. Language selector, study mode buttons,
- * word-banks shortcut, and a stats summary widget.
+ * vocab banks shortcut, and a stats summary widget.
  */
 import React, { useState, useCallback, useEffect } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
 import {
   View,
   Text,
@@ -25,7 +26,18 @@ import type { Language } from '@/src/types/vocab';
 import type { StudyType } from '@/src/types/state';
 import { loadStatsForLanguage } from '@/src/storage/statsStorage';
 import { getCompetencyLevel } from '@/src/types/stats';
-import StudyButton from '@/src/components/ui/StudyButton';
+
+// Warm coral-orange accent — clearly distinct from gender colours
+// (#4da3ff masc · #d66aa6 fem · #A4922D neut)
+const ACCENT_LIGHT = '#E07651';
+const ACCENT_DARK  = '#F09070';
+
+// Mode card palette: soft, slightly desaturated blue-gray with gradient
+// Gradient: lighter at top-center → slightly darker at bottom edges (soft light-from-above)
+const MODE_CARD_GRAD_LIGHT: [string, string] = ['#C9DCED', '#A6BCDA'];
+const MODE_CARD_GRAD_DARK:  [string, string] = ['#274562', '#152F4A'];
+const MODE_CARD_TEXT_LIGHT = '#143360';   // deep navy for contrast on light bg
+const MODE_CARD_TEXT_DARK  = '#C2D8EF';   // pale blue for contrast on dark bg
 
 const LANGUAGES: { id: Language; label: string; flag: string }[] = [
   { id: 'es', label: 'Spanish', flag: '🇪🇸' },
@@ -33,35 +45,26 @@ const LANGUAGES: { id: Language; label: string; flag: string }[] = [
   { id: 'de', label: 'German', flag: '🇩🇪' },
 ];
 
-const STUDY_MODE_LABELS: Record<StudyType, string> = {
-  general_vocab: 'General Vocab',
-  gender: 'Gender',
-};
-
 interface StatsSnapshot {
   mastered: number;
-  strong: number;
-  weak: number;
+  accuracy: number; // 0–100, or -1 when no attempts yet
 }
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const {
-    state,
-    isReady,
-    selectLanguage,
-    selectStudyType,
-  } = useAppContext();
+  const { state, isReady, selectLanguage, selectStudyType } = useAppContext();
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
+  const accent = scheme === 'dark' ? ACCENT_DARK : ACCENT_LIGHT;
+  const modeCardGrad = scheme === 'dark' ? MODE_CARD_GRAD_DARK  : MODE_CARD_GRAD_LIGHT;
+  const modeCardText = scheme === 'dark' ? MODE_CARD_TEXT_DARK  : MODE_CARD_TEXT_LIGHT;
 
   const language = state.languageSelected;
 
   const [langModalVisible, setLangModalVisible] = useState(false);
-  const [statsSnap, setStatsSnap] = useState<StatsSnapshot>({ mastered: 0, strong: 0, weak: 0 });
+  const [statsSnap, setStatsSnap] = useState<StatsSnapshot>({ mastered: 0, accuracy: -1 });
   const [statsLoading, setStatsLoading] = useState(false);
 
-  // Redirect to language selection if no language set
   useEffect(() => {
     if (isReady && !language) {
       router.replace('/');
@@ -73,25 +76,27 @@ export default function DashboardScreen() {
     setStatsLoading(true);
     try {
       const langStats = await loadStatsForLanguage(language);
-      let mastered = 0, strong = 0, weak = 0;
+      let mastered = 0;
+      let totalAttempts = 0;
+      let firstAttemptCorrect = 0;
+
       for (const entry of Object.values(langStats)) {
-        const level = getCompetencyLevel(entry);
-        if (level === 'mastered') mastered++;
-        else if (level === 'strong') strong++;
-        else weak++;
+        if (getCompetencyLevel(entry) === 'mastered') mastered++;
+        totalAttempts += entry.lifetimeTotalAttempts ?? 0;
+        firstAttemptCorrect += entry.lifetimeFirstAttemptCorrect ?? 0;
       }
-      setStatsSnap({ mastered, strong, weak });
+
+      const accuracy = totalAttempts > 0
+        ? Math.round((firstAttemptCorrect / totalAttempts) * 100)
+        : -1;
+
+      setStatsSnap({ mastered, accuracy });
     } finally {
       setStatsLoading(false);
     }
   }, [language]);
 
-  // Reload stats whenever screen comes into focus (e.g. returning from session)
-  useFocusEffect(
-    useCallback(() => {
-      refreshStats();
-    }, [refreshStats]),
-  );
+  useFocusEffect(useCallback(() => { refreshStats(); }, [refreshStats]));
 
   if (!isReady || !language) return null;
 
@@ -99,13 +104,10 @@ export default function DashboardScreen() {
 
   const handleLanguageSelect = (lang: Language) => {
     setLangModalVisible(false);
-    if (lang !== language) {
-      selectLanguage(lang);
-    }
+    if (lang !== language) selectLanguage(lang);
   };
 
   const handleStudyModePress = (studyType: StudyType) => {
-    // Read modeBanks directly from state — no callback staleness possible.
     const bank = state.modeBanks[studyType];
     const hasBank = bank !== null && (bank.activeVocabBank?.length ?? 0) > 0;
 
@@ -116,18 +118,8 @@ export default function DashboardScreen() {
       fullModeBanks: JSON.stringify(state.modeBanks),
     });
 
-    // Always call selectStudyType first so state.studyTypeSelected is set
-    // before the next screen mounts (both list-setup and direction need it).
     selectStudyType(studyType);
-
-    if (!hasBank) {
-      router.push('/list-setup');
-      return;
-    }
-
-    // Bank exists → navigate to the direction selection screen.
-    // The direction screen reads studyType from state.studyTypeSelected.
-    router.push('/direction');
+    router.push(hasBank ? '/direction' : '/list-setup');
   };
 
   // ── DEV ONLY — remove before publishing ─────────────────────────────────────
@@ -138,23 +130,18 @@ export default function DashboardScreen() {
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Reset',
-          style: 'destructive',
-          onPress: async () => {
-            await AsyncStorage.clear();
-            router.replace('/');
-          },
+          text: 'Reset', style: 'destructive',
+          onPress: async () => { await AsyncStorage.clear(); router.replace('/'); },
         },
       ],
     );
   };
   // ────────────────────────────────────────────────────────────────────────────
 
-  const totalStudied = statsSnap.mastered + statsSnap.strong + statsSnap.weak;
-
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]}>
-      {/* ── Language selector ─────────────────────────────────────────────────── */}
+
+      {/* ── Top bar ─────────────────────────────────────────────────────────── */}
       <View style={styles.topBar}>
         <TouchableOpacity
           style={[styles.langPill, { backgroundColor: palette.card, borderColor: palette.border }]}
@@ -167,104 +154,132 @@ export default function DashboardScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* ── Main content ──────────────────────────────────────────────────────── */}
-      <View style={styles.content}>
-        <Text style={[styles.title, { color: palette.text }]}>Isolingo</Text>
-        <Text style={[styles.subtitle, { color: palette.subtext }]}>
-          What would you like to study?
-        </Text>
+      {/* ── Welcome banner ──────────────────────────────────────────────────── */}
+      <View style={[styles.welcomeBanner, { backgroundColor: palette.card, borderColor: palette.border }]}>
+        <Text style={[styles.welcomeText, { color: palette.subtext }]}>Welcome back! 👋</Text>
+      </View>
 
-        {/* Study mode buttons */}
-        <View style={styles.modeGroup}>
+      {/* ── Central action area ─────────────────────────────────────────────── */}
+      <View style={styles.actionArea}>
+
+        {/* Study mode cards */}
+        <View style={styles.modeRow}>
+
           <TouchableOpacity
-            style={[styles.modeCard, { backgroundColor: palette.buttonPrimary }]}
+            style={styles.modeCard}
             onPress={() => handleStudyModePress('general_vocab')}
-            activeOpacity={0.8}
+            activeOpacity={0.82}
           >
-            <Text style={styles.modeCardIcon}>📚</Text>
-            <Text style={[styles.modeCardLabel, { color: palette.buttonPrimaryText }]}>
-              General Vocab
+            <LinearGradient
+              colors={modeCardGrad}
+              start={{ x: 0.5, y: 0 }}
+              end={{ x: 0.5, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <Text style={[styles.modeCardLabel, { color: modeCardText }]}>
+              General{'\n'}Vocab
             </Text>
+            <Text style={[styles.modeCardIcon, { color: modeCardText }]}>📖</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.modeCard, { backgroundColor: palette.buttonPrimary }]}
+            style={styles.modeCard}
             onPress={() => handleStudyModePress('gender')}
+            activeOpacity={0.82}
+          >
+            <LinearGradient
+              colors={modeCardGrad}
+              start={{ x: 0.5, y: 0 }}
+              end={{ x: 0.5, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <Text style={[styles.modeCardLabel, { color: modeCardText }]}>Gender</Text>
+            <Text style={[styles.modeCardIcon, { color: modeCardText }]}>⚥</Text>
+          </TouchableOpacity>
+
+        </View>
+
+        {/* My Vocab Banks — narrower, centred, softer */}
+        <View style={styles.vocabBankRow}>
+          <TouchableOpacity
+            style={[styles.vocabBankBtn, { backgroundColor: palette.card, borderColor: palette.border }]}
+            onPress={() => router.push('/word-banks')}
             activeOpacity={0.8}
           >
-            <Text style={styles.modeCardIcon}>🏷️</Text>
-            <Text style={[styles.modeCardLabel, { color: palette.buttonPrimaryText }]}>Gender</Text>
+            <Text style={styles.vocabBankIcon}>🗂</Text>
+            <Text style={[styles.vocabBankLabel, { color: palette.tint }]}>My Vocab Banks</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Word Banks */}
-        <StudyButton
-          label="My Word Banks"
-          variant="secondary"
-          size="medium"
-          onPress={() => router.push('/word-banks')}
-          style={styles.wordBanksBtn}
-        />
-
-        {/* ── DEV ONLY — remove before publishing ── */}
+        {/* DEV ONLY — remove before publishing */}
         <TouchableOpacity style={styles.devResetBtn} onPress={handleResetAppData}>
           <Text style={styles.devResetText}>🛠 Reset App Data</Text>
         </TouchableOpacity>
 
-        {/* Stats widget */}
+      </View>
+
+      {/* ── Stats widget ─────────────────────────────────────────────────────── */}
+      <View style={styles.statsSection}>
         <TouchableOpacity
-          style={[styles.statsWidget, { backgroundColor: palette.card, borderColor: palette.border }]}
+          style={[
+            styles.statsCard,
+            { backgroundColor: accent + '14', borderColor: accent + '38' },
+          ]}
           onPress={() => router.push('/stats')}
-          activeOpacity={0.8}
+          activeOpacity={0.85}
         >
-          <View style={styles.statsHeader}>
-            <Text style={[styles.statsTitle, { color: palette.text }]}>Your Progress</Text>
-            <Text style={[styles.statsHint, { color: palette.tint }]}>View details →</Text>
+          {/* Header row */}
+          <View style={styles.statsCardHeader}>
+            <Text style={[styles.statsCardTitle, { color: accent }]}>YOUR PROGRESS</Text>
+            <Text style={[styles.statsCardArrow, { color: accent }]}>View details →</Text>
           </View>
 
           {statsLoading ? (
-            <ActivityIndicator size="small" color={palette.tint} style={styles.statsSpinner} />
-          ) : totalStudied === 0 ? (
-            <Text style={[styles.statsEmpty, { color: palette.subtext }]}>
-              No words studied yet — start a session to see your stats.
-            </Text>
+            <ActivityIndicator size="small" color={accent} style={styles.statsSpinner} />
           ) : (
-            <View style={styles.statsRow}>
-              <View style={styles.statCell}>
-                <Text style={[styles.statNumber, { color: palette.correct }]}>
-                  {statsSnap.mastered}
-                </Text>
-                <Text style={[styles.statLabel, { color: palette.subtext }]}>Mastered</Text>
+            <View style={styles.metricsRow}>
+
+              {/* Mastered */}
+              <View style={styles.metric}>
+                <Text style={styles.metricIcon}>⭐</Text>
+                <Text style={[styles.metricValue, { color: accent }]}>{statsSnap.mastered}</Text>
+                <Text style={[styles.metricLabel, { color: accent + 'AA' }]}>Mastered</Text>
               </View>
-              <View style={[styles.statDivider, { backgroundColor: palette.border }]} />
-              <View style={styles.statCell}>
-                <Text style={[styles.statNumber, { color: palette.tint }]}>
-                  {statsSnap.strong}
-                </Text>
-                <Text style={[styles.statLabel, { color: palette.subtext }]}>Strong</Text>
+
+              <View style={[styles.metricDivider, { backgroundColor: accent + '38' }]} />
+
+              {/* Accuracy — displayed as a ring */}
+              <View style={styles.metric}>
+                <View style={[styles.accuracyRing, { borderColor: accent }]}>
+                  <Text style={[styles.accuracyText, { color: accent }]}>
+                    {statsSnap.accuracy >= 0 ? `${statsSnap.accuracy}%` : '—'}
+                  </Text>
+                </View>
+                <Text style={[styles.metricLabel, { color: accent + 'AA' }]}>Accuracy</Text>
               </View>
-              <View style={[styles.statDivider, { backgroundColor: palette.border }]} />
-              <View style={styles.statCell}>
-                <Text style={[styles.statNumber, { color: palette.incorrect }]}>
-                  {statsSnap.weak}
-                </Text>
-                <Text style={[styles.statLabel, { color: palette.subtext }]}>Weak</Text>
+
+              <View style={[styles.metricDivider, { backgroundColor: accent + '38' }]} />
+
+              {/* Today */}
+              <View style={styles.metric}>
+                <Text style={styles.metricIcon}>↑</Text>
+                <Text style={[styles.metricValue, { color: accent }]}>—</Text>
+                <Text style={[styles.metricLabel, { color: accent + 'AA' }]}>Today</Text>
               </View>
+
             </View>
           )}
         </TouchableOpacity>
       </View>
 
-      {/* ── Language selection modal ───────────────────────────────────────────── */}
+      {/* ── Language selection modal ─────────────────────────────────────────── */}
       <Modal
         visible={langModalVisible}
         transparent
         animationType="fade"
         onRequestClose={() => setLangModalVisible(false)}
       >
-        {/* Backdrop — tapping outside the card closes the modal */}
         <Pressable style={styles.langOverlay} onPress={() => setLangModalVisible(false)}>
-          {/* onPress={() => {}} blocks backdrop from firing when user taps inside the card */}
           <Pressable style={[styles.langSheet, { backgroundColor: palette.card }]} onPress={() => {}}>
             <Text style={[styles.sheetTitle, { color: palette.text }]}>Select Language</Text>
             {LANGUAGES.map((lang, idx) => (
@@ -299,80 +314,163 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
 
+  // ── Top bar ──────────────────────────────────────────────────────────────────
   topBar: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 22,
     paddingTop: 12,
-    paddingBottom: 4,
+    paddingBottom: 6,
     alignItems: 'flex-start',
   },
   langPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 24,
+    gap: 7,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
     borderWidth: 1,
   },
-  langFlag: { fontSize: 22 },
-  langName: { fontSize: 15, fontWeight: '600' },
-  chevron: { fontSize: 12, marginTop: 1 },
+  langFlag: { fontSize: 19 },
+  langName: { fontSize: 14, fontWeight: '600' },
+  chevron: { fontSize: 10, marginTop: 1 },
 
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 24,
-    gap: 18,
+  // ── Welcome banner ──────────────────────────────────────────────────────────
+  welcomeBanner: {
+    marginHorizontal: 22,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderWidth: 1,
   },
-  title: { fontSize: 34, fontWeight: '800', letterSpacing: -0.5 },
-  subtitle: { fontSize: 16, marginTop: -6 },
+  welcomeText: { fontSize: 14, fontWeight: '500' },
 
-  modeGroup: { flexDirection: 'row', gap: 14 },
+  // ── Action area (centered vertically between banner and stats) ──────────────
+  actionArea: {
+    flex: 1,
+    paddingHorizontal: 22,
+    justifyContent: 'center',
+    gap: 16,
+  },
+
+  // Study mode cards
+  modeRow: { flexDirection: 'row', gap: 14 },
   modeCard: {
     flex: 1,
-    borderRadius: 18,
-    paddingVertical: 28,
+    minHeight: 190,
+    borderRadius: 22,
+    overflow: 'hidden',         // clips the highlight overlay
+    paddingVertical: 32,
+    paddingHorizontal: 14,
     alignItems: 'center',
-    gap: 10,
+    justifyContent: 'center',
+    gap: 14,
+    // Top border acts as a "light reflection" highlight line
+    borderTopWidth: 1.5,
+    borderTopColor: 'rgba(255,255,255,0.55)',
+    borderBottomWidth: 1.5,
+    borderBottomColor: 'rgba(0,0,0,0.07)',
+    borderLeftWidth: 1,
+    borderLeftColor: 'rgba(255,255,255,0.3)',
+    borderRightWidth: 1,
+    borderRightColor: 'rgba(0,0,0,0.04)',
+    shadowColor: '#2C6BED',
+    shadowOpacity: 0.20,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 7,
+  },
+  modeCardLabel: {
+    fontSize: 35,
+    fontWeight: '800',
+    textAlign: 'center',
+    lineHeight: 42,
+    letterSpacing: 0.15,
+  },
+  modeCardIcon: {
+    fontSize: 104,
+    lineHeight: 118,
+    textAlign: 'center',
+  },
+
+  // Vocab Banks button
+  vocabBankRow: { alignItems: 'center' },
+  vocabBankBtn: {
+    width: '65%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
   },
-  modeCardIcon: { fontSize: 32 },
-  modeCardLabel: { fontSize: 16, fontWeight: '700' },
+  vocabBankIcon: { fontSize: 17 },
+  vocabBankLabel: { fontSize: 14, fontWeight: '600' },
 
-  wordBanksBtn: { alignSelf: 'stretch' },
+  // Dev reset
+  devResetBtn: { alignSelf: 'center', paddingVertical: 4, paddingHorizontal: 12 },
+  devResetText: { fontSize: 12, color: '#BBBBBB', fontWeight: '500' },
 
-  statsWidget: {
-    borderRadius: 18,
-    borderWidth: 1,
-    padding: 18,
-    gap: 12,
+  // ── Stats widget ─────────────────────────────────────────────────────────────
+  statsSection: {
+    paddingHorizontal: 22,
+    paddingBottom: 24,
   },
-  statsHeader: {
+  statsCard: {
+    borderRadius: 22,
+    borderWidth: 1.5,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+    gap: 16,
+  },
+  statsCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  statsTitle: { fontSize: 15, fontWeight: '700' },
-  statsHint: { fontSize: 13, fontWeight: '500' },
-  statsEmpty: { fontSize: 14, lineHeight: 20 },
-  statsSpinner: { marginVertical: 8 },
-  statsRow: { flexDirection: 'row', alignItems: 'center' },
-  statCell: { flex: 1, alignItems: 'center', gap: 4 },
-  statNumber: { fontSize: 30, fontWeight: '800' },
-  statLabel: { fontSize: 12, fontWeight: '600' },
-  statDivider: { width: StyleSheet.hairlineWidth, height: 44, marginHorizontal: 8 },
+  statsCardTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+  },
+  statsCardArrow: { fontSize: 12, fontWeight: '600' },
+  statsSpinner: { marginVertical: 10 },
 
-  devResetBtn: { alignSelf: 'center', paddingVertical: 6, paddingHorizontal: 14 },
-  devResetText: { fontSize: 13, color: '#999', fontWeight: '500' },
+  // Metrics row
+  metricsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  metric: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 5,
+  },
+  metricDivider: { width: 1, height: 46 },
+  metricIcon: { fontSize: 20 },
+  metricValue: { fontSize: 28, fontWeight: '800', lineHeight: 32 },
+  metricLabel: { fontSize: 11, fontWeight: '600', letterSpacing: 0.4 },
 
+  // Accuracy ring
+  accuracyRing: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    borderWidth: 2.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  accuracyText: { fontSize: 13, fontWeight: '800' },
+
+  // ── Language modal ───────────────────────────────────────────────────────────
   sheetTitle: { fontSize: 20, fontWeight: '700', marginBottom: 4 },
-
-  // ── Language modal (centred card) ─────────────────────────────────────────
   langOverlay: {
     flex: 1,
     justifyContent: 'center',
