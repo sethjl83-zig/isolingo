@@ -50,6 +50,72 @@ interface StatsSnapshot {
   accuracy: number; // 0–100, or -1 when no attempts yet
 }
 
+// ── Accuracy progress ring ────────────────────────────────────────────────────
+// Uses the two-half-circle clip technique to draw an arc proportional to `pct`.
+// No external library required.
+function AccuracyRing({
+  pct,
+  fillColor,
+  trackColor,
+  textColor,
+}: {
+  pct: number;       // 0–100, or -1 when no data
+  fillColor: string;
+  trackColor: string;
+  textColor: string;
+}) {
+  const SIZE   = 64;
+  const BORDER = 5;
+  const hasData    = pct >= 0;
+  const clamped    = hasData ? Math.max(0, Math.min(100, pct)) : 0;
+
+  // Right half covers 0–50 %; rotate from –180° (empty) to 0° (half full)
+  const rightRot = `${(clamped / 50) * 180 - 180}deg`;
+  // Left half covers 50–100 %; only rendered when > 50 %
+  const leftRot  = clamped > 50 ? `${((clamped - 50) / 50) * 180 - 180}deg` : '-180deg';
+
+  return (
+    <View style={{ width: SIZE, height: SIZE }}>
+      {/* Empty track */}
+      <View style={[
+        StyleSheet.absoluteFill,
+        { borderRadius: SIZE / 2, borderWidth: BORDER, borderColor: trackColor },
+      ]} />
+
+      {/* Right-half fill (0–50 %) */}
+      <View style={{ position: 'absolute', right: 0, width: SIZE / 2, height: SIZE, overflow: 'hidden' }}>
+        <View style={{
+          position: 'absolute', left: -(SIZE / 2),
+          width: SIZE, height: SIZE,
+          borderRadius: SIZE / 2,
+          borderWidth: BORDER, borderColor: fillColor,
+          transform: [{ rotate: rightRot }],
+        }} />
+      </View>
+
+      {/* Left-half fill (50–100 %) */}
+      {clamped > 50 && (
+        <View style={{ position: 'absolute', left: 0, width: SIZE / 2, height: SIZE, overflow: 'hidden' }}>
+          <View style={{
+            position: 'absolute', right: -(SIZE / 2),
+            width: SIZE, height: SIZE,
+            borderRadius: SIZE / 2,
+            borderWidth: BORDER, borderColor: fillColor,
+            transform: [{ rotate: leftRot }],
+          }} />
+        </View>
+      )}
+
+      {/* Centre label */}
+      <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}>
+        <Text style={{ fontSize: 14, fontWeight: '800', color: textColor }}>
+          {hasData ? `${clamped}%` : '—'}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
 export default function DashboardScreen() {
   const router = useRouter();
   const { state, isReady, selectLanguage, selectStudyType } = useAppContext();
@@ -57,6 +123,7 @@ export default function DashboardScreen() {
   const palette = Colors[scheme];
   const accent = scheme === 'dark' ? ACCENT_DARK : ACCENT_LIGHT;
   const modeCardGrad = scheme === 'dark' ? MODE_CARD_GRAD_DARK  : MODE_CARD_GRAD_LIGHT;
+  const modeCardBg   = modeCardGrad[0];   // flat version for widget backgrounds
   const modeCardText = scheme === 'dark' ? MODE_CARD_TEXT_DARK  : MODE_CARD_TEXT_LIGHT;
 
   const language = state.languageSelected;
@@ -150,13 +217,16 @@ export default function DashboardScreen() {
         >
           <Text style={styles.langFlag}>{currentLang.flag}</Text>
           <Text style={[styles.langName, { color: palette.text }]}>{currentLang.label}</Text>
-          <Text style={[styles.chevron, { color: palette.subtext }]}>▾</Text>
+          <Text style={[styles.chevron, { color: palette.subtext }]}>▼</Text>
         </TouchableOpacity>
       </View>
 
-      {/* ── Welcome banner ──────────────────────────────────────────────────── */}
-      <View style={[styles.welcomeBanner, { backgroundColor: palette.card, borderColor: palette.border }]}>
-        <Text style={[styles.welcomeText, { color: palette.subtext }]}>Welcome back! 👋</Text>
+      {/* ── Welcome header ──────────────────────────────────────────────────── */}
+      <View style={styles.welcomeSection}>
+        <Text style={[styles.welcomeHeading, { color: palette.text }]}>Welcome!</Text>
+        <Text style={[styles.studyPrompt, { color: palette.subtext }]}>
+          What do you want to study?
+        </Text>
       </View>
 
       {/* ── Central action area ─────────────────────────────────────────────── */}
@@ -207,7 +277,7 @@ export default function DashboardScreen() {
             activeOpacity={0.8}
           >
             <Text style={styles.vocabBankIcon}>🗂</Text>
-            <Text style={[styles.vocabBankLabel, { color: palette.tint }]}>My Vocab Banks</Text>
+            <Text style={[styles.vocabBankLabel, { color: palette.tint }]}>My Vocabulary</Text>
           </TouchableOpacity>
         </View>
 
@@ -223,48 +293,47 @@ export default function DashboardScreen() {
         <TouchableOpacity
           style={[
             styles.statsCard,
-            { backgroundColor: accent + '14', borderColor: accent + '38' },
+            { backgroundColor: modeCardBg, borderColor: '#2251CC' },
           ]}
           onPress={() => router.push('/stats')}
           activeOpacity={0.85}
         >
           {/* Header row */}
           <View style={styles.statsCardHeader}>
-            <Text style={[styles.statsCardTitle, { color: accent }]}>YOUR PROGRESS</Text>
-            <Text style={[styles.statsCardArrow, { color: accent }]}>View details →</Text>
+            <Text style={[styles.statsCardTitle, { color: modeCardText }]}>STATS</Text>
+            <Text style={[styles.statsCardArrow, { color: modeCardText }]}>View details →</Text>
           </View>
 
           {statsLoading ? (
-            <ActivityIndicator size="small" color={accent} style={styles.statsSpinner} />
+            <ActivityIndicator size="small" color={modeCardText} style={styles.statsSpinner} />
           ) : (
             <View style={styles.metricsRow}>
 
-              {/* Mastered */}
+              {/* Mastered — no icon */}
               <View style={styles.metric}>
-                <Text style={styles.metricIcon}>⭐</Text>
-                <Text style={[styles.metricValue, { color: accent }]}>{statsSnap.mastered}</Text>
-                <Text style={[styles.metricLabel, { color: accent + 'AA' }]}>Mastered</Text>
+                <Text style={[styles.metricValue, { color: modeCardText }]}>{statsSnap.mastered}</Text>
+                <Text style={[styles.metricLabel, { color: modeCardText + '99' }]}>Mastered</Text>
               </View>
 
-              <View style={[styles.metricDivider, { backgroundColor: accent + '38' }]} />
+              <View style={[styles.metricDivider, { backgroundColor: modeCardText + '40' }]} />
 
-              {/* Accuracy — displayed as a ring */}
+              {/* Accuracy — true percentage arc */}
               <View style={styles.metric}>
-                <View style={[styles.accuracyRing, { borderColor: accent }]}>
-                  <Text style={[styles.accuracyText, { color: accent }]}>
-                    {statsSnap.accuracy >= 0 ? `${statsSnap.accuracy}%` : '—'}
-                  </Text>
-                </View>
-                <Text style={[styles.metricLabel, { color: accent + 'AA' }]}>Accuracy</Text>
+                <AccuracyRing
+                  pct={statsSnap.accuracy}
+                  fillColor={modeCardText}
+                  trackColor={modeCardText + '30'}
+                  textColor={modeCardText}
+                />
+                <Text style={[styles.metricLabel, { color: modeCardText + '99' }]}>Accuracy</Text>
               </View>
 
-              <View style={[styles.metricDivider, { backgroundColor: accent + '38' }]} />
+              <View style={[styles.metricDivider, { backgroundColor: modeCardText + '40' }]} />
 
-              {/* Today */}
+              {/* Today — no icon */}
               <View style={styles.metric}>
-                <Text style={styles.metricIcon}>↑</Text>
-                <Text style={[styles.metricValue, { color: accent }]}>—</Text>
-                <Text style={[styles.metricLabel, { color: accent + 'AA' }]}>Today</Text>
+                <Text style={[styles.metricValue, { color: modeCardText }]}>—</Text>
+                <Text style={[styles.metricLabel, { color: modeCardText + '99' }]}>Today</Text>
               </View>
 
             </View>
@@ -324,31 +393,39 @@ const styles = StyleSheet.create({
   langPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 7,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 20,
+    gap: 9,
+    paddingHorizontal: 15,
+    paddingVertical: 9,
+    borderRadius: 22,
     borderWidth: 1,
   },
-  langFlag: { fontSize: 19 },
-  langName: { fontSize: 14, fontWeight: '600' },
-  chevron: { fontSize: 10, marginTop: 1 },
+  langFlag: { fontSize: 24 },
+  langName: { fontSize: 18, fontWeight: '600' },
+  chevron: { fontSize: 13, marginTop: 1 },
 
-  // ── Welcome banner ──────────────────────────────────────────────────────────
-  welcomeBanner: {
-    marginHorizontal: 22,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderWidth: 1,
+  // ── Welcome header (plain text, no card) ────────────────────────────────────
+  welcomeSection: {
+    paddingHorizontal: 22,
+    paddingTop: 10,
+    gap: 6,
   },
-  welcomeText: { fontSize: 14, fontWeight: '500' },
+  welcomeHeading: {
+    fontSize: 38,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+  },
+  studyPrompt: {
+    fontSize: 28,
+    fontWeight: '500',
+    letterSpacing: -0.2,
+  },
 
-  // ── Action area (centered vertically between banner and stats) ──────────────
+  // ── Action area ──────────────────────────────────────────────────────────────
   actionArea: {
     flex: 1,
     paddingHorizontal: 22,
-    justifyContent: 'center',
+    paddingTop: 28,        // intentional breathing room below the prompt
+    justifyContent: 'flex-start',
     gap: 16,
   },
 
@@ -402,7 +479,7 @@ const styles = StyleSheet.create({
     gap: 8,
     borderRadius: 16,
     borderWidth: 1.5,
-    paddingVertical: 12,
+    paddingVertical: 18,
     paddingHorizontal: 16,
     shadowColor: '#000',
     shadowOpacity: 0.04,
@@ -410,8 +487,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 1,
   },
-  vocabBankIcon: { fontSize: 17 },
-  vocabBankLabel: { fontSize: 14, fontWeight: '600' },
+  vocabBankIcon: { fontSize: 21 },
+  vocabBankLabel: { fontSize: 18, fontWeight: '600' },
 
   // Dev reset
   devResetBtn: { alignSelf: 'center', paddingVertical: 4, paddingHorizontal: 12 },
@@ -453,21 +530,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 5,
   },
-  metricDivider: { width: 1, height: 46 },
-  metricIcon: { fontSize: 20 },
-  metricValue: { fontSize: 28, fontWeight: '800', lineHeight: 32 },
+  metricDivider: { width: 1, height: 64 },   // matches AccuracyRing SIZE
+  metricValue: { fontSize: 42, fontWeight: '800', lineHeight: 48 },
   metricLabel: { fontSize: 11, fontWeight: '600', letterSpacing: 0.4 },
-
-  // Accuracy ring
-  accuracyRing: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    borderWidth: 2.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  accuracyText: { fontSize: 13, fontWeight: '800' },
 
   // ── Language modal ───────────────────────────────────────────────────────────
   sheetTitle: { fontSize: 20, fontWeight: '700', marginBottom: 4 },
