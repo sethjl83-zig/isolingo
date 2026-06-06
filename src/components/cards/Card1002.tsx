@@ -14,6 +14,7 @@ import { Colors, GenderColors } from '@/constants/theme';
 import type { Card1002Data, RelationshipType } from '@/src/types/cards';
 import type { Language } from '@/src/types/vocab';
 import StudyButton from '../ui/StudyButton';
+import CorrectText from '../ui/CorrectText';
 
 const CHOICES: { id: RelationshipType; label: string }[] = [
   { id: 'same_meaning', label: 'They mean the same thing' },
@@ -86,6 +87,7 @@ export default function Card1002({
 
   return (
     <View style={[styles.container, { backgroundColor: palette.background }]}>
+
       {/* Top bar */}
       <View style={styles.topBar}>
         <TouchableOpacity onPress={onExit}>
@@ -148,9 +150,11 @@ export default function Card1002({
       </View>
 
       {/* Feedback */}
-      {feedbackText !== '' && (
+      {answerState === 'correct' ? (
+        <CorrectText color={palette.correct} style={styles.feedbackMargin} />
+      ) : feedbackText !== '' ? (
         <Text style={[styles.feedback, { color: feedbackColor }]}>{feedbackText}</Text>
-      )}
+      ) : null}
 
       {/* Bottom actions */}
       <View style={styles.bottomBar}>
@@ -191,6 +195,7 @@ const styles = StyleSheet.create({
   pairTarget: { fontSize: 22, fontWeight: '700', marginTop: 8 },
   choices: { gap: 10 },
   choiceBtn: { width: '100%' },
+  feedbackMargin: { marginTop: 20 },
   feedback: { textAlign: 'center', fontSize: 16, fontWeight: '600', marginTop: 20 },
   bottomBar: {
     flexDirection: 'row',

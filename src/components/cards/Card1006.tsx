@@ -16,11 +16,13 @@ import {
   useColorScheme,
   Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, GenderColors } from '@/constants/theme';
 import type { Card1006Data } from '@/src/types/cards';
 import type { Gender, Language } from '@/src/types/vocab';
 import GenderTile from '../ui/GenderTile';
 import StudyButton from '../ui/StudyButton';
+import CorrectText from '../ui/CorrectText';
 import { validateAnswer, validateGermanNoun } from '@/src/engines/validationEngine';
 
 const GENDERS: Gender[] = ['masculine', 'feminine', 'neuter'];
@@ -52,8 +54,9 @@ export default function Card1006({
   onHome,
   onSubmit,
 }: Props) {
-  const scheme = useColorScheme() ?? 'light';
+  const scheme  = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
+  const insets  = useSafeAreaInsets();
 
   const [inputText, setInputText] = useState('');
   const [selectedGender, setSelectedGender] = useState<Gender | null>(null);
@@ -161,105 +164,123 @@ export default function Card1006({
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: palette.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={
+        Platform.OS === 'ios'
+          ? insets.bottom + 8   // safe-area bottom inset + 8 px breathing room
+          : 0
+      }
     >
+      {/*
+        inner wraps scroll content + bottom bar as siblings.
+        KeyboardAvoidingView shrinks inner when the keyboard appears;
+        the bottom bar stays pinned at the bottom of inner, never hidden.
+      */}
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Top bar */}
-          <View style={styles.topBar}>
-            <TouchableOpacity onPress={onExit}>
-              <Text style={[styles.topBarBtn, { color: palette.tint }]}>Exit Study</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={onHome}>
-              <Text style={[styles.topBarBtn, { color: palette.tint }]}>Home</Text>
-            </TouchableOpacity>
-          </View>
+        <View style={styles.inner}>
 
-          {/* Prompt */}
-          <View style={styles.promptArea}>
-            <Text style={[styles.prompt, { color: palette.text }]}>{card.prompt}</Text>
-          </View>
-
-          {/* Input */}
-          <TextInput
-            style={[
-              styles.input,
-              {
-                backgroundColor: palette.card,
-                borderColor: palette.border,
-                color: inputTextColor,
-              },
-              resolved && styles.inputResolved,
-            ]}
-            value={inputText}
-            onChangeText={text => {
-              if (!resolved) setInputText(text);
-            }}
-            placeholder={placeholder}
-            placeholderTextColor={palette.subtext}
-            editable={!resolved}
-            autoCapitalize="none"
-            autoCorrect={false}
-            onSubmitEditing={handleSubmit}
-            returnKeyType="done"
-            blurOnSubmit
-          />
-
-          {/* Gender tiles — German native_to_target only */}
-          {showGenderTiles && (
-            <View style={styles.tilesRow}>
-              {GENDERS.map(g => (
-                <GenderTile
-                  key={g}
-                  gender={g}
-                  selected={selectedGender === g}
-                  onPress={() => {
-                    if (!resolved) setSelectedGender(g);
-                  }}
-                  disabled={resolved}
-                />
-              ))}
+          {/* Scrollable content — everything except the action buttons */}
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Top bar */}
+            <View style={styles.topBar}>
+              <TouchableOpacity onPress={onExit}>
+                <Text style={[styles.topBarBtn, { color: palette.tint }]}>Exit Study</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={onHome}>
+                <Text style={[styles.topBarBtn, { color: palette.tint }]}>Home</Text>
+              </TouchableOpacity>
             </View>
-          )}
 
-          {/* Correct answer reveal */}
-          {(cardState === 'incorrect_final' || cardState === 'flipped') && (
-            <View style={styles.answerReveal}>
-              {correctDisplayGender ? (
-                <Text
-                  style={[
-                    styles.answerText,
-                    { color: GenderColors[correctDisplayGender] },
-                  ]}
-                >
-                  {card.canonicalAnswer}
-                </Text>
-              ) : (
-                <Text style={[styles.answerText, { color: palette.text }]}>
-                  {card.canonicalAnswer}
-                </Text>
-              )}
+            {/* Prompt */}
+            <View style={styles.promptArea}>
+              <Text style={[styles.prompt, { color: palette.text }]}>{card.prompt}</Text>
             </View>
-          )}
 
-          {/* Feedback */}
-          {feedbackText !== '' && (
-            <View style={styles.feedbackArea}>
-              <Text style={[styles.feedback, { color: feedbackColor }]}>{feedbackText}</Text>
-              {alsoCorrect.length > 0 && (
-                <Text style={[styles.alsoCorrect, { color: palette.subtext }]}>
-                  Also correct: {alsoCorrect.join(', ')}
-                </Text>
-              )}
-            </View>
-          )}
+            {/* Input */}
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor: palette.card,
+                  borderColor: palette.border,
+                  color: inputTextColor,
+                },
+                resolved && styles.inputResolved,
+              ]}
+              value={inputText}
+              onChangeText={text => {
+                if (!resolved) setInputText(text);
+              }}
+              placeholder={placeholder}
+              placeholderTextColor={palette.subtext}
+              editable={!resolved}
+              autoCapitalize="none"
+              autoCorrect={false}
+              onSubmitEditing={handleSubmit}
+              returnKeyType="done"
+              blurOnSubmit
+            />
 
-          {/* Bottom actions */}
+            {/* Gender tiles — German native_to_target only */}
+            {showGenderTiles && (
+              <View style={styles.tilesRow}>
+                {GENDERS.map(g => (
+                  <GenderTile
+                    key={g}
+                    gender={g}
+                    selected={selectedGender === g}
+                    onPress={() => {
+                      if (!resolved) setSelectedGender(g);
+                    }}
+                    disabled={resolved}
+                  />
+                ))}
+              </View>
+            )}
+
+            {/* Correct answer reveal */}
+            {(cardState === 'incorrect_final' || cardState === 'flipped') && (
+              <View style={styles.answerReveal}>
+                {correctDisplayGender ? (
+                  <Text
+                    style={[
+                      styles.answerText,
+                      { color: GenderColors[correctDisplayGender] },
+                    ]}
+                  >
+                    {card.canonicalAnswer}
+                  </Text>
+                ) : (
+                  <Text style={[styles.answerText, { color: palette.text }]}>
+                    {card.canonicalAnswer}
+                  </Text>
+                )}
+              </View>
+            )}
+
+            {/* Feedback */}
+            {cardState === 'correct' ? (
+              <View style={styles.feedbackArea}>
+                <CorrectText color={palette.correct} />
+                {alsoCorrect.length > 0 && (
+                  <Text style={[styles.alsoCorrect, { color: palette.subtext }]}>
+                    Also correct: {alsoCorrect.join(', ')}
+                  </Text>
+                )}
+              </View>
+            ) : feedbackText !== '' ? (
+              <View style={styles.feedbackArea}>
+                <Text style={[styles.feedback, { color: feedbackColor }]}>{feedbackText}</Text>
+              </View>
+            ) : null}
+          </ScrollView>
+
+          {/* Bottom actions — OUTSIDE the ScrollView so they ride above the keyboard */}
           <View style={styles.bottomBar}>
             <StudyButton
               label="Flip"
@@ -294,7 +315,8 @@ export default function Card1006({
               <StudyButton label="Next" variant="primary" size="medium" onPress={onNext} />
             )}
           </View>
-        </ScrollView>
+
+        </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
@@ -302,12 +324,14 @@ export default function Card1006({
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  // Fills the KeyboardAvoidingView; scroll + bottom bar are siblings inside.
+  inner: { flex: 1 },
   scroll: { flex: 1 },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: 16,
-    paddingBottom: 32,
+    paddingBottom: 16,   // reduced — bottom bar is now outside the scroll
   },
   topBar: {
     flexDirection: 'row',
@@ -342,7 +366,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 'auto',
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: 32,
     gap: 12,
   },
 });

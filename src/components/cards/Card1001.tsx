@@ -14,6 +14,7 @@ import { Colors, GenderColors } from '@/constants/theme';
 import type { Card1001Data, MatchingNoun } from '@/src/types/cards';
 import type { Gender, Language } from '@/src/types/vocab';
 import StudyButton from '../ui/StudyButton';
+import CorrectText from '../ui/CorrectText';
 
 type MatchResult = 'idle' | 'correct' | 'partial';
 
@@ -125,6 +126,7 @@ export default function Card1001({
 
   return (
     <View style={[styles.container, { backgroundColor: palette.background }]}>
+
       {/* Top bar */}
       <View style={styles.topBar}>
         <TouchableOpacity onPress={onExit}>
@@ -197,19 +199,18 @@ export default function Card1001({
       </View>
 
       {/* Feedback */}
-      {feedbackText !== '' && (
+      {result === 'correct' ? (
+        <CorrectText color={palette.correct} style={styles.feedbackMargin} />
+      ) : feedbackText !== '' ? (
         <Text
           style={[
             styles.feedback,
-            {
-              color:
-                result === 'correct' || flipped ? palette.correct : palette.incorrect,
-            },
+            { color: flipped ? palette.correct : palette.incorrect },
           ]}
         >
           {feedbackText}
         </Text>
-      )}
+      ) : null}
 
       {/* Bottom actions */}
       <View style={styles.bottomBar}>
@@ -265,6 +266,7 @@ const styles = StyleSheet.create({
   nounText: { fontSize: 18, fontWeight: '600' },
   genderTile: { width: 56, height: 56, borderRadius: 10 },
   tileDisabled: { opacity: 0.5 },
+  feedbackMargin: { marginTop: 20 },
   feedback: { textAlign: 'center', fontSize: 16, fontWeight: '600', marginTop: 20 },
   bottomBar: {
     flexDirection: 'row',

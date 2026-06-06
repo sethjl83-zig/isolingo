@@ -9,7 +9,14 @@ import {
   StyleSheet,
   useColorScheme,
   ActivityIndicator,
+  Dimensions,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/theme';
@@ -24,6 +31,8 @@ import ErrorBoundary from '@/src/components/ErrorBoundary';
 import StudyButton from '@/src/components/ui/StudyButton';
 import { loadStatsForLanguage, saveStatsForLanguage, type LangStats } from '@/src/storage/statsStorage';
 import { updateWordStats } from '@/src/types/stats';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
 
 function getCardKey(card: CardData, index: number): string {
   switch (card.type) {
@@ -98,6 +107,31 @@ export default function SessionScreen() {
     };
     loadCard(updatedState);
   }, [state, incrementCardIndex, loadCard]);
+
+  // ── Card sweep transition ─────────────────────────────────────────────────
+  // Phase 1 (140 ms): current card sweeps out to the left.
+  // Phase 2 (150 ms): new card snaps in from the right and sweeps to centre.
+  const sweepX = useSharedValue(0);
+
+  const cardSlideStyle = useAnimatedStyle(() => ({
+    flex: 1,
+    transform: [{ translateX: sweepX.value }],
+  }));
+
+  const handleNext = useCallback(() => {
+    sweepX.value = withTiming(-SCREEN_WIDTH, {
+      duration: 140,
+      easing: Easing.in(Easing.quad),
+    });
+    setTimeout(() => {
+      sweepX.value = SCREEN_WIDTH;   // instant snap: new card starts off-screen right
+      loadNextCard();                 // React re-renders new card at SCREEN_WIDTH
+      sweepX.value = withTiming(0, {
+        duration: 150,
+        easing: Easing.out(Easing.quad),
+      });
+    }, 145);
+  }, [loadNextCard]);
 
   const handleSubmit = useCallback(
     (
@@ -194,70 +228,72 @@ export default function SessionScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: palette.background }]}>
-      <ErrorBoundary
-        key={cardKey}
-        resetKeys={[cardKey]}
-        title="Card error"
-        onReset={loadNextCard}
-        onExit={handleExit}
-        exitLabel="Exit study"
-      >
-        {currentCard.type === 'CARD_1001' && (
-          <Card1001
-            key={cardKey}
-            card={currentCard}
-            language={language}
-            onNext={loadNextCard}
-            onFlip={() => {}}
-            onExit={handleExit}
-            onHome={handleHome}
-            onSubmit={correct =>
-              handleSubmit(null, correct, 'CARD_1001', 'neutral')
-            }
-          />
-        )}
+      <Animated.View style={cardSlideStyle}>
+        <ErrorBoundary
+          key={cardKey}
+          resetKeys={[cardKey]}
+          title="Card error"
+          onReset={loadNextCard}
+          onExit={handleExit}
+          exitLabel="Exit study"
+        >
+          {currentCard.type === 'CARD_1001' && (
+            <Card1001
+              key={cardKey}
+              card={currentCard}
+              language={language}
+              onNext={handleNext}
+              onFlip={() => {}}
+              onExit={handleExit}
+              onHome={handleHome}
+              onSubmit={correct =>
+                handleSubmit(null, correct, 'CARD_1001', 'neutral')
+              }
+            />
+          )}
 
-        {currentCard.type === 'CARD_1002' && (
-          <Card1002
-            key={cardKey}
-            card={currentCard}
-            language={language}
-            onNext={loadNextCard}
-            onFlip={() => {}}
-            onExit={handleExit}
-            onHome={handleHome}
-            onSubmit={correct =>
-              handleSubmit(
-                currentCard.targetItem.id,
-                correct,
-                'CARD_1002',
-                'neutral',
-              )
-            }
-          />
-        )}
+          {currentCard.type === 'CARD_1002' && (
+            <Card1002
+              key={cardKey}
+              card={currentCard}
+              language={language}
+              onNext={handleNext}
+              onFlip={() => {}}
+              onExit={handleExit}
+              onHome={handleHome}
+              onSubmit={correct =>
+                handleSubmit(
+                  currentCard.targetItem.id,
+                  correct,
+                  'CARD_1002',
+                  'neutral',
+                )
+              }
+            />
+          )}
 
-        {currentCard.type === 'CARD_1006' && (
-          <Card1006
-            key={cardKey}
-            card={currentCard}
-            language={language}
-            onNext={loadNextCard}
-            onFlip={() => {}}
-            onExit={handleExit}
-            onHome={handleHome}
-            onSubmit={(correct, isFirstAttempt) =>
-              handleSubmit(
-                currentCard.item.id,
-                correct,
-                'CARD_1006',
-                currentCard.direction,
-                isFirstAttempt,
-              )
-            }
-          />
-        )}
-      </ErrorBoundary>
+          {currentCard.type === 'CARD_1006' && (
+            <Card1006
+              key={cardKey}
+              card={currentCard}
+              language={language}
+              onNext={handleNext}
+              onFlip={() => {}}
+              onExit={handleExit}
+              onHome={handleHome}
+              onSubmit={(correct, isFirstAttempt) =>
+                handleSubmit(
+                  currentCard.item.id,
+                  correct,
+                  'CARD_1006',
+                  currentCard.direction,
+                  isFirstAttempt,
+                )
+              }
+            />
+          )}
+        </ErrorBoundary>
+      </Animated.View>
     </SafeAreaView>
   );
 }
