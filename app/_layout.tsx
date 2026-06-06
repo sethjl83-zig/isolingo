@@ -15,7 +15,8 @@ export default function RootLayout() {
           <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" />
-            <Stack.Screen name="dashboard" />
+            <Stack.Screen name="welcome"   options={{ animation: 'none' }} />
+            <Stack.Screen name="dashboard" options={{ animation: 'none' }} />
             <Stack.Screen name="direction" />
             <Stack.Screen name="word-banks" />
             <Stack.Screen name="stats" />
