@@ -73,7 +73,12 @@ export default function SessionScreen() {
     (stateOverride?: typeof state) => {
       try {
         setLoadError(null);
-        const card = generateNextCard(stateOverride ?? state, sessionRef.current);
+        const { card, updatedSession } = generateNextCard(
+          stateOverride ?? state,
+          sessionRef.current,
+        );
+        // Persist deck advancement even when no card is returned
+        sessionRef.current = updatedSession;
         if (!card) {
           setLoadError(
             'No card could be generated. Your vocab bank may be empty or incompatible with this study mode.',
@@ -140,9 +145,19 @@ export default function SessionScreen() {
       cardType: CardData['type'],
       direction: string,
       isFirstAttempt?: boolean,
+      wordIds?: string[],
     ) => {
       if (vocabId) recordCardResult(vocabId, correct);
-      sessionRef.current = advanceSession(sessionRef.current, cardType, direction);
+
+      // Resolve the word IDs to track for spacing / session history
+      const ids: string[] = wordIds ?? (vocabId ? [vocabId] : []);
+      sessionRef.current = advanceSession(
+        sessionRef.current,
+        cardType,
+        direction,
+        ids,
+        cardType === 'CARD_1001',
+      );
 
       // Record detailed stats for Card1006 results
       if (cardType === 'CARD_1006' && vocabId && language && isFirstAttempt !== undefined) {
@@ -247,7 +262,14 @@ export default function SessionScreen() {
               onExit={handleExit}
               onHome={handleHome}
               onSubmit={correct =>
-                handleSubmit(null, correct, 'CARD_1001', 'neutral')
+                handleSubmit(
+                  null,
+                  correct,
+                  'CARD_1001',
+                  'neutral',
+                  undefined,
+                  currentCard.nouns.map(n => n.item.id),
+                )
               }
             />
           )}

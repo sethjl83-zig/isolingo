@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Colors, GenderColors } from '@/constants/theme';
 import { useAppContext } from '@/src/context/AppContext';
 import { getMasterDataset } from '@/src/data';
@@ -38,6 +38,7 @@ import SearchBar from '@/src/components/ui/SearchBar';
 import GeneratedListModal, { type DraftWord } from '@/src/components/list-setup/GeneratedListModal';
 
 type SetupMode = 'choice' | 'random' | 'custom';
+type ListSetupSource = 'study_mode' | 'vocab_bank';
 
 const LANGUAGE_LABELS: Record<string, string> = {
   de: 'German',
@@ -54,6 +55,9 @@ const COUNT_OPTIONS = [10, 15, 20, 25];
 
 export default function ListSetupScreen() {
   const router = useRouter();
+  const { source: sourceParam } = useLocalSearchParams<{ source?: string }>();
+  const setupSource: ListSetupSource =
+    sourceParam === 'study_mode' ? 'study_mode' : 'vocab_bank';
   const { state, setVocabBank } = useAppContext();
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
@@ -149,6 +153,14 @@ export default function ListSetupScreen() {
     });
   };
 
+  const navigateAfterSetup = () => {
+    if (setupSource === 'study_mode') {
+      router.replace('/direction');
+      return;
+    }
+    router.replace('/dashboard');
+  };
+
   const confirmDraftList = () => {
     const bank = draftWords.map(entry => entry.item);
     const frequencySettings = buildFrequencySettings(
@@ -159,7 +171,7 @@ export default function ListSetupScreen() {
     // without relying on state.studyTypeSelected being committed in the reducer.
     setVocabBank(bank, frequencySettings, studyType ?? undefined);
     setReviewVisible(false);
-    router.replace('/dashboard');
+    navigateAfterSetup();
   };
 
   const handleSaveCustom = () => {
@@ -173,7 +185,7 @@ export default function ListSetupScreen() {
     const bank = masterList.filter(w => selectedIds.has(w.id));
     // Pass studyType explicitly — same reason as above.
     setVocabBank(bank, undefined, studyType ?? undefined);
-    router.replace('/dashboard');
+    navigateAfterSetup();
   };
 
   const goBackToModeSelect = () => {

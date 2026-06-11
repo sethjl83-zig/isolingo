@@ -57,7 +57,7 @@ export default function WordBanksScreen() {
 
   const handleSetUp = (studyType: StudyType) => {
     selectStudyType(studyType);
-    router.push('/list-setup');
+    router.push({ pathname: '/list-setup', params: { source: 'vocab_bank' } });
   };
 
   return (

@@ -6,6 +6,7 @@ import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
+  ScrollView,
   TouchableOpacity,
   StyleSheet,
   useColorScheme,
@@ -15,6 +16,7 @@ import type { Card1001Data, MatchingNoun } from '@/src/types/cards';
 import type { Gender, Language } from '@/src/types/vocab';
 import StudyButton from '../ui/StudyButton';
 import CorrectText from '../ui/CorrectText';
+import WordMgmtStrip from '../ui/WordMgmtStrip';
 
 type MatchResult = 'idle' | 'correct' | 'partial';
 
@@ -28,10 +30,6 @@ interface Props {
   onSubmit: (allCorrect: boolean) => void;
 }
 
-const GENDER_ORDER: Gender[] =
-  // We need to know the language to decide whether to show 2 or 3 tiles.
-  // We always render all genders that appear in the card's nouns.
-  ['masculine', 'feminine', 'neuter'];
 
 export default function Card1001({
   card,
@@ -45,11 +43,11 @@ export default function Card1001({
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
 
-  // Derive the genders actually present
-  const presentGenders = [
-    ...new Set(card.nouns.map(n => n.item.gender as Gender)),
-  ] as Gender[];
-  const tileGenders: Gender[] = GENDER_ORDER.filter(g => presentGenders.includes(g));
+  // Always show all genders for the language, not just those present on this card
+  const tileGenders: Gender[] =
+    language === 'de'
+      ? ['masculine', 'feminine', 'neuter']
+      : ['masculine', 'feminine'];
 
   const [selectedNounId, setSelectedNounId] = useState<string | null>(null);
   const [pairs, setPairs] = useState<Record<string, Gender>>({}); // nounId → gender
@@ -127,22 +125,30 @@ export default function Card1001({
   return (
     <View style={[styles.container, { backgroundColor: palette.background }]}>
 
-      {/* Top bar */}
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onExit}>
-          <Text style={[styles.topBarBtn, { color: palette.tint }]}>Exit Study</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onHome}>
-          <Text style={[styles.topBarBtn, { color: palette.tint }]}>Home</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Card content — scrollable so feedback never pushes buttons off-screen */}
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.contentArea}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
 
-      <Text style={[styles.instruction, { color: palette.subtext }]}>match the words</Text>
+        {/* Top bar */}
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={onExit}>
+            <Text style={[styles.topBarBtn, { color: palette.tint }]}>Exit Study</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onHome}>
+            <Text style={[styles.topBarBtn, { color: palette.tint }]}>Home</Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* Two-column matching area */}
-      <View style={styles.matchArea}>
-        {/* Left: nouns */}
-        <View style={styles.nounColumn}>
+        <Text style={[styles.instruction, { color: palette.subtext }]}>
+          tap a word, then tap its gender below
+        </Text>
+
+        {/* Noun list — full-width vertical stack */}
+        <View style={styles.nounList}>
           {card.nouns.map(noun => {
             const paired = pairs[noun.item.id];
             const isLocked = lockedCorrect.has(noun.item.id);
@@ -159,7 +165,7 @@ export default function Card1001({
                 key={noun.item.id}
                 style={[
                   styles.nounChip,
-                  { borderColor: palette.border, backgroundColor: palette.card },
+                  { borderColor: paired ? (GenderColors[paired] ?? palette.border) : palette.border, backgroundColor: palette.card },
                   isSelected && styles.nounSelected,
                   isLocked && styles.nounLocked,
                 ]}
@@ -167,12 +173,7 @@ export default function Card1001({
                 disabled={isLocked || submitted || flipped}
                 activeOpacity={0.75}
               >
-                <Text
-                  style={[
-                    styles.nounText,
-                    { color: nounColor ?? palette.text },
-                  ]}
-                >
+                <Text style={[styles.nounText, { color: nounColor ?? palette.text }]}>
                   {noun.displayForm}
                 </Text>
               </TouchableOpacity>
@@ -180,8 +181,8 @@ export default function Card1001({
           })}
         </View>
 
-        {/* Right: gender tiles */}
-        <View style={styles.tileColumn}>
+        {/* Gender tiles — horizontal row below all nouns */}
+        <View style={styles.tileRow}>
           {tileGenders.map(gender => (
             <TouchableOpacity
               key={gender}
@@ -196,23 +197,25 @@ export default function Card1001({
             />
           ))}
         </View>
-      </View>
 
-      {/* Feedback */}
-      {result === 'correct' ? (
-        <CorrectText color={palette.correct} style={styles.feedbackMargin} />
-      ) : feedbackText !== '' ? (
-        <Text
-          style={[
-            styles.feedback,
-            { color: flipped ? palette.correct : palette.incorrect },
-          ]}
-        >
-          {feedbackText}
-        </Text>
-      ) : null}
+        {/* Feedback */}
+        {result === 'correct' ? (
+          <CorrectText color={palette.correct} style={styles.feedbackMargin} />
+        ) : feedbackText !== '' ? (
+          <Text
+            style={[
+              styles.feedback,
+              { color: flipped ? palette.correct : palette.incorrect },
+            ]}
+          >
+            {feedbackText}
+          </Text>
+        ) : null}
 
-      {/* Bottom actions */}
+
+      </ScrollView>
+
+      {/* Action buttons — anchored below scroll, above management strip */}
       <View style={styles.bottomBar}>
         <StudyButton
           label="Flip"
@@ -234,27 +237,32 @@ export default function Card1001({
           <StudyButton label="Next" variant="primary" size="medium" onPress={onNext} />
         )}
       </View>
+
+      {/* Word management strip — fixed at the very bottom */}
+      <WordMgmtStrip />
+
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 32 },
+  container: { flex: 1 },
+  scroll: { flex: 1 },
+  contentArea: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 16 },
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 16,
   },
   topBarBtn: { fontSize: 15, fontWeight: '500' },
-  instruction: { textAlign: 'center', fontSize: 14, marginBottom: 28 },
-  matchArea: {
+  instruction: { textAlign: 'center', fontSize: 14, marginBottom: 24 },
+  nounList: { gap: 12, marginBottom: 32 },
+  tileRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    flex: 1,
+    justifyContent: 'center',
+    gap: 20,
+    marginBottom: 24,
   },
-  nounColumn: { flex: 1, gap: 14 },
-  tileColumn: { gap: 14, paddingLeft: 24, justifyContent: 'center' },
   nounChip: {
     borderWidth: 1.5,
     borderRadius: 10,
@@ -264,15 +272,16 @@ const styles = StyleSheet.create({
   nounSelected: { borderColor: '#2C6BED', borderWidth: 2.5 },
   nounLocked: { opacity: 0.6 },
   nounText: { fontSize: 18, fontWeight: '600' },
-  genderTile: { width: 56, height: 56, borderRadius: 10 },
+  genderTile: { width: 80, height: 56, borderRadius: 10 },
   tileDisabled: { opacity: 0.5 },
-  feedbackMargin: { marginTop: 20 },
-  feedback: { textAlign: 'center', fontSize: 16, fontWeight: '600', marginTop: 20 },
+  feedbackMargin: { marginBottom: 16 },
+  feedback: { textAlign: 'center', fontSize: 16, fontWeight: '600', marginBottom: 16 },
   bottomBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
     gap: 12,
   },
 });

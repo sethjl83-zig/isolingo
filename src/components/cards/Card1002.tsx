@@ -6,6 +6,7 @@ import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
+  ScrollView,
   TouchableOpacity,
   StyleSheet,
   useColorScheme,
@@ -15,6 +16,7 @@ import type { Card1002Data, RelationshipType } from '@/src/types/cards';
 import type { Language } from '@/src/types/vocab';
 import StudyButton from '../ui/StudyButton';
 import CorrectText from '../ui/CorrectText';
+import WordMgmtStrip from '../ui/WordMgmtStrip';
 
 const CHOICES: { id: RelationshipType; label: string }[] = [
   { id: 'same_meaning', label: 'They mean the same thing' },
@@ -88,75 +90,86 @@ export default function Card1002({
   return (
     <View style={[styles.container, { backgroundColor: palette.background }]}>
 
-      {/* Top bar */}
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onExit}>
-          <Text style={[styles.topBarBtn, { color: palette.tint }]}>Exit Study</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onHome}>
-          <Text style={[styles.topBarBtn, { color: palette.tint }]}>Home</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Card content — scrollable so feedback never pushes buttons off-screen */}
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.contentArea}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
 
-      <Text style={[styles.instruction, { color: palette.subtext }]}>
-        what is the relationship between these words?
-      </Text>
+        {/* Top bar */}
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={onExit}>
+            <Text style={[styles.topBarBtn, { color: palette.tint }]}>Exit Study</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onHome}>
+            <Text style={[styles.topBarBtn, { color: palette.tint }]}>Home</Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* Word pair */}
-      <View style={[styles.pairBox, { backgroundColor: palette.card, borderColor: palette.border }]}>
-        <Text style={[styles.pairEnglish, { color: palette.text }]}>
-          {card.englishWord}
+        <Text style={[styles.instruction, { color: palette.subtext }]}>
+          what is the relationship between these words?
         </Text>
-        <View style={styles.separator} />
-        {isNoun ? (
-          <Text style={[styles.pairTarget, { color: nounColor ?? palette.text }]}>
-            {card.targetWord}
+
+        {/* Word pair */}
+        <View style={[styles.pairBox, { backgroundColor: palette.card, borderColor: palette.border }]}>
+          <Text style={[styles.pairEnglish, { color: palette.text }]}>
+            {card.englishWord}
           </Text>
-        ) : (
-          <Text style={[styles.pairTarget, { color: palette.text }]}>
-            {card.targetWord}
-          </Text>
-        )}
-      </View>
+          <View style={styles.separator} />
+          {isNoun ? (
+            <Text style={[styles.pairTarget, { color: nounColor ?? palette.text }]}>
+              {card.targetWord}
+            </Text>
+          ) : (
+            <Text style={[styles.pairTarget, { color: palette.text }]}>
+              {card.targetWord}
+            </Text>
+          )}
+        </View>
 
-      {/* Answer choices */}
-      <View style={styles.choices}>
-        {CHOICES.map(choice => {
-          const isSelected = selected === choice.id;
-          const isCorrect = choice.id === card.correctRelationship;
-          const resolved = answerState !== 'idle';
+        {/* Answer choices */}
+        <View style={styles.choices}>
+          {CHOICES.map(choice => {
+            const isSelected = selected === choice.id;
+            const isCorrect = choice.id === card.correctRelationship;
+            const resolved = answerState !== 'idle';
 
-          let variant: React.ComponentProps<typeof StudyButton>['variant'] = 'secondary';
-          if (resolved) {
-            if (isCorrect) variant = 'correct';
-            else if (isSelected && !isCorrect) variant = 'incorrect';
-            else variant = 'inactive';
-          } else if (isSelected) {
-            variant = 'primary';
-          }
+            let variant: React.ComponentProps<typeof StudyButton>['variant'] = 'secondary';
+            if (resolved) {
+              if (isCorrect) variant = 'correct';
+              else if (isSelected && !isCorrect) variant = 'incorrect';
+              else variant = 'inactive';
+            } else if (isSelected) {
+              variant = 'primary';
+            }
 
-          return (
-            <StudyButton
-              key={choice.id}
-              label={choice.label}
-              variant={variant}
-              size="medium"
-              onPress={() => handleSelect(choice.id)}
-              disabled={resolved}
-              style={styles.choiceBtn}
-            />
-          );
-        })}
-      </View>
+            return (
+              <StudyButton
+                key={choice.id}
+                label={choice.label}
+                variant={variant}
+                size="medium"
+                onPress={() => handleSelect(choice.id)}
+                disabled={resolved}
+                style={styles.choiceBtn}
+              />
+            );
+          })}
+        </View>
 
-      {/* Feedback */}
-      {answerState === 'correct' ? (
-        <CorrectText color={palette.correct} style={styles.feedbackMargin} />
-      ) : feedbackText !== '' ? (
-        <Text style={[styles.feedback, { color: feedbackColor }]}>{feedbackText}</Text>
-      ) : null}
+        {/* Feedback */}
+        {answerState === 'correct' ? (
+          <CorrectText color={palette.correct} style={styles.feedbackMargin} />
+        ) : feedbackText !== '' ? (
+          <Text style={[styles.feedback, { color: feedbackColor }]}>{feedbackText}</Text>
+        ) : null}
 
-      {/* Bottom actions */}
+
+      </ScrollView>
+
+      {/* Action buttons — anchored below scroll, above management strip */}
       <View style={styles.bottomBar}>
         <StudyButton
           label="Flip"
@@ -169,12 +182,18 @@ export default function Card1002({
           <StudyButton label="Next" variant="primary" size="medium" onPress={onNext} />
         )}
       </View>
+
+      {/* Word management strip — fixed at the very bottom */}
+      <WordMgmtStrip />
+
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 32 },
+  container: { flex: 1 },
+  scroll: { flex: 1 },
+  contentArea: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 16 },
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -195,13 +214,14 @@ const styles = StyleSheet.create({
   pairTarget: { fontSize: 22, fontWeight: '700', marginTop: 8 },
   choices: { gap: 10 },
   choiceBtn: { width: '100%' },
-  feedbackMargin: { marginTop: 20 },
-  feedback: { textAlign: 'center', fontSize: 16, fontWeight: '600', marginTop: 20 },
+  feedbackMargin: { marginBottom: 16 },
+  feedback: { textAlign: 'center', fontSize: 16, fontWeight: '600', marginBottom: 16 },
   bottomBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
     gap: 12,
   },
 });

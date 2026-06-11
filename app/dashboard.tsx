@@ -434,7 +434,9 @@ export default function DashboardScreen() {
     const hasBank = bank !== null && (bank.activeVocabBank?.length ?? 0) > 0;
 
     selectStudyType(studyType);
-    router.push(hasBank ? '/direction' : '/list-setup');
+    router.push(
+      hasBank ? '/direction' : { pathname: '/list-setup', params: { source: 'study_mode' } },
+    );
   };
 
   // ── DEV ONLY — remove before publishing ─────────────────────────────────────

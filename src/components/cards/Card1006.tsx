@@ -8,10 +8,8 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  TouchableWithoutFeedback,
   ScrollView,
   KeyboardAvoidingView,
-  Keyboard,
   StyleSheet,
   useColorScheme,
   Platform,
@@ -23,6 +21,7 @@ import type { Gender, Language } from '@/src/types/vocab';
 import GenderTile from '../ui/GenderTile';
 import StudyButton from '../ui/StudyButton';
 import CorrectText from '../ui/CorrectText';
+import WordMgmtStrip from '../ui/WordMgmtStrip';
 import { validateAnswer, validateGermanNoun } from '@/src/engines/validationEngine';
 
 const GENDERS: Gender[] = ['masculine', 'feminine', 'neuter'];
@@ -66,7 +65,8 @@ export default function Card1006({
 
   const isGerman = language === 'de';
   const isNativeToTarget = card.direction === 'native_to_target';
-  const showGenderTiles = isGerman && isNativeToTarget;
+  const isNoun = card.item.partOfSpeech === 'noun';
+  const showGenderTiles = isGerman && isNativeToTarget && isNoun;
   const resolved = cardState !== 'typing' && cardState !== 'incorrect_1';
   const canSubmit = showGenderTiles
     ? inputText.trim().length > 0 && selectedGender !== null
@@ -85,7 +85,6 @@ export default function Card1006({
 
   const handleSubmit = useCallback(() => {
     if (!canSubmit) return;
-    Keyboard.dismiss();
 
     let result: { correct: boolean; alsoCorrect: string[] };
 
@@ -122,7 +121,6 @@ export default function Card1006({
   }, [canSubmit, showGenderTiles, inputText, selectedGender, card, onSubmit]);
 
   const handleFlip = useCallback(() => {
-    Keyboard.dismiss();
     setCardState('flipped');
     onFlip();
   }, [onFlip]);
@@ -133,7 +131,22 @@ export default function Card1006({
 
   // ── Correct answer display form ──────────────────────────────────────────────
   const correctDisplayNoun = card.item.lemma;
-  const correctDisplayGender = card.item.gender as Gender | undefined;
+  // Only apply gender colour to the answer when the answer IS a target-language
+  // word (native_to_target). In target_to_native the canonical answer is English.
+  const correctDisplayGender =
+    card.direction === 'native_to_target'
+      ? (card.item.gender as Gender | undefined)
+      : undefined;
+
+  // ── Prompt colour ─────────────────────────────────────────────────────────────
+  // In target_to_native the prompt IS the target-language noun — colour it by gender.
+  // In native_to_target the prompt is the English cue — no gender colour.
+  const promptColor =
+    card.direction === 'target_to_native' &&
+    card.item.partOfSpeech === 'noun' &&
+    card.item.gender
+      ? GenderColors[card.item.gender as Gender]
+      : palette.text;
 
   // ── Feedback text ─────────────────────────────────────────────────────────────
   let feedbackText = '';
@@ -175,7 +188,6 @@ export default function Card1006({
         KeyboardAvoidingView shrinks inner when the keyboard appears;
         the bottom bar stays pinned at the bottom of inner, never hidden.
       */}
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.inner}>
 
           {/* Scrollable content — everything except the action buttons */}
@@ -183,7 +195,7 @@ export default function Card1006({
             style={styles.scroll}
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="on-drag"
+            keyboardDismissMode="none"
             showsVerticalScrollIndicator={false}
           >
             {/* Top bar */}
@@ -198,7 +210,7 @@ export default function Card1006({
 
             {/* Prompt */}
             <View style={styles.promptArea}>
-              <Text style={[styles.prompt, { color: palette.text }]}>{card.prompt}</Text>
+              <Text style={[styles.prompt, { color: promptColor }]}>{card.prompt}</Text>
             </View>
 
             {/* Input */}
@@ -218,12 +230,12 @@ export default function Card1006({
               }}
               placeholder={placeholder}
               placeholderTextColor={palette.subtext}
-              editable={!resolved}
+              autoFocus
               autoCapitalize="none"
               autoCorrect={false}
               onSubmitEditing={handleSubmit}
               returnKeyType="done"
-              blurOnSubmit
+              blurOnSubmit={false}
             />
 
             {/* Gender tiles — German native_to_target only */}
@@ -278,9 +290,10 @@ export default function Card1006({
                 <Text style={[styles.feedback, { color: feedbackColor }]}>{feedbackText}</Text>
               </View>
             ) : null}
+
           </ScrollView>
 
-          {/* Bottom actions — OUTSIDE the ScrollView so they ride above the keyboard */}
+          {/* Action buttons — anchored below scroll, above management strip */}
           <View style={styles.bottomBar}>
             <StudyButton
               label="Flip"
@@ -316,22 +329,24 @@ export default function Card1006({
             )}
           </View>
 
+          {/* Word management strip — always visible at the very bottom */}
+          <WordMgmtStrip />
+
         </View>
-      </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  // Fills the KeyboardAvoidingView; scroll + bottom bar are siblings inside.
+  // Fills the KeyboardAvoidingView; scroll and management strip are siblings inside.
   inner: { flex: 1 },
   scroll: { flex: 1 },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: 16,
-    paddingBottom: 16,   // reduced — bottom bar is now outside the scroll
+    paddingBottom: 16,
   },
   topBar: {
     flexDirection: 'row',
@@ -367,8 +382,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 32,
+    paddingVertical: 12,
     gap: 12,
   },
 });

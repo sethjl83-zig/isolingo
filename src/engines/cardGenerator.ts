@@ -15,12 +15,24 @@ import { selectWord } from './repetitionEngine';
 export function generateCard1001(
   bank: VocabItem[],
   language: Language,
+  excludeNounIds?: Set<string>,
+  recentWordIds?: string[],
 ): Card1001Data | null {
-  const nouns = bank.filter(w => w.partOfSpeech === 'noun' && w.gender !== null);
+  const allNouns = bank.filter(w => w.partOfSpeech === 'noun' && w.gender !== null);
   const genderSet: Gender[] =
     language === 'de'
       ? ['masculine', 'feminine', 'neuter']
       : ['masculine', 'feminine'];
+
+  if (allNouns.length < 3) return null;
+
+  // Anti-same-group: prefer nouns NOT in the previous Card1001 group.
+  // Fall back to the full noun pool if the fresh pool is too small.
+  const freshNouns =
+    excludeNounIds && excludeNounIds.size > 0
+      ? allNouns.filter(n => !excludeNounIds.has(n.id))
+      : allNouns;
+  const nouns = freshNouns.length >= 3 ? freshNouns : allNouns;
 
   const byGender: Partial<Record<Gender, VocabItem[]>> = {};
   for (const noun of nouns) {
@@ -32,7 +44,8 @@ export function generateCard1001(
   const availableGenders = genderSet.filter(g => (byGender[g]?.length ?? 0) > 0);
   if (availableGenders.length < 2) return null;
 
-  const targetCount = language === 'de' ? 3 : 4;
+  // Target 3–5 nouns, capped by pool size
+  const targetCount = Math.min(5, nouns.length);
   const selected: VocabItem[] = [];
 
   // At least one noun per available gender
@@ -42,15 +55,24 @@ export function generateCard1001(
     if (selected.length >= targetCount) break;
   }
 
-  // Fill remaining slots with variety
-  while (selected.length < Math.min(targetCount, nouns.length)) {
+  // Fill remaining slots with variety, preferring spacing-eligible nouns
+  while (selected.length < targetCount) {
     const remaining = nouns.filter(n => !selected.find(s => s.id === n.id));
     if (remaining.length === 0) break;
-    selected.push(remaining[Math.floor(Math.random() * remaining.length)]);
+    // Prefer nouns not recently seen
+    const fresh = recentWordIds && recentWordIds.length > 0
+      ? remaining.filter(n => !recentWordIds.includes(n.id))
+      : remaining;
+    const pool = fresh.length > 0 ? fresh : remaining;
+    selected.push(pool[Math.floor(Math.random() * pool.length)]);
   }
 
-  // Shuffle
-  const shuffled = selected.sort(() => Math.random() - 0.5);
+  // Fisher-Yates shuffle
+  const shuffled = [...selected];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
 
   return {
     type: 'CARD_1001',
@@ -255,21 +277,38 @@ export function generateCard(
   wordStats: Record<string, import('../types/state').WordStats>,
   sessionCardIndex: number,
   wordFrequencySettings: Record<string, import('../types/state').WordFrequencySetting> = {},
+  recentWordIds: string[] = [],
+  excludeCard1001NounIds: Set<string> = new Set(),
+  preSelectedItem?: VocabItem,
 ): CardData | null {
   if (cardType === 'CARD_1001') {
-    return generateCard1001(bank, language) ?? generateCard1006Fallback(
-      bank, language, direction, wordStats, sessionCardIndex, wordFrequencySettings,
+    return (
+      generateCard1001(bank, language, excludeCard1001NounIds, recentWordIds) ??
+      generateCard1006Fallback(
+        bank, language, direction, wordStats, sessionCardIndex,
+        wordFrequencySettings, recentWordIds,
+      )
     );
   }
 
   if (cardType === 'CARD_1002') {
-    return generateCard1002(bank, language) ?? generateCard1006Fallback(
-      bank, language, direction, wordStats, sessionCardIndex, wordFrequencySettings,
+    return (
+      generateCard1002(bank, language) ??
+      generateCard1006Fallback(
+        bank, language, direction, wordStats, sessionCardIndex,
+        wordFrequencySettings, recentWordIds,
+      )
     );
   }
 
+  // CARD_1006 — use pre-selected item if provided by the deck manager
+  if (preSelectedItem) {
+    return generateCard1006(preSelectedItem, language, direction);
+  }
+
   return generateCard1006Fallback(
-    bank, language, direction, wordStats, sessionCardIndex, wordFrequencySettings,
+    bank, language, direction, wordStats, sessionCardIndex,
+    wordFrequencySettings, recentWordIds,
   );
 }
 
@@ -280,6 +319,7 @@ function generateCard1006Fallback(
   wordStats: Record<string, import('../types/state').WordStats>,
   sessionCardIndex: number,
   wordFrequencySettings: Record<string, import('../types/state').WordFrequencySetting>,
+  recentWordIds: string[] = [],
 ): CardData | null {
   let eligible = bank.filter(item => {
     if (direction === 'target_to_native') {
@@ -292,7 +332,15 @@ function generateCard1006Fallback(
 
   if (eligible.length === 0) eligible = bank;
 
-  const item = selectWord(eligible, wordStats, sessionCardIndex, wordFrequencySettings);
+  // For German native_to_target, prioritise nouns with gender so gender tiles appear.
+  if (language === 'de' && direction === 'native_to_target') {
+    const nounPool = eligible.filter(w => w.partOfSpeech === 'noun' && w.gender !== null);
+    if (nounPool.length > 0) eligible = nounPool;
+  }
+
+  const item = selectWord(
+    eligible, wordStats, sessionCardIndex, wordFrequencySettings, recentWordIds,
+  );
   if (!item) return null;
 
   return generateCard1006(item, language, direction);
