@@ -38,7 +38,15 @@ import SearchBar from '@/src/components/ui/SearchBar';
 import GeneratedListModal, { type DraftWord } from '@/src/components/list-setup/GeneratedListModal';
 
 type SetupMode = 'choice' | 'random' | 'custom';
-type ListSetupSource = 'study_mode' | 'vocab_bank';
+export type ListSetupSource = 'study_mode' | 'vocab_bank';
+
+// Module-level fallback for the launch source. The navigation param is the
+// primary signal, but this survives cases where the router drops or mangles
+// params (same pattern as the pending-celebration flag in welcome.tsx).
+let _launchSource: ListSetupSource = 'vocab_bank';
+export function setListSetupLaunchSource(source: ListSetupSource): void {
+  _launchSource = source;
+}
 
 const LANGUAGE_LABELS: Record<string, string> = {
   de: 'German',
@@ -55,9 +63,12 @@ const COUNT_OPTIONS = [10, 15, 20, 25];
 
 export default function ListSetupScreen() {
   const router = useRouter();
-  const { source: sourceParam } = useLocalSearchParams<{ source?: string }>();
+  const { source: sourceParam } = useLocalSearchParams<{ source?: string | string[] }>();
+  const normalizedSource = Array.isArray(sourceParam) ? sourceParam[0] : sourceParam;
   const setupSource: ListSetupSource =
-    sourceParam === 'study_mode' ? 'study_mode' : 'vocab_bank';
+    normalizedSource === 'study_mode' || normalizedSource === 'vocab_bank'
+      ? normalizedSource
+      : _launchSource;
   const { state, setVocabBank } = useAppContext();
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
@@ -154,6 +165,7 @@ export default function ListSetupScreen() {
   };
 
   const navigateAfterSetup = () => {
+    console.log('[ListSetup] navigateAfterSetup', { sourceParam, setupSource });
     if (setupSource === 'study_mode') {
       router.replace('/direction');
       return;

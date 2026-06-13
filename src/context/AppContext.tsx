@@ -12,6 +12,7 @@ import type { VocabItem } from '../types/vocab';
 import type {
   AppState,
   DirectionMode,
+  LanguageBanks,
   ModeBankData,
   StudyType,
   WordFrequencySetting,
@@ -23,7 +24,6 @@ import { buildFrequencySettings } from '../utils/vocabBank';
 import {
   loadPersistedState,
   savePersistedState,
-  clearPersistedState,
   EMPTY_MODE_BANKS,
   hasModeBank,
 } from '../storage/persistedState';
@@ -39,12 +39,14 @@ type Action =
   | { type: 'REMOVE_FROM_BANK'; vocabId: string }
   | { type: 'SET_WORD_FREQUENCY'; vocabId: string; setting: WordFrequencySetting }
   | { type: 'ADD_WORD_TO_MASTER'; item: VocabItem }
-  | { type: 'RESET_SESSION' };
+  | { type: 'RESET_SESSION' }
+  | { type: 'RESET_APP' };
 
 const initialState: AppState = {
   languageSelected: null,
   studyTypeSelected: null,
   directionMode: 'mixed',
+  languageBanks: {},
   modeBanks: { ...EMPTY_MODE_BANKS },
   activeVocabBank: [],
   wordStats: {},
@@ -62,14 +64,22 @@ function syncModeBank(
   }
 
   const modeBank: ModeBankData = { activeVocabBank: bank, wordFrequencySettings };
+  const modeBanks = {
+    ...state.modeBanks,
+    [state.studyTypeSelected]: modeBank,
+  };
+  // Mirror the active language's banks into the per-language map so they
+  // survive language switches and are persisted per language.
+  const languageBanks: LanguageBanks = state.languageSelected
+    ? { ...state.languageBanks, [state.languageSelected]: modeBanks }
+    : state.languageBanks;
+
   return {
     ...state,
     activeVocabBank: bank,
     wordFrequencySettings,
-    modeBanks: {
-      ...state.modeBanks,
-      [state.studyTypeSelected]: modeBank,
-    },
+    modeBanks,
+    languageBanks,
   };
 }
 
@@ -78,13 +88,22 @@ function reducer(state: AppState, action: Action): AppState {
     case 'HYDRATE':
       return { ...state, ...action.payload };
 
-    case 'SELECT_LANGUAGE':
+    case 'SELECT_LANGUAGE': {
+      // Fold the outgoing language's banks into the per-language map, then
+      // restore whatever was previously saved for the incoming language.
+      const languageBanks: LanguageBanks = state.languageSelected
+        ? { ...state.languageBanks, [state.languageSelected]: state.modeBanks }
+        : state.languageBanks;
+      const restored = languageBanks[action.language] ?? { ...EMPTY_MODE_BANKS };
+
       return {
         ...initialState,
         languageSelected: action.language,
         directionMode: state.directionMode,
-        modeBanks: { ...EMPTY_MODE_BANKS },
+        languageBanks,
+        modeBanks: { ...restored },
       };
+    }
 
     case 'SET_VOCAB_BANK': {
       const frequencySettings =
@@ -171,6 +190,14 @@ function reducer(state: AppState, action: Action): AppState {
         sessionCardIndex: 0,
       };
 
+    case 'RESET_APP':
+      // Full fresh-install state: no language, no banks anywhere.
+      return {
+        ...initialState,
+        languageBanks: {},
+        modeBanks: { ...EMPTY_MODE_BANKS },
+      };
+
     default:
       return state;
   }
@@ -191,6 +218,8 @@ interface AppContextValue {
   setWordFrequency: (vocabId: string, setting: WordFrequencySetting) => void;
   addWordToMaster: (item: VocabItem) => void;
   resetSession: () => void;
+  /** Dev/testing: returns the app to a pristine fresh-install state. */
+  resetApp: () => void;
   hasModeBank: (studyType: StudyType) => boolean;
   getModeBank: (studyType: StudyType) => ModeBankData | null;
 }
@@ -201,7 +230,11 @@ function toPersistedPayload(state: AppState) {
   if (!state.languageSelected) return null;
   return {
     selectedLanguage: state.languageSelected,
-    modeBanks: state.modeBanks,
+    languageBanks: {
+      ...state.languageBanks,
+      // Always include the active language's latest banks
+      [state.languageSelected]: state.modeBanks,
+    },
     directionMode: state.directionMode,
     onboardingComplete: true as const,
   };
@@ -221,7 +254,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           type: 'HYDRATE',
           payload: {
             languageSelected: stored.selectedLanguage,
-            modeBanks: stored.modeBanks,
+            languageBanks: stored.languageBanks,
+            modeBanks:
+              stored.languageBanks[stored.selectedLanguage] ?? { ...EMPTY_MODE_BANKS },
             directionMode: stored.directionMode,
             activeVocabBank: [],
             wordFrequencySettings: {},
@@ -236,16 +271,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!hasHydrated.current || !isReady) return;
     const payload = toPersistedPayload(state);
-    console.log('[AppContext] savePersistedState payload:', JSON.stringify(payload, null, 2));
     if (payload) savePersistedState(payload);
-  }, [isReady, state.languageSelected, state.modeBanks, state.directionMode]);
+  }, [isReady, state.languageSelected, state.languageBanks, state.modeBanks, state.directionMode]);
 
   const requestLanguageChange = useCallback(() => {
     setShowLanguagePicker(true);
   }, []);
 
   const selectLanguage = useCallback((language: Language) => {
-    clearPersistedState();
+    // Do NOT clear persisted state here — each language's banks are kept in
+    // the per-language map and restored when the user switches back.
     setShowLanguagePicker(false);
     dispatch({ type: 'SELECT_LANGUAGE', language });
   }, []);
@@ -295,6 +330,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const resetSession = useCallback(() => dispatch({ type: 'RESET_SESSION' }), []);
 
+  const resetApp = useCallback(() => dispatch({ type: 'RESET_APP' }), []);
+
   const checkHasModeBank = useCallback(
     (studyType: StudyType) => hasModeBank(state.modeBanks, studyType),
     [state.modeBanks],
@@ -322,6 +359,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setWordFrequency,
         addWordToMaster,
         resetSession,
+        resetApp,
         hasModeBank: checkHasModeBank,
         getModeBank,
       }}

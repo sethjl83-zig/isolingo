@@ -22,10 +22,18 @@ export interface ModeBankData {
   wordFrequencySettings: Record<string, WordFrequencySetting>;
 }
 
+/** Per-language map of mode banks — each language keeps its own saved banks. */
+export type LanguageBanks = Partial<
+  Record<Language, Record<StudyType, ModeBankData | null>>
+>;
+
 export interface AppState {
   languageSelected: Language | null;
   studyTypeSelected: StudyType | null;
   directionMode: DirectionMode;
+  /** Banks for ALL languages. Source of truth for persistence. */
+  languageBanks: LanguageBanks;
+  /** Banks for the currently selected language (view into languageBanks). */
   modeBanks: Record<StudyType, ModeBankData | null>;
   activeVocabBank: VocabItem[];
   wordStats: Record<string, WordStats>;
@@ -35,7 +43,7 @@ export interface AppState {
 
 export interface PersistedAppData {
   selectedLanguage: Language;
-  modeBanks: Record<StudyType, ModeBankData | null>;
+  languageBanks: LanguageBanks;
   directionMode: DirectionMode;
   /** Written only after the user explicitly picks a language. Absent in stale/legacy data. */
   onboardingComplete?: boolean;

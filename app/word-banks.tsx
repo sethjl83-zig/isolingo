@@ -16,6 +16,7 @@ import { Colors } from '@/constants/theme';
 import { useAppContext } from '@/src/context/AppContext';
 import type { StudyType } from '@/src/types/state';
 import StudyButton from '@/src/components/ui/StudyButton';
+import { setListSetupLaunchSource } from './list-setup';
 
 const MODE_LABELS: Record<StudyType, string> = {
   general_vocab: 'General Vocab Bank',
@@ -57,6 +58,7 @@ export default function WordBanksScreen() {
 
   const handleSetUp = (studyType: StudyType) => {
     selectStudyType(studyType);
+    setListSetupLaunchSource('vocab_bank');
     router.push({ pathname: '/list-setup', params: { source: 'vocab_bank' } });
   };
 

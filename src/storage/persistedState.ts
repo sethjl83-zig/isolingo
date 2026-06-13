@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { PersistedAppData, ModeBankData, StudyType } from '../types/state';
+import type { PersistedAppData, ModeBankData, StudyType, LanguageBanks } from '../types/state';
 import type { Language, VocabItem } from '../types/vocab';
 import type { DirectionMode, WordFrequencySetting } from '../types/state';
 import { normalizeFrequencySetting } from '../types/state';
@@ -13,8 +13,16 @@ export const EMPTY_MODE_BANKS: Record<StudyType, ModeBankData | null> = {
 
 export interface StoredState {
   selectedLanguage: Language;
-  modeBanks: Record<StudyType, ModeBankData | null>;
+  /** Banks for every language the user has set up, keyed by language. */
+  languageBanks: LanguageBanks;
   directionMode: DirectionMode;
+}
+
+/** Format v2 — single set of mode banks tied to the selected language. */
+interface ModeBanksStoredState {
+  selectedLanguage: Language;
+  modeBanks: Record<StudyType, ModeBankData | null>;
+  directionMode?: DirectionMode;
 }
 
 /** Legacy single-bank format before per-mode banks were introduced. */
@@ -51,6 +59,15 @@ function normalizeModeBanks(
   };
 }
 
+function normalizeLanguageBanks(languageBanks: LanguageBanks | undefined): LanguageBanks {
+  const result: LanguageBanks = {};
+  if (!languageBanks) return result;
+  for (const [lang, banks] of Object.entries(languageBanks)) {
+    result[lang as Language] = normalizeModeBanks(banks ?? undefined);
+  }
+  return result;
+}
+
 function migrateLegacyState(parsed: LegacyStoredState): StoredState | null {
   if (!parsed.selectedLanguage || !Array.isArray(parsed.activeVocabBank)) {
     return null;
@@ -69,7 +86,9 @@ function migrateLegacyState(parsed: LegacyStoredState): StoredState | null {
 
   return {
     selectedLanguage: parsed.selectedLanguage,
-    modeBanks: { general_vocab: generalBank, gender: null },
+    languageBanks: {
+      [parsed.selectedLanguage]: { general_vocab: generalBank, gender: null },
+    },
     directionMode: parsed.directionMode ?? 'mixed',
   };
 }
@@ -79,14 +98,28 @@ export async function loadPersistedState(): Promise<StoredState | null> {
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
 
-    const parsed = JSON.parse(raw) as PersistedAppData & LegacyStoredState;
+    const parsed = JSON.parse(raw) as PersistedAppData &
+      ModeBanksStoredState &
+      LegacyStoredState;
     if (!parsed.selectedLanguage) return null;
     if (!parsed.onboardingComplete) return null;
 
+    // Current format — per-language banks
+    if ('languageBanks' in parsed && parsed.languageBanks) {
+      return {
+        selectedLanguage: parsed.selectedLanguage,
+        languageBanks: normalizeLanguageBanks(parsed.languageBanks),
+        directionMode: parsed.directionMode ?? 'mixed',
+      };
+    }
+
+    // v2 format — one set of mode banks, owned by the selected language
     if ('modeBanks' in parsed && parsed.modeBanks) {
       return {
         selectedLanguage: parsed.selectedLanguage,
-        modeBanks: normalizeModeBanks(parsed.modeBanks),
+        languageBanks: {
+          [parsed.selectedLanguage]: normalizeModeBanks(parsed.modeBanks),
+        },
         directionMode: parsed.directionMode ?? 'mixed',
       };
     }

@@ -35,6 +35,7 @@ import type { StudyType } from '@/src/types/state';
 import { loadStatsForLanguage } from '@/src/storage/statsStorage';
 import { getCompetencyLevel } from '@/src/types/stats';
 import { USER_NAME_KEY, CELEBRATION_PENDING_KEY, takePendingCelebration } from './welcome';
+import { setListSetupLaunchSource } from './list-setup';
 
 // Warm coral-orange accent — clearly distinct from gender colours
 // (#4da3ff masc · #d66aa6 fem · #A4922D neut)
@@ -333,7 +334,7 @@ const celebStyles = StyleSheet.create({
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const { state, isReady, selectLanguage, selectStudyType } = useAppContext();
+  const { state, isReady, selectLanguage, selectStudyType, resetApp } = useAppContext();
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
   const accent = scheme === 'dark' ? ACCENT_DARK : ACCENT_LIGHT;
@@ -362,7 +363,13 @@ export default function DashboardScreen() {
   // For returning users: load name from storage (celebration path already has it).
   // Also handle the edge-case where the app restarted mid-celebration (AsyncStorage backup).
   useEffect(() => {
-    if (celebrationActive) return;   // new-user path already resolved above
+    if (celebrationActive) {
+      // Celebration is firing now via the in-memory path — clear the storage
+      // flag immediately so it can never fire again (e.g. when a later
+      // navigation mounts a fresh dashboard instance).
+      AsyncStorage.removeItem(CELEBRATION_PENDING_KEY);
+      return;
+    }
 
     Promise.all([
       AsyncStorage.getItem(USER_NAME_KEY),
@@ -434,9 +441,12 @@ export default function DashboardScreen() {
     const hasBank = bank !== null && (bank.activeVocabBank?.length ?? 0) > 0;
 
     selectStudyType(studyType);
-    router.push(
-      hasBank ? '/direction' : { pathname: '/list-setup', params: { source: 'study_mode' } },
-    );
+    if (hasBank) {
+      router.push('/direction');
+    } else {
+      setListSetupLaunchSource('study_mode');
+      router.push({ pathname: '/list-setup', params: { source: 'study_mode' } });
+    }
   };
 
   // ── DEV ONLY — remove before publishing ─────────────────────────────────────
@@ -448,7 +458,14 @@ export default function DashboardScreen() {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Reset', style: 'destructive',
-          onPress: async () => { await AsyncStorage.clear(); router.replace('/'); },
+          onPress: async () => {
+            await AsyncStorage.clear();
+            // AppProvider survives navigation, so the in-memory state must be
+            // reset too — otherwise the old language and banks linger and get
+            // re-persisted on the next state change.
+            resetApp();
+            router.replace('/');
+          },
         },
       ],
     );
