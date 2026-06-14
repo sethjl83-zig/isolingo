@@ -25,8 +25,9 @@ export type RelationshipType =
 export interface Card1002Data {
   type: 'CARD_1002';
   englishWord: string;
-  targetWord: string;   // display form (with article for FR/ES nouns)
+  targetWord: string;            // display form (with article for FR/ES nouns)
   targetItem: VocabItem;
+  targetDeterminerType: DeterminerType | null; // FR/ES nouns only
   correctRelationship: RelationshipType;
 }
 

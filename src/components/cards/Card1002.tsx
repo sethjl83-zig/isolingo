@@ -13,7 +13,8 @@ import {
 } from 'react-native';
 import { Colors, GenderColors } from '@/constants/theme';
 import type { Card1002Data, RelationshipType } from '@/src/types/cards';
-import type { Language } from '@/src/types/vocab';
+import type { Gender, Language } from '@/src/types/vocab';
+import { splitDisplayForm } from '@/src/engines/articleHelper';
 import StudyButton from '../ui/StudyButton';
 import CorrectText from '../ui/CorrectText';
 import WordMgmtStrip from '../ui/WordMgmtStrip';
@@ -55,6 +56,19 @@ export default function Card1002({
   const isNoun =
     card.targetItem.partOfSpeech === 'noun' && card.targetItem.gender !== null;
   const nounColor = isNoun ? GenderColors[card.targetItem.gender!] : undefined;
+
+  // For FR/ES nouns with an article, split so only the noun part gets the gender color.
+  const targetParts =
+    isNoun &&
+    card.targetDeterminerType &&
+    (language === 'fr' || language === 'es')
+      ? splitDisplayForm(
+          language,
+          card.targetItem.gender as Gender,
+          card.targetItem.lemma,
+          card.targetDeterminerType,
+        )
+      : null;
 
   const handleSelect = useCallback(
     (id: RelationshipType) => {
@@ -118,7 +132,16 @@ export default function Card1002({
             {card.englishWord}
           </Text>
           <View style={styles.separator} />
-          {isNoun ? (
+          {targetParts ? (
+            <Text style={styles.pairTarget}>
+              <Text style={{ color: palette.text }}>
+                {targetParts.article}{targetParts.separator}
+              </Text>
+              <Text style={{ color: nounColor }}>
+                {targetParts.noun}
+              </Text>
+            </Text>
+          ) : isNoun ? (
             <Text style={[styles.pairTarget, { color: nounColor ?? palette.text }]}>
               {card.targetWord}
             </Text>

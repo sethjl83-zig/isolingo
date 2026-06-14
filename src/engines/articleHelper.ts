@@ -74,6 +74,30 @@ export function getDisplayForm(
   return `${article} ${lemma}`;
 }
 
+/**
+ * Splits a FR/ES display form into its article and noun parts for two-color
+ * rendering (article in default color, noun in gender color).
+ * Returns empty article for German.
+ * For French elision ("l'hôtel") the separator is '' rather than ' '.
+ */
+export function splitDisplayForm(
+  language: Language,
+  gender: Gender,
+  lemma: string,
+  determinerType: DeterminerType = 'definite',
+): { article: string; separator: string; noun: string } {
+  if (language === 'de') return { article: '', separator: '', noun: lemma };
+
+  // French elision: le/la → l' before a vowel or silent h
+  if (language === 'fr' && determinerType === 'definite') {
+    const startsWithVowelOrH = /^[aeiouéèêëàâùûîïôœæh]/i.test(lemma);
+    if (startsWithVowelOrH) return { article: "l'", separator: '', noun: lemma };
+  }
+
+  const article = getArticle(language, gender, determinerType);
+  return { article, separator: ' ', noun: lemma };
+}
+
 /** Returns an English determiner+noun prompt: "the dog", "a cat", "my friend". */
 export function getEnglishDeterminerPrompt(
   englishNoun: string,

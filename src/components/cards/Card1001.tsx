@@ -14,6 +14,7 @@ import {
 import { Colors, GenderColors } from '@/constants/theme';
 import type { Card1001Data, MatchingNoun } from '@/src/types/cards';
 import type { Gender, Language } from '@/src/types/vocab';
+import { splitDisplayForm } from '@/src/engines/articleHelper';
 import StudyButton from '../ui/StudyButton';
 import CorrectText from '../ui/CorrectText';
 import WordMgmtStrip from '../ui/WordMgmtStrip';
@@ -160,6 +161,14 @@ export default function Card1001({
                 ? GenderColors[paired]
                 : undefined;
 
+            // For FR/ES, split article and noun so only the noun gets the gender color.
+            // Card1001 always uses 'definite' articles in its display forms.
+            const isFrEs = language === 'fr' || language === 'es';
+            const parts =
+              isFrEs && noun.item.partOfSpeech === 'noun' && noun.item.gender
+                ? splitDisplayForm(language, noun.item.gender as Gender, noun.item.lemma, 'definite')
+                : null;
+
             return (
               <TouchableOpacity
                 key={noun.item.id}
@@ -173,9 +182,20 @@ export default function Card1001({
                 disabled={isLocked || submitted || flipped}
                 activeOpacity={0.75}
               >
-                <Text style={[styles.nounText, { color: nounColor ?? palette.text }]}>
-                  {noun.displayForm}
-                </Text>
+                {parts ? (
+                  <Text style={styles.nounText}>
+                    <Text style={{ color: palette.text }}>
+                      {parts.article}{parts.separator}
+                    </Text>
+                    <Text style={{ color: nounColor ?? palette.text }}>
+                      {parts.noun}
+                    </Text>
+                  </Text>
+                ) : (
+                  <Text style={[styles.nounText, { color: nounColor ?? palette.text }]}>
+                    {noun.displayForm}
+                  </Text>
+                )}
               </TouchableOpacity>
             );
           })}

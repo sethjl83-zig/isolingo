@@ -103,11 +103,21 @@ function pickRelationship(): RelationshipType {
   return 'same_meaning';
 }
 
-function nounDisplayForCard1002(item: VocabItem, language: Language): string {
-  if (item.partOfSpeech !== 'noun' || !item.gender) return item.lemma;
-  if (language === 'de') return item.lemma;
-  const det: DeterminerType = Math.random() < 0.5 ? 'definite' : 'indefinite';
-  return getDisplayForm(language, item.gender, item.lemma, det);
+function nounDisplayForCard1002(
+  item: VocabItem,
+  language: Language,
+): { displayForm: string; determinerType: DeterminerType | null } {
+  if (item.partOfSpeech !== 'noun' || !item.gender) {
+    return { displayForm: item.lemma, determinerType: null };
+  }
+  if (language === 'de') {
+    return { displayForm: item.lemma, determinerType: null };
+  }
+  const det = DETERMINER_TYPES[Math.floor(Math.random() * DETERMINER_TYPES.length)];
+  return {
+    displayForm: getDisplayForm(language, item.gender, item.lemma, det),
+    determinerType: det,
+  };
 }
 
 export function generateCard1002(
@@ -120,11 +130,13 @@ export function generateCard1002(
 
   if (relType === 'same_meaning') {
     const item = bank[Math.floor(Math.random() * bank.length)];
+    const { displayForm, determinerType } = nounDisplayForCard1002(item, language);
     return {
       type: 'CARD_1002',
       englishWord: item.english,
-      targetWord: nounDisplayForCard1002(item, language),
+      targetWord: displayForm,
       targetItem: item,
+      targetDeterminerType: determinerType,
       correctRelationship: 'same_meaning',
     };
   }
@@ -144,11 +156,13 @@ export function generateCard1002(
 
     const w1 = catWords[i1];
     const w2 = catWords[i2];
+    const { displayForm: df2, determinerType: dt2 } = nounDisplayForCard1002(w2, language);
     return {
       type: 'CARD_1002',
       englishWord: w1.english,
-      targetWord: nounDisplayForCard1002(w2, language),
+      targetWord: df2,
       targetItem: w2,
+      targetDeterminerType: dt2,
       correctRelationship: 'same_category',
     };
   }
@@ -163,11 +177,13 @@ export function generateCard1002(
   if (diffCat.length === 0) return generateCard1002SameMeaning(bank, language);
 
   const item2 = diffCat[Math.floor(Math.random() * diffCat.length)];
+  const { displayForm: dfNcr, determinerType: dtNcr } = nounDisplayForCard1002(item2, language);
   return {
     type: 'CARD_1002',
     englishWord: item1.english,
-    targetWord: nounDisplayForCard1002(item2, language),
+    targetWord: dfNcr,
     targetItem: item2,
+    targetDeterminerType: dtNcr,
     correctRelationship: 'no_clear_relationship',
   };
 }
@@ -177,11 +193,13 @@ function generateCard1002SameMeaning(
   language: Language,
 ): Card1002Data {
   const item = bank[Math.floor(Math.random() * bank.length)];
+  const { displayForm, determinerType } = nounDisplayForCard1002(item, language);
   return {
     type: 'CARD_1002',
     englishWord: item.english,
-    targetWord: nounDisplayForCard1002(item, language),
+    targetWord: displayForm,
     targetItem: item,
+    targetDeterminerType: determinerType,
     correctRelationship: 'same_meaning',
   };
 }
@@ -203,11 +221,17 @@ export function generateCard1006(
 
 function card1006TargetToNative(item: VocabItem, language: Language): Card1006Data {
   let prompt: string;
+  let usedDeterminer: DeterminerType | null = null;
+
   if (item.partOfSpeech === 'noun' && item.gender) {
-    prompt =
-      language === 'de'
-        ? item.lemma
-        : getDisplayForm(language, item.gender, item.lemma, 'definite');
+    if (language === 'de') {
+      prompt = item.lemma;
+    } else {
+      // FR/ES: cycle through all three determiner types so users see all forms
+      const det = DETERMINER_TYPES[Math.floor(Math.random() * DETERMINER_TYPES.length)];
+      usedDeterminer = det;
+      prompt = getDisplayForm(language, item.gender, item.lemma, det);
+    }
   } else {
     prompt = item.lemma;
   }
@@ -219,7 +243,7 @@ function card1006TargetToNative(item: VocabItem, language: Language): Card1006Da
     type: 'CARD_1006',
     item,
     direction: 'target_to_native',
-    determinerType: null,
+    determinerType: usedDeterminer,
     prompt,
     canonicalAnswer: canonical,
     acceptedAnswers: rest,

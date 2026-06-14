@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, GenderColors } from '@/constants/theme';
 import type { Card1006Data } from '@/src/types/cards';
 import type { Gender, Language } from '@/src/types/vocab';
+import { splitDisplayForm } from '@/src/engines/articleHelper';
 import GenderTile from '../ui/GenderTile';
 import StudyButton from '../ui/StudyButton';
 import CorrectText from '../ui/CorrectText';
@@ -148,6 +149,29 @@ export default function Card1006({
       ? GenderColors[card.item.gender as Gender]
       : palette.text;
 
+  // ── Split article/noun for FR/ES — only the noun gets the gender colour ────────
+  const isFrEs = language === 'fr' || language === 'es';
+
+  // Prompt split: target_to_native FR/ES noun with determiner
+  const promptParts =
+    isFrEs &&
+    card.direction === 'target_to_native' &&
+    isNoun &&
+    card.item.gender &&
+    card.determinerType
+      ? splitDisplayForm(language, card.item.gender as Gender, card.item.lemma, card.determinerType)
+      : null;
+
+  // Answer reveal split: native_to_target FR/ES noun — canonical answer is "le chien" etc.
+  const answerParts =
+    isFrEs &&
+    card.direction === 'native_to_target' &&
+    isNoun &&
+    card.item.gender &&
+    card.determinerType
+      ? splitDisplayForm(language, card.item.gender as Gender, card.item.lemma, card.determinerType)
+      : null;
+
   // ── Feedback text ─────────────────────────────────────────────────────────────
   let feedbackText = '';
   let feedbackColor = palette.text;
@@ -210,7 +234,18 @@ export default function Card1006({
 
             {/* Prompt */}
             <View style={styles.promptArea}>
-              <Text style={[styles.prompt, { color: promptColor }]}>{card.prompt}</Text>
+              {promptParts ? (
+                <Text style={styles.prompt}>
+                  <Text style={{ color: palette.text }}>
+                    {promptParts.article}{promptParts.separator}
+                  </Text>
+                  <Text style={{ color: promptColor }}>
+                    {promptParts.noun}
+                  </Text>
+                </Text>
+              ) : (
+                <Text style={[styles.prompt, { color: promptColor }]}>{card.prompt}</Text>
+              )}
             </View>
 
             {/* Input */}
@@ -258,13 +293,17 @@ export default function Card1006({
             {/* Correct answer reveal */}
             {(cardState === 'incorrect_final' || cardState === 'flipped') && (
               <View style={styles.answerReveal}>
-                {correctDisplayGender ? (
-                  <Text
-                    style={[
-                      styles.answerText,
-                      { color: GenderColors[correctDisplayGender] },
-                    ]}
-                  >
+                {answerParts && correctDisplayGender ? (
+                  <Text style={styles.answerText}>
+                    <Text style={{ color: palette.text }}>
+                      {answerParts.article}{answerParts.separator}
+                    </Text>
+                    <Text style={{ color: GenderColors[correctDisplayGender] }}>
+                      {answerParts.noun}
+                    </Text>
+                  </Text>
+                ) : correctDisplayGender ? (
+                  <Text style={[styles.answerText, { color: GenderColors[correctDisplayGender] }]}>
                     {card.canonicalAnswer}
                   </Text>
                 ) : (
