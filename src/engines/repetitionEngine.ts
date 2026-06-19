@@ -62,9 +62,18 @@ export function buildDeck(
 }
 
 /**
- * Picks the first word in the deck that satisfies the spacing rule.
- * Scans forward through the deck (not just the head) to find an eligible
- * word. Falls back to the deck head if nothing qualifies.
+ * Picks the best word from the deck using a three-pass priority system:
+ *
+ * Pass 1 — Prefer words NEVER seen this session.
+ *   This guarantees all bank words are introduced before any word repeats,
+ *   eliminating the "cycling same few words before incorporating others" bug.
+ *
+ * Pass 2 — Words that satisfy the spacing rule (seen before, but enough
+ *   unique other words have appeared in between).
+ *
+ * Pass 3 — Fallback when spacing cannot be satisfied (tiny bank). Picks
+ *   the first valid entry regardless of recency.
+ *
  * Returns the selected item and the deck with that entry removed.
  */
 export function selectFromDeck(
@@ -75,26 +84,42 @@ export function selectFromDeck(
 ): { item: VocabItem; remainingDeck: string[] } | null {
   if (deck.length === 0) return null;
 
-  // Try to find the first eligible entry respecting spacing
-  for (let i = 0; i < deck.length; i++) {
-    const id = deck[i];
-    const item = bankById.get(id);
-    if (!item) continue;
-    if (isWordEligibleBySpacing(id, recentWordIds, minSpacing)) {
-      const remainingDeck = [...deck.slice(0, i), ...deck.slice(i + 1)];
-      return { item, remainingDeck };
-    }
+  const seenIds = new Set(recentWordIds);
+
+  function pick(i: number) {
+    return {
+      item: bankById.get(deck[i])!,
+      remainingDeck: [...deck.slice(0, i), ...deck.slice(i + 1)],
+    };
   }
 
-  // Spacing cannot be satisfied (bank too small relative to spacing requirement)
-  // — fall back to the first valid entry in the deck regardless
+  // Pass 1: words not yet seen this session
   for (let i = 0; i < deck.length; i++) {
-    const item = bankById.get(deck[i]);
-    if (item) {
-      const remainingDeck = [...deck.slice(0, i), ...deck.slice(i + 1)];
-      return { item, remainingDeck };
+    if (!seenIds.has(deck[i]) && bankById.has(deck[i])) return pick(i);
+  }
+
+  // Pass 2: spacing-eligible repeats
+  for (let i = 0; i < deck.length; i++) {
+    if (!bankById.has(deck[i])) continue;
+    if (isWordEligibleBySpacing(deck[i], recentWordIds, minSpacing)) return pick(i);
+  }
+
+  // Pass 3: forced fallback — pick the least-recently-seen eligible word so the
+  // user sees the word they practised longest ago rather than the first arbitrary
+  // entry in the shuffled deck order.
+  let lruIdx = -1;
+  let lruScore = -1; // higher = seen longer ago = better candidate
+  for (let i = 0; i < deck.length; i++) {
+    if (!bankById.has(deck[i])) continue;
+    const pos = recentWordIds.indexOf(deck[i]);
+    // pos === -1 means beyond the tracked window — treat as maximally old
+    const score = pos === -1 ? Number.MAX_SAFE_INTEGER : pos;
+    if (score > lruScore) {
+      lruScore = score;
+      lruIdx = i;
     }
   }
+  if (lruIdx >= 0) return pick(lruIdx);
 
   return null;
 }
@@ -174,12 +199,23 @@ export function selectWord(
   const minSpacing = getMinSpacing(pool.length);
 
   let candidates: VocabItem[];
+
   if (recentWordIds && recentWordIds.length > 0) {
-    const spacingEligible = pool.filter(item =>
-      isWordEligibleBySpacing(item.id, recentWordIds, minSpacing),
-    );
-    candidates = spacingEligible.length > 0 ? spacingEligible : pool;
+    const seenIds = new Set(recentWordIds);
+
+    // Pass 1: words not yet seen this session (mirror selectFromDeck priority)
+    const unseen = pool.filter(item => !seenIds.has(item.id));
+    if (unseen.length > 0) {
+      candidates = unseen;
+    } else {
+      // Pass 2: spacing-eligible words
+      const spacingEligible = pool.filter(item =>
+        isWordEligibleBySpacing(item.id, recentWordIds, minSpacing),
+      );
+      candidates = spacingEligible.length > 0 ? spacingEligible : pool;
+    }
   } else {
+    // No history yet — exclude words seen very recently by session index
     const notRecent = pool.filter(item => {
       const s = stats[item.id];
       if (!s) return true;

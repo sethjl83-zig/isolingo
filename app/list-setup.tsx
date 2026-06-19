@@ -104,7 +104,7 @@ export default function ListSetupScreen() {
   if (!language || !studyType) return null;
 
   const categoryFiltered = selectedCategory
-    ? masterList.filter(w => w.category === selectedCategory)
+    ? masterList.filter(w => w.category.includes(selectedCategory))
     : masterList;
   const filteredMaster = filterVocabBySearch(categoryFiltered, searchQuery);
   const selectedCount = selectedIds.size;

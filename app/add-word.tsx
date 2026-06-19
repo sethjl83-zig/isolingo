@@ -74,7 +74,13 @@ export default function AddWordScreen() {
   const [pos, setPos] = useState<PartOfSpeech | null>(null);
   const [gender, setGender] = useState<Gender | null>(null);
   const [plural, setPlural] = useState('');
-  const [category, setCategory] = useState('general');
+  const [categories, setCategories] = useState<string[]>(['general']);
+
+  const toggleCategory = (cat: string) => {
+    setCategories(prev =>
+      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat],
+    );
+  };
 
   const showGender = pos === 'noun';
   const showPlural = pos === 'noun';
@@ -118,7 +124,7 @@ export default function AddWordScreen() {
       partOfSpeech: pos!,
       gender: pos === 'noun' ? gender : null,
       plural: pos === 'noun' && plural.trim() ? plural.trim() : null,
-      category,
+      category: categories.length > 0 ? categories : ['general'],
       competencies: pos === 'noun' ? ['vocab', 'gender'] : ['vocab'],
       user_added: 'y',
     };
@@ -255,30 +261,33 @@ export default function AddWordScreen() {
           </>
         )}
 
-        {/* Category */}
-        <Text style={labelStyle}>Category (optional)</Text>
+        {/* Category — tap to toggle, multiple selections allowed */}
+        <Text style={labelStyle}>Categories (optional — select all that apply)</Text>
         <View style={styles.chipRow}>
-          {CATEGORIES.map(cat => (
-            <TouchableOpacity
-              key={cat}
-              style={[
-                styles.chip,
-                { borderColor: palette.border, backgroundColor: palette.card },
-                category === cat && { backgroundColor: palette.tint, borderColor: palette.tint },
-              ]}
-              onPress={() => setCategory(cat)}
-            >
-              <Text
+          {CATEGORIES.map(cat => {
+            const active = categories.includes(cat);
+            return (
+              <TouchableOpacity
+                key={cat}
                 style={[
-                  styles.chipText,
-                  { color: palette.text },
-                  category === cat && { color: '#fff' },
+                  styles.chip,
+                  { borderColor: palette.border, backgroundColor: palette.card },
+                  active && { backgroundColor: palette.tint, borderColor: palette.tint },
                 ]}
+                onPress={() => toggleCategory(cat)}
               >
-                {cat}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text
+                  style={[
+                    styles.chipText,
+                    { color: palette.text },
+                    active && { color: '#fff' },
+                  ]}
+                >
+                  {cat}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         <View style={styles.saveRow}>

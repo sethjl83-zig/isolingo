@@ -12,7 +12,7 @@ export interface VocabItem {
   partOfSpeech: PartOfSpeech;
   gender: Gender | null;
   plural: string | null;
-  category: string;
+  category: string[];
   competencies: Competency[];
   user_added?: 'y';
 }

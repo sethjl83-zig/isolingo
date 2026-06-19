@@ -5,10 +5,28 @@ import deRaw from '../../docs/V0_German_Vocab_List.json';
 import frRaw from '../../docs/V0_French_Vocab_List.json';
 import esRaw from '../../docs/V0_Spanish_Vocab_List.json';
 
+/**
+ * Normalise a raw vocab record so that `category` is always `string[]`.
+ * The JSON files currently ship with `category` as a plain string; this shim
+ * converts those legacy values automatically so the app never breaks while the
+ * JSON files are being updated to the new array format.
+ */
+function normalizeItem(raw: unknown): VocabItem {
+  const item = raw as VocabItem & { category: string | string[] };
+  return {
+    ...item,
+    category: Array.isArray(item.category) ? item.category : [item.category],
+  };
+}
+
+function normalizeList(raw: unknown[]): VocabItem[] {
+  return raw.map(normalizeItem);
+}
+
 export const MASTER_DATASET: Record<string, VocabItem[]> = {
-  de: deRaw as unknown as VocabItem[],
-  fr: frRaw as unknown as VocabItem[],
-  es: esRaw as unknown as VocabItem[],
+  de: normalizeList(deRaw as unknown[]),
+  fr: normalizeList(frRaw as unknown[]),
+  es: normalizeList(esRaw as unknown[]),
 };
 
 const userAddedWords: Record<string, VocabItem[]> = {

@@ -33,6 +33,19 @@ interface LegacyStoredState {
   directionMode?: DirectionMode;
 }
 
+/**
+ * Ensure a VocabItem's `category` field is always `string[]`.
+ * Words saved before the array migration have `category: string`; this shim
+ * converts those values so the rest of the app never sees the old format.
+ */
+function normalizeVocabItem(item: VocabItem): VocabItem {
+  const raw = item as VocabItem & { category: string | string[] };
+  if (!Array.isArray(raw.category)) {
+    return { ...raw, category: raw.category ? [raw.category] : ['general'] };
+  }
+  return item;
+}
+
 function normalizeModeBank(bank: ModeBankData | null | undefined): ModeBankData | null {
   if (!bank || !Array.isArray(bank.activeVocabBank) || bank.activeVocabBank.length === 0) {
     return null;
@@ -45,7 +58,7 @@ function normalizeModeBank(bank: ModeBankData | null | undefined): ModeBankData 
   }
 
   return {
-    activeVocabBank: bank.activeVocabBank,
+    activeVocabBank: bank.activeVocabBank.map(normalizeVocabItem),
     wordFrequencySettings,
   };
 }

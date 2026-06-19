@@ -1,7 +1,7 @@
 import type { CardData, CardType } from '../types/cards';
 import type { AppState, DirectionMode } from '../types/state';
 import { selectCardType } from './cardRotationEngine';
-import { generateCard } from './cardGenerator';
+import { generateCard, generateCard1006, isIdenticalToEnglish } from './cardGenerator';
 import { buildDeck, selectFromDeck, getMinSpacing } from './repetitionEngine';
 import type { VocabItem } from '../types/vocab';
 
@@ -110,13 +110,24 @@ export function generateNextCard(
   const cardType = selectCardType(studyTypeSelected, directionMode, session.recentCardTypes);
   const direction = resolveDirection(directionMode, session.recentDirections);
 
+  // ── Identical-word exclusion set (t-t-n, non-gender mode only) ────────────
+  // In gender mode the user is tested on gender not translation, so identical
+  // words like "Hotel" → "hotel" are still educationally valid.
+  const identicalIds =
+    direction === 'target_to_native' && studyTypeSelected !== 'gender'
+      ? new Set(bank.filter(isIdenticalToEnglish).map(w => w.id))
+      : new Set<string>();
+
   // ── Word selection for Card1006 (deck-based) ──────────────────────────────
   let updatedDeck = deck;
   let preSelectedItem: VocabItem | undefined;
 
   if (cardType === 'CARD_1006') {
-    // For German native_to_target, prefer nouns from the deck
+    // Build the working deck for this card:
+    // 1. For German native_to_target, restrict to nouns (so gender tiles appear).
+    // 2. For target_to_native (non-gender), strip trivially obvious words.
     let targetDeck = deck;
+
     if (languageSelected === 'de' && direction === 'native_to_target') {
       const nounIds = new Set(
         bank.filter(w => w.partOfSpeech === 'noun' && w.gender !== null).map(w => w.id),
@@ -125,15 +136,25 @@ export function generateNextCard(
       if (nounDeck.length > 0) targetDeck = nounDeck;
     }
 
+    if (identicalIds.size > 0) {
+      const filtered = targetDeck.filter(id => !identicalIds.has(id));
+      // Only narrow the pool if it leaves at least one candidate
+      if (filtered.length > 0) targetDeck = filtered;
+    }
+
     let result = selectFromDeck(targetDeck, bankById, session.recentWordIds, minSpacing);
 
     if (!result) {
       // Deck exhausted or all words spacing-blocked — rebuild and retry
-      const freshDeck = buildDeck(bank, wordFrequencySettings);
+      let freshDeck = buildDeck(bank, wordFrequencySettings);
+      if (identicalIds.size > 0) {
+        const filtered = freshDeck.filter(id => !identicalIds.has(id));
+        if (filtered.length > 0) freshDeck = filtered;
+      }
       result = selectFromDeck(freshDeck, bankById, session.recentWordIds, minSpacing);
       if (result) updatedDeck = result.remainingDeck;
     } else {
-      // Remove selected entry from original deck (the noun-filtered view is a subset)
+      // Remove selected entry from the ORIGINAL full deck (targetDeck may be a subset)
       const selectedId = result.item.id;
       const origIdx = deck.indexOf(selectedId);
       updatedDeck =
@@ -146,7 +167,7 @@ export function generateNextCard(
   }
 
   // ── Generate card ─────────────────────────────────────────────────────────
-  const card = generateCard(
+  let card = generateCard(
     cardType,
     bank,
     languageSelected,
@@ -157,7 +178,19 @@ export function generateNextCard(
     session.recentWordIds,
     new Set(session.lastCard1001NounIds),
     preSelectedItem,
+    studyTypeSelected,
   );
+
+  // ── Absolute last-resort fallback ─────────────────────────────────────────
+  // generateCard should never return null when the bank is non-empty, but if
+  // spacing or filtering constraints somehow exhaust all candidates we pick any
+  // bank word and create a Card1006 directly so the session never hard-fails.
+  if (!card && bank.length > 0) {
+    const fallbackItem =
+      preSelectedItem ??
+      bank[Math.floor(Math.random() * bank.length)];
+    card = generateCard1006(fallbackItem, languageSelected, direction);
+  }
 
   const updatedSession: SessionState = {
     ...session,

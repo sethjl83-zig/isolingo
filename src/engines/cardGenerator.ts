@@ -9,6 +9,20 @@ import type {
 } from '../types/cards';
 import { getDisplayForm, getEnglishDeterminerPrompt } from './articleHelper';
 import { selectWord } from './repetitionEngine';
+import type { StudyType } from '../types/state';
+
+// ── Identical-word guard ───────────────────────────────────────────────────────
+
+/**
+ * Returns true when the target-language lemma is case-insensitively identical
+ * to the primary English translation, making a target-to-native card trivial.
+ * Examples: German "Hotel" → "hotel", "Jeans" → "jeans".
+ */
+export function isIdenticalToEnglish(item: VocabItem): boolean {
+  const lemmaKey = item.lemma.toLowerCase().replace(/\s+/g, '');
+  const englishKey = item.english.split(',')[0].trim().toLowerCase().replace(/\s+/g, '');
+  return lemmaKey === englishKey;
+}
 
 // ── Card 1001 — Matching (Gender Anchoring) ───────────────────────────────────
 
@@ -142,14 +156,15 @@ export function generateCard1002(
   }
 
   if (relType === 'same_category') {
-    const categories = [...new Set(bank.map(w => w.category))];
+    // Flatten all per-word category arrays to find categories represented by ≥2 words
+    const categories = [...new Set(bank.flatMap(w => w.category))];
     const validCats = categories.filter(
-      c => bank.filter(w => w.category === c).length >= 2,
+      c => bank.filter(w => w.category.includes(c)).length >= 2,
     );
     if (validCats.length === 0) return generateCard1002SameMeaning(bank, language);
 
     const cat = validCats[Math.floor(Math.random() * validCats.length)];
-    const catWords = bank.filter(w => w.category === cat);
+    const catWords = bank.filter(w => w.category.includes(cat));
     let i1 = Math.floor(Math.random() * catWords.length);
     let i2 = Math.floor(Math.random() * catWords.length);
     while (i2 === i1 && catWords.length > 1) i2 = Math.floor(Math.random() * catWords.length);
@@ -171,7 +186,8 @@ export function generateCard1002(
   const item1 = bank[Math.floor(Math.random() * bank.length)];
   const diffCat = bank.filter(
     w =>
-      w.category !== item1.category &&
+      // Words share no category in common
+      !w.category.some(c => item1.category.includes(c)) &&
       w.english.toLowerCase() !== item1.english.toLowerCase(),
   );
   if (diffCat.length === 0) return generateCard1002SameMeaning(bank, language);
@@ -304,12 +320,13 @@ export function generateCard(
   recentWordIds: string[] = [],
   excludeCard1001NounIds: Set<string> = new Set(),
   preSelectedItem?: VocabItem,
+  studyType: StudyType = 'general_vocab',
 ): CardData | null {
   if (cardType === 'CARD_1001') {
     return (
       generateCard1001(bank, language, excludeCard1001NounIds, recentWordIds) ??
       generateCard1006Fallback(
-        bank, language, direction, wordStats, sessionCardIndex,
+        bank, language, direction, studyType, wordStats, sessionCardIndex,
         wordFrequencySettings, recentWordIds,
       )
     );
@@ -319,7 +336,7 @@ export function generateCard(
     return (
       generateCard1002(bank, language) ??
       generateCard1006Fallback(
-        bank, language, direction, wordStats, sessionCardIndex,
+        bank, language, direction, studyType, wordStats, sessionCardIndex,
         wordFrequencySettings, recentWordIds,
       )
     );
@@ -331,7 +348,7 @@ export function generateCard(
   }
 
   return generateCard1006Fallback(
-    bank, language, direction, wordStats, sessionCardIndex,
+    bank, language, direction, studyType, wordStats, sessionCardIndex,
     wordFrequencySettings, recentWordIds,
   );
 }
@@ -340,16 +357,17 @@ function generateCard1006Fallback(
   bank: VocabItem[],
   language: Language,
   direction: 'native_to_target' | 'target_to_native',
+  studyType: StudyType,
   wordStats: Record<string, import('../types/state').WordStats>,
   sessionCardIndex: number,
   wordFrequencySettings: Record<string, import('../types/state').WordFrequencySetting>,
   recentWordIds: string[] = [],
 ): CardData | null {
   let eligible = bank.filter(item => {
-    if (direction === 'target_to_native') {
-      const lemmaKey = item.lemma.toLowerCase().replace(/\s+/g, '');
-      const englishKey = item.english.split(',')[0].trim().toLowerCase().replace(/\s+/g, '');
-      if (lemmaKey === englishKey) return false;
+    // In gender mode the user is tested on gender, not translation — so identical
+    // words (e.g. "Hotel" → "hotel") are still valid cards; don't filter them.
+    if (direction === 'target_to_native' && studyType !== 'gender') {
+      if (isIdenticalToEnglish(item)) return false;
     }
     return true;
   });

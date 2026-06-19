@@ -122,7 +122,7 @@ export function filterVocabBySearch(words: VocabItem[], query: string): VocabIte
 
       w.english.toLowerCase().includes(q) ||
 
-      w.category.toLowerCase().includes(q),
+      w.category.some(c => c.toLowerCase().includes(q)),
 
   );
 
@@ -132,7 +132,7 @@ export function filterVocabBySearch(words: VocabItem[], query: string): VocabIte
 
 export function getUniqueCategories(words: VocabItem[]): string[] {
 
-  return [...new Set(words.map(w => w.category))].sort((a, b) => a.localeCompare(b));
+  return [...new Set(words.flatMap(w => w.category))].sort((a, b) => a.localeCompare(b));
 
 }
 
