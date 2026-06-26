@@ -566,7 +566,7 @@ export default function DashboardScreen() {
         <View style={styles.vocabBankRow}>
           <TouchableOpacity
             style={[styles.vocabBankBtn, { backgroundColor: palette.card, borderColor: palette.border }]}
-            onPress={() => router.push('/word-banks')}
+            onPress={() => router.push('/my-lists' as never)}
             activeOpacity={0.8}
           >
             <Text style={styles.vocabBankIcon}>🗂</Text>

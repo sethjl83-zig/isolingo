@@ -3,6 +3,8 @@ import type { PersistedAppData, ModeBankData, StudyType, LanguageBanks } from '.
 import type { Language, VocabItem } from '../types/vocab';
 import type { DirectionMode, WordFrequencySetting } from '../types/state';
 import { normalizeFrequencySetting } from '../types/state';
+import type { Pool, PoolWord, DefaultPoolIds } from '../types/pool';
+import { EMPTY_DEFAULT_POOL_IDS, generatePoolId, snapToDeckSize } from '../types/pool';
 
 const STORAGE_KEY = '@isolingo/persisted_state';
 
@@ -16,6 +18,9 @@ export interface StoredState {
   /** Banks for every language the user has set up, keyed by language. */
   languageBanks: LanguageBanks;
   directionMode: DirectionMode;
+  // ── Named pools (source of truth after migration) ─────────────────────────
+  languagePools: Partial<Record<Language, Pool[]>>;
+  defaultPoolIds: DefaultPoolIds;
 }
 
 /** Format v2 — single set of mode banks tied to the selected language. */
@@ -81,7 +86,10 @@ function normalizeLanguageBanks(languageBanks: LanguageBanks | undefined): Langu
   return result;
 }
 
-function migrateLegacyState(parsed: LegacyStoredState): StoredState | null {
+/** Intermediate shape returned before pool migration is applied. */
+type PrePoolStoredState = Omit<StoredState, 'languagePools' | 'defaultPoolIds'>;
+
+function migrateLegacyState(parsed: LegacyStoredState): PrePoolStoredState | null {
   if (!parsed.selectedLanguage || !Array.isArray(parsed.activeVocabBank)) {
     return null;
   }
@@ -94,7 +102,7 @@ function migrateLegacyState(parsed: LegacyStoredState): StoredState | null {
 
   const generalBank: ModeBankData | null =
     parsed.activeVocabBank.length > 0
-      ? { activeVocabBank: parsed.activeVocabBank, wordFrequencySettings }
+      ? { activeVocabBank: parsed.activeVocabBank.map(normalizeVocabItem), wordFrequencySettings }
       : null;
 
   return {
@@ -105,6 +113,75 @@ function migrateLegacyState(parsed: LegacyStoredState): StoredState | null {
     directionMode: parsed.directionMode ?? 'mixed',
   };
 }
+
+// ── Pool migration helpers ────────────────────────────────────────────────────
+
+/** Convert a ModeBankData record into a Pool. */
+function modeBankToPool(
+  bank: ModeBankData,
+  name: string,
+  language: Language,
+  createdVia: Pool['createdVia'],
+): Pool {
+  const words: PoolWord[] = bank.activeVocabBank.map(vocabItem => {
+    const normalized = normalizeVocabItem(vocabItem);
+    const rawFreq = bank.wordFrequencySettings?.[normalized.id];
+    const frequency = normalizeFrequencySetting(rawFreq) as Pool['words'][number]['frequency'];
+    return { item: normalized, frequency };
+  });
+
+  return {
+    id: generatePoolId(),
+    name,
+    language,
+    words,
+    deckSize: snapToDeckSize(words.length),
+    createdVia,
+    pausedWordIds: [],
+  };
+}
+
+/**
+ * Convert the old per-language ModeBankData map into the new Pool format.
+ * Called once on first load after the data model upgrade.
+ */
+function migrateToPoolFormat(languageBanks: LanguageBanks): {
+  languagePools: Partial<Record<Language, Pool[]>>;
+  defaultPoolIds: DefaultPoolIds;
+} {
+  const languagePools: Partial<Record<Language, Pool[]>> = {};
+  const defaultPoolIds: DefaultPoolIds = {
+    general_vocab: {},
+    gender: {},
+  };
+
+  for (const [lang, banks] of Object.entries(languageBanks)) {
+    const language = lang as Language;
+    const pools: Pool[] = [];
+
+    const generalBank = banks?.general_vocab;
+    if (generalBank && generalBank.activeVocabBank.length > 0) {
+      const pool = modeBankToPool(generalBank, 'List 1', language, 'custom');
+      pools.push(pool);
+      defaultPoolIds.general_vocab[language] = [pool.id];
+    }
+
+    const genderBank = banks?.gender;
+    if (genderBank && genderBank.activeVocabBank.length > 0) {
+      const pool = modeBankToPool(genderBank, 'List 1 (Gender)', language, 'custom');
+      pools.push(pool);
+      defaultPoolIds.gender[language] = [pool.id];
+    }
+
+    if (pools.length > 0) {
+      languagePools[language] = pools;
+    }
+  }
+
+  return { languagePools, defaultPoolIds };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 export async function loadPersistedState(): Promise<StoredState | null> {
   try {
@@ -117,27 +194,50 @@ export async function loadPersistedState(): Promise<StoredState | null> {
     if (!parsed.selectedLanguage) return null;
     if (!parsed.onboardingComplete) return null;
 
-    // Current format — per-language banks
+    // Current format — per-language banks (may or may not already have pools)
     if ('languageBanks' in parsed && parsed.languageBanks) {
+      const languageBanks = normalizeLanguageBanks(parsed.languageBanks);
+
+      // If pool data was already written, use it; otherwise run migration once.
+      let languagePools: Partial<Record<Language, Pool[]>>;
+      let defaultPoolIds: DefaultPoolIds;
+
+      if (parsed.languagePools && Object.keys(parsed.languagePools).length > 0) {
+        languagePools = parsed.languagePools as Partial<Record<Language, Pool[]>>;
+        defaultPoolIds = parsed.defaultPoolIds ?? { ...EMPTY_DEFAULT_POOL_IDS };
+      } else {
+        ({ languagePools, defaultPoolIds } = migrateToPoolFormat(languageBanks));
+      }
+
       return {
         selectedLanguage: parsed.selectedLanguage,
-        languageBanks: normalizeLanguageBanks(parsed.languageBanks),
+        languageBanks,
         directionMode: parsed.directionMode ?? 'mixed',
+        languagePools,
+        defaultPoolIds,
       };
     }
 
     // v2 format — one set of mode banks, owned by the selected language
     if ('modeBanks' in parsed && parsed.modeBanks) {
+      const languageBanks: LanguageBanks = {
+        [parsed.selectedLanguage]: normalizeModeBanks(parsed.modeBanks),
+      };
+      const { languagePools, defaultPoolIds } = migrateToPoolFormat(languageBanks);
       return {
         selectedLanguage: parsed.selectedLanguage,
-        languageBanks: {
-          [parsed.selectedLanguage]: normalizeModeBanks(parsed.modeBanks),
-        },
+        languageBanks,
         directionMode: parsed.directionMode ?? 'mixed',
+        languagePools,
+        defaultPoolIds,
       };
     }
 
-    return migrateLegacyState(parsed);
+    // Oldest format — migrate legacy, then migrate to pools
+    const legacyResult = migrateLegacyState(parsed);
+    if (!legacyResult) return null;
+    const { languagePools, defaultPoolIds } = migrateToPoolFormat(legacyResult.languageBanks);
+    return { ...legacyResult, languagePools, defaultPoolIds };
   } catch {
     return null;
   }

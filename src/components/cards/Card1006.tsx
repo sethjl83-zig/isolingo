@@ -78,9 +78,11 @@ export default function Card1006({
       ? GenderColors[selectedGender]
       : undefined;
 
-  // Colour of the typed noun in the input (German only, after tile selected)
+  // Colour of the typed noun in the input (German only, after tile selected).
+  // Use !resolved so the colour updates in both 'typing' AND 'incorrect_1' states,
+  // i.e. any time the user is still allowed to change their tile selection.
   const inputTextColor =
-    showGenderTiles && selectedGender && cardState === 'typing'
+    showGenderTiles && selectedGender && !resolved
       ? GenderColors[selectedGender]
       : palette.text;
 

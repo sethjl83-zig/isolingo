@@ -19,6 +19,8 @@ export default function RootLayout() {
             <Stack.Screen name="dashboard" options={{ animation: 'none' }} />
             <Stack.Screen name="direction" />
             <Stack.Screen name="word-banks" />
+            <Stack.Screen name="my-lists" />
+            <Stack.Screen name="add-list" />
             <Stack.Screen name="stats" />
             <Stack.Screen name="list-setup" />
             <Stack.Screen name="session" />

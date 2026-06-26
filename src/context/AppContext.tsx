@@ -18,6 +18,8 @@ import type {
   WordFrequencySetting,
 } from '../types/state';
 import type { Language } from '../types/vocab';
+import type { Pool, DefaultPoolIds, PoolWord } from '../types/pool';
+import { EMPTY_DEFAULT_POOL_IDS, generatePoolId, snapToDeckSize } from '../types/pool';
 import { addUserWord } from '../data';
 import { updateStatsAfterCard, getOrInitStats } from '../engines/repetitionEngine';
 import { buildFrequencySettings } from '../utils/vocabBank';
@@ -40,7 +42,12 @@ type Action =
   | { type: 'SET_WORD_FREQUENCY'; vocabId: string; setting: WordFrequencySetting }
   | { type: 'ADD_WORD_TO_MASTER'; item: VocabItem }
   | { type: 'RESET_SESSION' }
-  | { type: 'RESET_APP' };
+  | { type: 'RESET_APP' }
+  // ── Pool actions ───────────────────────────────────────────────────────────
+  | { type: 'CREATE_POOL'; pool: Pool }
+  | { type: 'UPDATE_POOL'; poolId: string; updates: Partial<Omit<Pool, 'id' | 'language'>> }
+  | { type: 'DELETE_POOL'; poolId: string; language: Language }
+  | { type: 'SET_DEFAULT_POOL'; studyType: StudyType; language: Language; poolIds: string[] };
 
 const initialState: AppState = {
   languageSelected: null,
@@ -52,6 +59,8 @@ const initialState: AppState = {
   wordStats: {},
   wordFrequencySettings: {},
   sessionCardIndex: 0,
+  languagePools: {},
+  defaultPoolIds: { ...EMPTY_DEFAULT_POOL_IDS },
 };
 
 function syncModeBank(
@@ -102,6 +111,9 @@ function reducer(state: AppState, action: Action): AppState {
         directionMode: state.directionMode,
         languageBanks,
         modeBanks: { ...restored },
+        // Preserve pool data — it is per-language and must not be wiped on switch
+        languagePools: state.languagePools,
+        defaultPoolIds: state.defaultPoolIds,
       };
     }
 
@@ -115,11 +127,76 @@ function reducer(state: AppState, action: Action): AppState {
       const stateForSync: AppState = effectiveStudyType
         ? { ...state, studyTypeSelected: effectiveStudyType }
         : state;
-      return {
+      const synced: AppState = {
         ...syncModeBank(stateForSync, action.bank, frequencySettings),
         wordStats: {},
         sessionCardIndex: 0,
       };
+
+      // Keep languagePools in sync so My Lists screen always reflects the
+      // current banks without requiring an app restart to trigger migration.
+      if (synced.languageSelected && effectiveStudyType) {
+        const lang = synced.languageSelected;
+        const existingPools = synced.languagePools[lang] ?? [];
+        const existingDefaultIds =
+          synced.defaultPoolIds[effectiveStudyType]?.[lang] ?? [];
+        const existingPool = existingPools.find(p =>
+          existingDefaultIds.includes(p.id),
+        );
+
+        const poolWords: PoolWord[] = action.bank.map(item => ({
+          item,
+          frequency:
+            (frequencySettings[item.id] as PoolWord['frequency']) ?? 'normal',
+        }));
+
+        if (existingPool) {
+          // Update the existing default pool's word list in-place
+          const updatedPool: Pool = {
+            ...existingPool,
+            words: poolWords,
+            deckSize: snapToDeckSize(action.bank.length),
+          };
+          return {
+            ...synced,
+            languagePools: {
+              ...synced.languagePools,
+              [lang]: existingPools.map(p =>
+                p.id === existingPool.id ? updatedPool : p,
+              ),
+            },
+          };
+        } else {
+          // No default pool yet — create one
+          const poolName =
+            effectiveStudyType === 'general_vocab' ? 'List 1' : 'List 1 (Gender)';
+          const newPool: Pool = {
+            id: generatePoolId(),
+            name: poolName,
+            language: lang,
+            words: poolWords,
+            deckSize: snapToDeckSize(action.bank.length),
+            createdVia: 'custom',
+            pausedWordIds: [],
+          };
+          return {
+            ...synced,
+            languagePools: {
+              ...synced.languagePools,
+              [lang]: [...existingPools, newPool],
+            },
+            defaultPoolIds: {
+              ...synced.defaultPoolIds,
+              [effectiveStudyType]: {
+                ...(synced.defaultPoolIds[effectiveStudyType] ?? {}),
+                [lang]: [newPool.id],
+              },
+            },
+          };
+        }
+      }
+
+      return synced;
     }
 
     case 'SELECT_STUDY_TYPE': {
@@ -196,7 +273,57 @@ function reducer(state: AppState, action: Action): AppState {
         ...initialState,
         languageBanks: {},
         modeBanks: { ...EMPTY_MODE_BANKS },
+        languagePools: {},
+        defaultPoolIds: { ...EMPTY_DEFAULT_POOL_IDS },
       };
+
+    // ── Pool actions ──────────────────────────────────────────────────────────
+
+    case 'CREATE_POOL': {
+      const lang = action.pool.language;
+      const existing = state.languagePools[lang] ?? [];
+      return {
+        ...state,
+        languagePools: {
+          ...state.languagePools,
+          [lang]: [...existing, action.pool],
+        },
+      };
+    }
+
+    case 'UPDATE_POOL': {
+      const updated: Partial<Record<Language, Pool[]>> = {};
+      for (const [lang, pools] of Object.entries(state.languagePools)) {
+        updated[lang as Language] = (pools ?? []).map(p =>
+          p.id === action.poolId ? { ...p, ...action.updates } : p,
+        );
+      }
+      return { ...state, languagePools: { ...state.languagePools, ...updated } };
+    }
+
+    case 'DELETE_POOL': {
+      const existing = state.languagePools[action.language] ?? [];
+      return {
+        ...state,
+        languagePools: {
+          ...state.languagePools,
+          [action.language]: existing.filter(p => p.id !== action.poolId),
+        },
+      };
+    }
+
+    case 'SET_DEFAULT_POOL': {
+      return {
+        ...state,
+        defaultPoolIds: {
+          ...state.defaultPoolIds,
+          [action.studyType]: {
+            ...(state.defaultPoolIds[action.studyType] ?? {}),
+            [action.language]: action.poolIds,
+          },
+        },
+      };
+    }
 
     default:
       return state;
@@ -222,6 +349,13 @@ interface AppContextValue {
   resetApp: () => void;
   hasModeBank: (studyType: StudyType) => boolean;
   getModeBank: (studyType: StudyType) => ModeBankData | null;
+  // ── Pool API ───────────────────────────────────────────────────────────────
+  createPool: (pool: Pool) => void;
+  updatePool: (poolId: string, updates: Partial<Omit<Pool, 'id' | 'language'>>) => void;
+  deletePool: (poolId: string, language: Language) => void;
+  setDefaultPool: (studyType: StudyType, language: Language, poolIds: string[]) => void;
+  getLanguagePools: (language: Language) => Pool[];
+  getDefaultPools: (studyType: StudyType, language: Language) => Pool[];
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -237,6 +371,9 @@ function toPersistedPayload(state: AppState) {
     },
     directionMode: state.directionMode,
     onboardingComplete: true as const,
+    // ── Pools (new source of truth) ──────────────────────────────────────────
+    languagePools: state.languagePools,
+    defaultPoolIds: state.defaultPoolIds,
   };
 }
 
@@ -260,6 +397,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
             directionMode: stored.directionMode,
             activeVocabBank: [],
             wordFrequencySettings: {},
+            languagePools: stored.languagePools,
+            defaultPoolIds: stored.defaultPoolIds,
           },
         });
       }
@@ -272,7 +411,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!hasHydrated.current || !isReady) return;
     const payload = toPersistedPayload(state);
     if (payload) savePersistedState(payload);
-  }, [isReady, state.languageSelected, state.languageBanks, state.modeBanks, state.directionMode]);
+  }, [
+    isReady,
+    state.languageSelected,
+    state.languageBanks,
+    state.modeBanks,
+    state.directionMode,
+    state.languagePools,
+    state.defaultPoolIds,
+  ]);
 
   const requestLanguageChange = useCallback(() => {
     setShowLanguagePicker(true);
@@ -342,6 +489,45 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [state.modeBanks],
   );
 
+  // ── Pool callbacks ─────────────────────────────────────────────────────────
+
+  const createPool = useCallback(
+    (pool: Pool) => dispatch({ type: 'CREATE_POOL', pool }),
+    [],
+  );
+
+  const updatePool = useCallback(
+    (poolId: string, updates: Partial<Omit<Pool, 'id' | 'language'>>) =>
+      dispatch({ type: 'UPDATE_POOL', poolId, updates }),
+    [],
+  );
+
+  const deletePool = useCallback(
+    (poolId: string, language: Language) =>
+      dispatch({ type: 'DELETE_POOL', poolId, language }),
+    [],
+  );
+
+  const setDefaultPool = useCallback(
+    (studyType: StudyType, language: Language, poolIds: string[]) =>
+      dispatch({ type: 'SET_DEFAULT_POOL', studyType, language, poolIds }),
+    [],
+  );
+
+  const getLanguagePools = useCallback(
+    (language: Language): Pool[] => state.languagePools[language] ?? [],
+    [state.languagePools],
+  );
+
+  const getDefaultPools = useCallback(
+    (studyType: StudyType, language: Language): Pool[] => {
+      const ids = state.defaultPoolIds[studyType]?.[language] ?? [];
+      const pools = state.languagePools[language] ?? [];
+      return ids.flatMap(id => pools.filter(p => p.id === id));
+    },
+    [state.languagePools, state.defaultPoolIds],
+  );
+
   return (
     <AppContext.Provider
       value={{
@@ -362,6 +548,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         resetApp,
         hasModeBank: checkHasModeBank,
         getModeBank,
+        createPool,
+        updatePool,
+        deletePool,
+        setDefaultPool,
+        getLanguagePools,
+        getDefaultPools,
       }}
     >
       {children}

@@ -1,4 +1,7 @@
 import type { Language, VocabItem } from './vocab';
+import type { Pool, DefaultPoolIds } from './pool';
+
+export type { Pool, DefaultPoolIds };
 
 export type StudyType = 'general_vocab' | 'gender';
 export type DirectionMode = 'target_to_native' | 'native_to_target' | 'mixed';
@@ -31,7 +34,7 @@ export interface AppState {
   languageSelected: Language | null;
   studyTypeSelected: StudyType | null;
   directionMode: DirectionMode;
-  /** Banks for ALL languages. Source of truth for persistence. */
+  /** Banks for ALL languages. Kept for backward compat while UI migrates. */
   languageBanks: LanguageBanks;
   /** Banks for the currently selected language (view into languageBanks). */
   modeBanks: Record<StudyType, ModeBankData | null>;
@@ -39,6 +42,12 @@ export interface AppState {
   wordStats: Record<string, WordStats>;
   wordFrequencySettings: Record<string, WordFrequencySetting>;
   sessionCardIndex: number;
+
+  // ── NEW: named pools (source of truth going forward) ──────────────────────
+  /** All pools for every language. */
+  languagePools: Partial<Record<Language, Pool[]>>;
+  /** Which pool ID(s) are the session default per study type + language. */
+  defaultPoolIds: DefaultPoolIds;
 }
 
 export interface PersistedAppData {
@@ -47,6 +56,12 @@ export interface PersistedAppData {
   directionMode: DirectionMode;
   /** Written only after the user explicitly picks a language. Absent in stale/legacy data. */
   onboardingComplete?: boolean;
+
+  // ── NEW: named pools ──────────────────────────────────────────────────────
+  /** All pools for every language. Present once the user has been migrated. */
+  languagePools?: Partial<Record<Language, Pool[]>>;
+  /** Default pool selections per study type + language. */
+  defaultPoolIds?: DefaultPoolIds;
 }
 
 export const MIN_BANK_SIZE = 10;

@@ -4,9 +4,9 @@ import type { StudyType, DirectionMode } from '../types/state';
 // ── Distribution targets ──────────────────────────────────────────────────────
 
 const GENERAL_VOCAB_DIST: Record<CardType, number> = {
-  CARD_1006: 0.45,
-  CARD_1002: 0.30,
-  CARD_1001: 0.25,
+  CARD_1006: 0.60,
+  CARD_1002: 0.40,
+  CARD_1001: 0.00, // never eligible in general vocab — gender-recognition only
 };
 
 const GENDER_DIST: Record<CardType, number> = {
@@ -19,10 +19,21 @@ const MAX_CONSECUTIVE = 2;
 // If CARD_1006 hasn't appeared in the last N cards, prioritise it
 const PRODUCTION_PRIORITY_WINDOW = 3;
 
-// ── Eligible types by direction ────────────────────────────────────────────────
+// ── Eligible types by direction + study type ──────────────────────────────────
 
-export function getEligibleCardTypes(directionMode: DirectionMode): CardType[] {
-  if (directionMode === 'mixed') return ['CARD_1006', 'CARD_1001', 'CARD_1002'];
+export function getEligibleCardTypes(
+  directionMode: DirectionMode,
+  studyType?: StudyType,
+): CardType[] {
+  // CARD_1001 tests gender recognition — it is only eligible in gender mode.
+  // In general vocab mode it is always excluded, regardless of direction.
+  const isGenderMode = studyType === 'gender';
+
+  if (directionMode === 'mixed') {
+    return isGenderMode
+      ? ['CARD_1006', 'CARD_1001', 'CARD_1002']
+      : ['CARD_1006', 'CARD_1002'];
+  }
   // Pure directional modes: only CARD_1006 is eligible
   return ['CARD_1006'];
 }
@@ -37,7 +48,7 @@ export function selectCardType(
   directionMode: DirectionMode,
   recentTypes: CardType[],
 ): CardType {
-  const eligible = getEligibleCardTypes(directionMode);
+  const eligible = getEligibleCardTypes(directionMode, studyType);
   const dist = studyType === 'gender' ? GENDER_DIST : GENERAL_VOCAB_DIST;
 
   // Prioritise CARD_1006 if it hasn't appeared recently
