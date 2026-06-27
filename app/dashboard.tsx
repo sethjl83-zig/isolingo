@@ -566,7 +566,13 @@ export default function DashboardScreen() {
         <View style={styles.vocabBankRow}>
           <TouchableOpacity
             style={[styles.vocabBankBtn, { backgroundColor: palette.card, borderColor: palette.border }]}
-            onPress={() => router.push('/my-lists' as never)}
+            onPress={() => {
+              if (!state.languageSelected) {
+                Alert.alert('No language selected', 'Please select a language from the dropdown first.');
+                return;
+              }
+              router.push('/my-lists' as never);
+            }}
             activeOpacity={0.8}
           >
             <Text style={styles.vocabBankIcon}>🗂</Text>

@@ -67,13 +67,14 @@ export function generatePoolId(): string {
 }
 
 /**
- * Round an arbitrary word-count to the nearest valid PoolDeckSize.
- * list-setup only offers 10/15/20/25, so the input is usually already one of
- * these values; the clamp handles edge cases gracefully.
+ * Return the largest valid PoolDeckSize that does not exceed `n`.
+ * This ensures a session deck never requests more words than the pool contains.
+ *
+ * Examples: 10→10, 12→10, 15→15, 17→15, 20→20, 22→20, 25+→25
  */
 export function snapToDeckSize(n: number): PoolDeckSize {
-  if (n <= 10) return 10;
-  if (n <= 15) return 15;
-  if (n <= 20) return 20;
-  return 25;
+  if (n >= 25) return 25;
+  if (n >= 20) return 20;
+  if (n >= 15) return 15;
+  return 10; // minimum; also covers n < 10 as a safe fallback
 }

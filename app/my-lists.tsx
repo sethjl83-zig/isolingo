@@ -30,7 +30,6 @@ export default function MyListsScreen() {
     getDefaultPools,
     deletePool,
     setDefaultPool,
-    selectStudyType,
   } = useAppContext();
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
@@ -60,16 +59,9 @@ export default function MyListsScreen() {
   // ── Action handlers ────────────────────────────────────────────────────────
 
   const handleViewEdit = (pool: Pool) => {
-    // vocab-bank.tsx requires studyTypeSelected to be set or it redirects to
-    // the dashboard. Determine the study type from the pool's default assignments:
-    // prefer general_vocab; fall back to gender; default to general_vocab.
-    const isDefaultGeneral = defaultGeneralIds.includes(pool.id);
-    const isDefaultGender  = defaultGenderIds.includes(pool.id);
-    const studyType: StudyType = (!isDefaultGeneral && isDefaultGender)
-      ? 'gender'
-      : 'general_vocab';
-    selectStudyType(studyType);
-    router.push('/vocab-bank');
+    // Pass poolId so vocab-bank reads words directly from the pool,
+    // not from the old modeBanks / activeVocabBank structure.
+    router.push({ pathname: '/vocab-bank', params: { poolId: pool.id } });
   };
 
   const handleSetDefault = (pool: Pool) => {

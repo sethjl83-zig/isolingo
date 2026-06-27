@@ -21,6 +21,9 @@ export default function RootLayout() {
             <Stack.Screen name="word-banks" />
             <Stack.Screen name="my-lists" />
             <Stack.Screen name="add-list" />
+            <Stack.Screen name="curated-list" />
+            <Stack.Screen name="build-your-own" />
+            <Stack.Screen name="random-list" />
             <Stack.Screen name="stats" />
             <Stack.Screen name="list-setup" />
             <Stack.Screen name="session" />
