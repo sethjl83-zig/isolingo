@@ -155,8 +155,6 @@ export default function MyListsScreen() {
             <Text style={[styles.poolMeta, { color: palette.subtext }]}>
               {pool.words.length}{' '}
               {pool.words.length === 1 ? 'word' : 'words'}
-              {'  ·  deck '}
-              {pool.deckSize}
             </Text>
 
             {/* Default badges — shown inline below meta so they're always visible */}

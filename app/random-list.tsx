@@ -289,11 +289,6 @@ export default function RandomListScreen() {
 
                 <View style={[styles.summaryCard, { backgroundColor: palette.card, borderColor: palette.border }]}>
                   <SummaryRow label="Words" value={String(pickedWords.length)} palette={palette} />
-                  <SummaryRow
-                    label="Session deck size"
-                    value={String(snapToDeckSize(Math.min(pickedWords.length, 25)))}
-                    palette={palette}
-                  />
                   <SummaryRow label="Created via" value="Random" palette={palette} />
                 </View>
 
