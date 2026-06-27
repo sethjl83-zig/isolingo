@@ -253,7 +253,15 @@ function card1006TargetToNative(item: VocabItem, language: Language): Card1006Da
   }
 
   const englishValues = item.english.split(',').map(s => s.trim()).filter(Boolean);
-  const [canonical, ...rest] = englishValues;
+
+  // When the prompt shows a determiner (FR/ES noun), the expected English
+  // answer must use the matching English determiner form: "the X", "a X",
+  // or "my X". Without this, "ma minute" would incorrectly accept "minute".
+  const mappedValues = usedDeterminer
+    ? englishValues.map(e => getEnglishDeterminerPrompt(e, usedDeterminer!))
+    : englishValues;
+
+  const [canonical, ...rest] = mappedValues;
 
   return {
     type: 'CARD_1006',
