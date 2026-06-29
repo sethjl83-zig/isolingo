@@ -35,7 +35,7 @@ import type { StudyType } from '@/src/types/state';
 import { loadStatsForLanguage } from '@/src/storage/statsStorage';
 import { getCompetencyLevel } from '@/src/types/stats';
 import { USER_NAME_KEY, CELEBRATION_PENDING_KEY, takePendingCelebration } from './welcome';
-import { setListSetupLaunchSource } from './list-setup';
+import { setAddListLaunchSource } from './add-list';
 
 // Warm coral-orange accent — clearly distinct from gender colours
 // (#4da3ff masc · #d66aa6 fem · #A4922D neut)
@@ -334,7 +334,7 @@ const celebStyles = StyleSheet.create({
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const { state, isReady, selectLanguage, selectStudyType, resetApp } = useAppContext();
+  const { state, isReady, selectLanguage, selectStudyType, resetApp, getLanguagePools } = useAppContext();
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
   const accent = scheme === 'dark' ? ACCENT_DARK : ACCENT_LIGHT;
@@ -431,21 +431,22 @@ export default function DashboardScreen() {
 
   const handleStudyModePress = (studyType: StudyType) => {
     if (!language) {
-      // Remind the user to pick a language first
       setShowLangHint(true);
       setTimeout(() => setShowLangHint(false), 3500);
       return;
     }
 
-    const bank    = state.modeBanks[studyType];
-    const hasBank = bank !== null && (bank.activeVocabBank?.length ?? 0) > 0;
-
     selectStudyType(studyType);
-    if (hasBank) {
-      router.push('/direction');
+
+    const pools = getLanguagePools(language);
+    if (pools.length === 0) {
+      // No pools yet — send user to the creation choice screen, tagging the
+      // source so creation screens know to route into the session afterwards.
+      setAddListLaunchSource('study_mode', studyType);
+      router.push('/add-list' as never);
     } else {
-      setListSetupLaunchSource('study_mode');
-      router.push({ pathname: '/list-setup', params: { source: 'study_mode' } });
+      // Pools exist — show the multi-select picker.
+      router.push('/select-study-list' as never);
     }
   };
 

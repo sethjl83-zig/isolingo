@@ -24,6 +24,8 @@ export default function RootLayout() {
             <Stack.Screen name="curated-list" />
             <Stack.Screen name="build-your-own" />
             <Stack.Screen name="random-list" />
+            <Stack.Screen name="select-study-list" />
+            <Stack.Screen name="deck-size" />
             <Stack.Screen name="stats" />
             <Stack.Screen name="list-setup" />
             <Stack.Screen name="session" />

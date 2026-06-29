@@ -5,6 +5,7 @@
  *   Step 2 — Name the list and confirm pool creation
  */
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { getAddListLaunchSource } from './add-list';
 import {
   View,
   Text,
@@ -145,8 +146,13 @@ export default function BuildYourOwnScreen() {
     };
 
     createPool(pool);
-    // Dismiss this screen + add-list back to My Lists
-    router.dismiss(2);
+
+    const { source } = getAddListLaunchSource();
+    if (source === 'study_mode') {
+      router.replace('/select-study-list' as never);
+    } else {
+      router.dismiss(2);
+    }
   }, [language, masterWords, selectedIds, listName, getLanguagePools, createPool, router]);
 
   // ── Guard ─────────────────────────────────────────────────────────────────

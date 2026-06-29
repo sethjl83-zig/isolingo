@@ -3,6 +3,7 @@
  * Browse approved categories, multi-select, then create one pool per category.
  */
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { getAddListLaunchSource } from './add-list';
 import {
   View,
   Text,
@@ -170,8 +171,12 @@ export default function CuratedListScreen() {
       createPool(pool);
     }
 
-    // Pop this screen + add-list, landing back on My Lists
-    router.dismiss(2);
+    const { source } = getAddListLaunchSource();
+    if (source === 'study_mode') {
+      router.replace('/select-study-list' as never);
+    } else {
+      router.dismiss(2);
+    }
   }, [language, canProceed, selectedKeys, entries, getLanguagePools, createPool, router]);
 
   // ── Guard ─────────────────────────────────────────────────────────────────

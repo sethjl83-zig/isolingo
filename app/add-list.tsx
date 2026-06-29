@@ -1,6 +1,10 @@
 /**
  * SCREEN — ADD LIST
  * Choice screen: the user picks how they want to build a new vocabulary pool.
+ *
+ * Module-level launch-source state lets the Dashboard signal that the user
+ * arrived here from a study-mode tap (no pools existed yet). Creation screens
+ * read this to decide where to navigate after the pool is saved.
  */
 import React from 'react';
 import {
@@ -13,6 +17,31 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/theme';
+import type { StudyType } from '@/src/types/state';
+
+// ── Launch-source tracking ────────────────────────────────────────────────────
+
+export type AddListLaunchSource = 'my_lists' | 'study_mode';
+
+let _addListSource: AddListLaunchSource = 'my_lists';
+let _addListStudyType: StudyType | null = null;
+
+/** Call this before navigating to /add-list from a study-mode button. */
+export function setAddListLaunchSource(
+  source: AddListLaunchSource,
+  studyType?: StudyType,
+): void {
+  _addListSource = source;
+  _addListStudyType = studyType ?? null;
+}
+
+/** Read by creation screens (random-list, curated-list, build-your-own). */
+export function getAddListLaunchSource(): {
+  source: AddListLaunchSource;
+  studyType: StudyType | null;
+} {
+  return { source: _addListSource, studyType: _addListStudyType };
+}
 
 interface ChoiceCardProps {
   icon: string;

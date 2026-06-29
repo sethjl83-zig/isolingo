@@ -13,7 +13,7 @@ import {
   useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Colors } from '@/constants/theme';
 import { useAppContext } from '@/src/context/AppContext';
 import type { StudyType, DirectionMode } from '@/src/types/state';
@@ -36,13 +36,18 @@ export default function DirectionScreen() {
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
 
+  // Pool IDs and deck size are forwarded from select-study-list / deck-size to session.
+  const { poolIds, deckSize } = useLocalSearchParams<{ poolIds?: string; deckSize?: string }>();
+
   // studyTypeSelected is set by the dashboard before navigating here.
   const studyType: StudyType = state.studyTypeSelected ?? 'general_vocab';
   const directionMode = state.directionMode;
 
   const handleStart = () => {
-    // activeVocabBank is already loaded by selectStudyType in the dashboard.
-    router.replace('/session');
+    router.replace({
+      pathname: '/session',
+      params: { poolIds: poolIds ?? '', deckSize: deckSize ?? '' },
+    } as never);
   };
 
   return (

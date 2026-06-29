@@ -2,7 +2,7 @@
  * SCREEN 0104 — STUDY SESSION ENGINE
  * Infinite study loop: generates cards, delivers them, updates repetition state.
  */
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -18,10 +18,13 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Colors } from '@/constants/theme';
 import { useAppContext } from '@/src/context/AppContext';
+import type { AppState, WordFrequencySetting } from '@/src/types/state';
+import type { VocabItem } from '@/src/types/vocab';
 import { generateNextCard, makeSessionState, advanceSession } from '@/src/engines/sessionEngine';
+import { selectSessionSubset } from '@/src/engines/repetitionEngine';
 import type { CardData } from '@/src/types/cards';
 import type { SessionState } from '@/src/engines/sessionEngine';
 import Card1001 from '@/src/components/cards/Card1001';
@@ -59,6 +62,83 @@ export default function SessionScreen() {
 
   const language = state.languageSelected;
 
+  // ── Pool-derived bank (bridge until deck-size step is built) ─────────────
+  // When pool IDs are passed via navigation params (new flow from
+  // select-study-list), combine those pools into a temporary in-memory bank
+  // that the engines use in place of the legacy modeBanks / activeVocabBank.
+
+  const { poolIds: poolIdsParam, deckSize: deckSizeParam } =
+    useLocalSearchParams<{ poolIds?: string; deckSize?: string }>();
+
+  const poolIds = useMemo<string[]>(() => {
+    if (!poolIdsParam) return [];
+    try { return JSON.parse(poolIdsParam) as string[]; }
+    catch { return []; }
+  }, [poolIdsParam]);
+
+  // Build the combined bank + freq settings from selected pools, then trim to
+  // the chosen deck size using frequency-weighted random sampling.
+  // Computed once: none of these deps change during an active session.
+  const { poolDerivedBank, poolDerivedFreqSettings } = useMemo<{
+    poolDerivedBank: VocabItem[] | null;
+    poolDerivedFreqSettings: Record<string, WordFrequencySetting> | null;
+  }>(() => {
+    if (!language || poolIds.length === 0) {
+      return { poolDerivedBank: null, poolDerivedFreqSettings: null };
+    }
+
+    const selectedPools = (state.languagePools[language] ?? []).filter(p =>
+      poolIds.includes(p.id),
+    );
+
+    // Merge words across pools, deduplicating by word ID. First pool wins for
+    // frequency settings when the same word appears in multiple pools.
+    const seenIds = new Set<string>();
+    const fullBank: VocabItem[] = [];
+    const settings: Record<string, WordFrequencySetting> = {};
+
+    for (const pool of selectedPools) {
+      for (const pw of pool.words) {
+        if (!seenIds.has(pw.item.id)) {
+          seenIds.add(pw.item.id);
+          fullBank.push(pw.item);
+          settings[pw.item.id] = pw.frequency;
+        }
+      }
+    }
+
+    if (fullBank.length === 0) {
+      return { poolDerivedBank: null, poolDerivedFreqSettings: null };
+    }
+
+    // Apply deck size subset (selected once at session start using freq weights).
+    const deckSize = deckSizeParam ? parseInt(deckSizeParam, 10) : NaN;
+    const bank =
+      !isNaN(deckSize) && deckSize > 0 && deckSize < fullBank.length
+        ? selectSessionSubset(fullBank, deckSize, settings)
+        : fullBank;
+
+    return { poolDerivedBank: bank, poolDerivedFreqSettings: settings };
+  }, [language, poolIds, state.languagePools, deckSizeParam]);
+
+  /**
+   * Inject the pool-derived bank into any AppState snapshot before handing
+   * it to the session/card engines. When no pool IDs are present this is a
+   * no-op and the legacy activeVocabBank path is preserved.
+   */
+  const withPoolBank = useCallback(
+    (baseState: AppState): AppState => {
+      if (!poolDerivedBank) return baseState;
+      return {
+        ...baseState,
+        activeVocabBank: poolDerivedBank,
+        wordFrequencySettings:
+          poolDerivedFreqSettings ?? baseState.wordFrequencySettings,
+      };
+    },
+    [poolDerivedBank, poolDerivedFreqSettings],
+  );
+
   // Load existing stats for this language at session start
   useEffect(() => {
     if (language) {
@@ -74,7 +154,7 @@ export default function SessionScreen() {
       try {
         setLoadError(null);
         const { card, updatedSession } = generateNextCard(
-          stateOverride ?? state,
+          withPoolBank(stateOverride ?? state),
           sessionRef.current,
         );
         // Persist deck advancement even when no card is returned
@@ -96,7 +176,7 @@ export default function SessionScreen() {
         setHasAttemptedLoad(true);
       }
     },
-    [state],
+    [state, withPoolBank],
   );
 
   useEffect(() => {
@@ -197,7 +277,9 @@ export default function SessionScreen() {
     );
   }
 
-  if (!state.studyTypeSelected || state.activeVocabBank.length === 0) {
+  // Use pool-derived bank if available (new flow), else fall back to legacy activeVocabBank.
+  const effectiveBank = poolDerivedBank ?? state.activeVocabBank;
+  if (!state.studyTypeSelected || effectiveBank.length === 0) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: palette.background }]}>
         <View style={styles.messageBox}>

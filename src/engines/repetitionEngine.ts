@@ -124,6 +124,68 @@ export function selectFromDeck(
   return null;
 }
 
+// ── Session word subset selection ────────────────────────────────────────────
+
+/**
+ * Select a frequency-weighted random subset of `count` words from `bank`.
+ *
+ * Uses the same multiplier logic as buildDeck (low=1x, normal=2x, high=3x) so
+ * higher-priority words are more likely to land in the session deck. Because
+ * buildDeck Fisher-Yates-shuffles before returning, each call produces a
+ * different but frequency-biased ordering; the first `count` unique IDs are
+ * the selected words.
+ *
+ * When bank.length ≤ count, the full bank is returned in shuffled order.
+ * Call this exactly once at session start to produce the fixed active bank.
+ */
+export function selectSessionSubset(
+  bank: VocabItem[],
+  count: number,
+  frequencySettings: Record<string, WordFrequencySetting>,
+): VocabItem[] {
+  if (bank.length <= count) {
+    const shuffled = [...bank];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }
+
+  // buildDeck produces a frequency-weighted, shuffled list of IDs where
+  // high-freq words appear 3×, normal 2×, low 1×. Deduplicating by taking
+  // the first occurrence of each ID gives a biased random subset.
+  const weightedPool = buildDeck(bank, frequencySettings);
+  const bankById = new Map(bank.map(w => [w.id, w]));
+  const selected = new Set<string>();
+  const result: VocabItem[] = [];
+
+  for (const id of weightedPool) {
+    if (!selected.has(id) && bankById.has(id)) {
+      selected.add(id);
+      result.push(bankById.get(id)!);
+      if (result.length >= count) break;
+    }
+  }
+
+  // Safety fallback: if buildDeck's pool didn't yield enough unique IDs
+  // (possible when many words are set to 'low' and the pool is sparse),
+  // fill remaining slots from the un-selected words in random order.
+  if (result.length < count) {
+    const remaining = bank.filter(w => !selected.has(w.id));
+    for (let i = remaining.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
+    }
+    for (const w of remaining) {
+      result.push(w);
+      if (result.length >= count) break;
+    }
+  }
+
+  return result;
+}
+
 // ── Per-word stats lifecycle ──────────────────────────────────────────────────
 
 export function initWordStats(vocabId: string): WordStats {

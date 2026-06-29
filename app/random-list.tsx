@@ -5,6 +5,7 @@
  *   Step 2 — Name the list and confirm pool creation
  */
 import React, { useState, useMemo, useCallback } from 'react';
+import { getAddListLaunchSource } from './add-list';
 import {
   View,
   Text,
@@ -145,8 +146,17 @@ export default function RandomListScreen() {
     };
 
     createPool(pool);
-    // Navigate back to My Lists and clear the add-list screen from the stack
-    router.dismiss(2);
+
+    const { source } = getAddListLaunchSource();
+    if (source === 'study_mode') {
+      // Replace this screen with the list picker so the user can study the
+      // newly created pool immediately (back button pops to add-list, but
+      // select-study-list's own back button navigates straight to dashboard).
+      router.replace('/select-study-list' as never);
+    } else {
+      // Normal path: pop this screen and add-list, landing on My Lists.
+      router.dismiss(2);
+    }
   }, [language, pickedWords, listName, getLanguagePools, createPool, router]);
 
   // ── Guard ─────────────────────────────────────────────────────────────────
