@@ -1,8 +1,13 @@
 /**
- * SCREEN 0005 — ADD CUSTOM WORD
- * Form to add a user-defined vocabulary word to the master dataset + active bank.
+ * SCREEN — NEW WORD
+ * Form to create a user-defined vocabulary word and add it directly into one
+ * or more of the user's existing pools.
+ *
+ * IMPORTANT: this screen does NOT touch the master vocab dataset. The new word
+ * lives only in the pool(s) the user selects and will never appear in Curated
+ * Lists, Build Your Own, or Random.
  */
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -19,8 +24,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/theme';
 import { useAppContext } from '@/src/context/AppContext';
-import { getMasterDataset } from '@/src/data';
 import type { VocabItem, PartOfSpeech, Gender, Language } from '@/src/types/vocab';
+import type { Pool } from '@/src/types/pool';
 import StudyButton from '@/src/components/ui/StudyButton';
 
 const POS_OPTIONS: PartOfSpeech[] = ['noun', 'verb', 'adjective', 'adverb'];
@@ -46,7 +51,6 @@ function validateEntry(
   if (!pos) return 'Please select a part of speech.';
   if (pos === 'noun') {
     if (!gender) return 'Please select a gender for this noun.';
-    // Reject entries that include articles
     const articlePatterns: Record<Language, RegExp> = {
       de: /^(der|die|das)\s/i,
       fr: /^(le|la|l'|les)\s/i,
@@ -59,9 +63,59 @@ function validateEntry(
   return null;
 }
 
+// ── Pool checklist row ────────────────────────────────────────────────────────
+
+function PoolCheckRow({
+  pool,
+  checked,
+  onToggle,
+  palette,
+}: {
+  pool: Pool;
+  checked: boolean;
+  onToggle: () => void;
+  palette: (typeof Colors)['light'];
+}) {
+  return (
+    <TouchableOpacity
+      style={[
+        styles.poolRow,
+        {
+          backgroundColor: checked ? palette.feedback : palette.card,
+          borderColor: checked ? palette.tint : palette.border,
+        },
+      ]}
+      onPress={onToggle}
+      activeOpacity={0.75}
+    >
+      <View
+        style={[
+          styles.checkbox,
+          {
+            borderColor: palette.tint,
+            backgroundColor: checked ? palette.tint : 'transparent',
+          },
+        ]}
+      >
+        {checked && <Text style={styles.checkmark}>✓</Text>}
+      </View>
+      <View style={styles.poolInfo}>
+        <Text style={[styles.poolName, { color: palette.text }]} numberOfLines={1}>
+          {pool.name}
+        </Text>
+        <Text style={[styles.poolCount, { color: palette.subtext }]}>
+          {pool.words.length} {pool.words.length === 1 ? 'word' : 'words'}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+// ── Screen ────────────────────────────────────────────────────────────────────
+
 export default function AddWordScreen() {
   const router = useRouter();
-  const { state, addWordToMaster } = useAppContext();
+  const { state, updatePool, getLanguagePools } = useAppContext();
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
 
@@ -69,12 +123,20 @@ export default function AddWordScreen() {
   const isGenderMode = state.studyTypeSelected === 'gender';
   const posOptions: PartOfSpeech[] = isGenderMode ? ['noun'] : POS_OPTIONS;
 
+  const allPools = useMemo(
+    () => getLanguagePools(language),
+    [language, getLanguagePools],
+  );
+  const hasPools = allPools.length > 0;
+
+  // ── Form state ────────────────────────────────────────────────────────────
   const [lemma, setLemma] = useState('');
   const [english, setEnglish] = useState('');
   const [pos, setPos] = useState<PartOfSpeech | null>(null);
   const [gender, setGender] = useState<Gender | null>(null);
   const [plural, setPlural] = useState('');
   const [categories, setCategories] = useState<string[]>(['general']);
+  const [selectedPoolIds, setSelectedPoolIds] = useState<Set<string>>(new Set());
 
   const toggleCategory = (cat: string) => {
     setCategories(prev =>
@@ -82,30 +144,45 @@ export default function AddWordScreen() {
     );
   };
 
+  const togglePool = (poolId: string) => {
+    setSelectedPoolIds(prev => {
+      const next = new Set(prev);
+      if (next.has(poolId)) { next.delete(poolId); } else { next.add(poolId); }
+      return next;
+    });
+  };
+
   const showGender = pos === 'noun';
   const showPlural = pos === 'noun';
+  const canSave = hasPools && selectedPoolIds.size > 0;
 
+  // ── Save ──────────────────────────────────────────────────────────────────
   const handleSave = () => {
+    if (!hasPools) return; // button is disabled anyway
+
+    if (selectedPoolIds.size === 0) {
+      Alert.alert('No list selected', 'Please choose at least one list to add this word to.');
+      return;
+    }
+
     const error = validateEntry(lemma, english, pos, gender, language);
     if (error) {
       Alert.alert('Check your entry', error);
       return;
     }
 
-    const normalizedLemma = lemma.trim();
-    const duplicate = getMasterDataset(language).some(
-      w => w.lemma.toLowerCase() === normalizedLemma.toLowerCase(),
+    const normalizedLemma = lemma.trim().toLowerCase();
+
+    // Duplicate check — only within the selected pools (not the master dataset)
+    const selectedPools = allPools.filter(p => selectedPoolIds.has(p.id));
+    const duplicate = selectedPools.some(pool =>
+      pool.words.some(pw => pw.item.lemma.toLowerCase() === normalizedLemma),
     );
     if (duplicate) {
-      Alert.alert('Word already exists', 'This word is already in your vocabulary list.');
-      return;
-    }
-
-    const alreadyInBank = state.activeVocabBank.some(
-      w => w.lemma.toLowerCase() === normalizedLemma.toLowerCase(),
-    );
-    if (alreadyInBank) {
-      Alert.alert('Word already in bank', 'This word is already in your active vocabulary.');
+      Alert.alert(
+        'Word already in list',
+        'This word already exists in one or more of your selected lists.',
+      );
       return;
     }
 
@@ -129,7 +206,13 @@ export default function AddWordScreen() {
       user_added: 'y',
     };
 
-    addWordToMaster(item);
+    // Write directly into each selected pool — master dataset is NOT touched.
+    for (const pool of selectedPools) {
+      updatePool(pool.id, {
+        words: [...pool.words, { item, frequency: 'normal' }],
+      });
+    }
+
     router.back();
   };
 
@@ -146,14 +229,12 @@ export default function AddWordScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <Text style={[styles.topBarBtn, { color: palette.tint }]}>Cancel</Text>
         </TouchableOpacity>
-        <Text style={[styles.screenTitle, { color: palette.text }]}>Add a word</Text>
+        <Text style={[styles.screenTitle, { color: palette.text }]}>New Word</Text>
         <View style={styles.topBarSpacer} />
       </View>
 
       <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
-        <Text style={[styles.formTitle, { color: palette.text }]}>
-          Add a word to your vocabulary
-        </Text>
+        <Text style={[styles.formTitle, { color: palette.text }]}>New Word</Text>
 
         {/* Target language word */}
         <Text style={labelStyle}>
@@ -261,7 +342,7 @@ export default function AddWordScreen() {
           </>
         )}
 
-        {/* Category — tap to toggle, multiple selections allowed */}
+        {/* Category chips */}
         <Text style={labelStyle}>Categories (optional — select all that apply)</Text>
         <View style={styles.chipRow}>
           {CATEGORIES.map(cat => {
@@ -290,8 +371,45 @@ export default function AddWordScreen() {
           })}
         </View>
 
+        {/* ── Pool selection ───────────────────────────────────────────────── */}
+        <Text style={[styles.label, styles.poolSectionLabel, { color: palette.subtext }]}>
+          Add to which list(s)?
+        </Text>
+
+        {hasPools ? (
+          <View style={styles.poolList}>
+            {allPools.map(pool => (
+              <PoolCheckRow
+                key={pool.id}
+                pool={pool}
+                checked={selectedPoolIds.has(pool.id)}
+                onToggle={() => togglePool(pool.id)}
+                palette={palette}
+              />
+            ))}
+            {selectedPoolIds.size === 0 && (
+              <Text style={[styles.poolHint, { color: palette.subtext }]}>
+                Select at least one list.
+              </Text>
+            )}
+          </View>
+        ) : (
+          <View style={[styles.noPoolsBox, { backgroundColor: palette.card, borderColor: palette.border }]}>
+            <Text style={[styles.noPoolsText, { color: palette.subtext }]}>
+              You need at least one list before adding a new word. Create one in My Vocabulary first.
+            </Text>
+          </View>
+        )}
+
+        {/* Actions */}
         <View style={styles.saveRow}>
-          <StudyButton label="Save" variant="primary" size="large" onPress={handleSave} />
+          <StudyButton
+            label="Save"
+            variant="primary"
+            size="large"
+            onPress={handleSave}
+            disabled={!canSave}
+          />
           <StudyButton
             label="Cancel"
             variant="secondary"
@@ -303,6 +421,8 @@ export default function AddWordScreen() {
     </SafeAreaView>
   );
 }
+
+// ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
@@ -348,5 +468,40 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   chipText: { fontSize: 14 },
+
+  // Pool selection
+  poolSectionLabel: { marginTop: 20 },
+  poolList: { gap: 8, marginTop: 6 },
+  poolRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    gap: 12,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 5,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  checkmark: { color: '#fff', fontSize: 12, fontWeight: '700', lineHeight: 15 },
+  poolInfo: { flex: 1, gap: 2 },
+  poolName: { fontSize: 15, fontWeight: '600' },
+  poolCount: { fontSize: 12 },
+  poolHint: { fontSize: 13, marginTop: 4 },
+  noPoolsBox: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 6,
+  },
+  noPoolsText: { fontSize: 14, lineHeight: 21 },
+
   saveRow: { flexDirection: 'row', gap: 12, marginTop: 28, alignItems: 'center' },
 });

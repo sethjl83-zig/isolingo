@@ -31,6 +31,7 @@ export default function RootLayout() {
             <Stack.Screen name="session" />
             <Stack.Screen name="vocab-bank" />
             <Stack.Screen name="add-word" />
+            <Stack.Screen name="add-existing-word" />
           </Stack>
         </AppProvider>
       </ErrorBoundary>

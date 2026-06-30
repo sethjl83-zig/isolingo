@@ -211,11 +211,22 @@ export default function VocabBankScreen() {
         }
       />
 
-      {/* Add Word only available in legacy mode (pool-based word management comes later) */}
-      {!isPoolMode && (
+      {isPoolMode && (
         <View style={[styles.bottomBar, { borderTopColor: palette.border }]}>
           <StudyButton
             label="Add Word"
+            variant="secondary"
+            size="medium"
+            onPress={() =>
+              router.push({
+                pathname: '/add-existing-word',
+                params: { poolId: poolId ?? '' },
+              } as never)
+            }
+            style={styles.actionBtn}
+          />
+          <StudyButton
+            label="Create New Word"
             variant="secondary"
             size="medium"
             onPress={() => router.push('/add-word')}
@@ -278,6 +289,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderTopWidth: 1,
+    gap: 12,
   },
-  actionBtn: { width: 140 },
+  actionBtn: { flex: 1 },
 });

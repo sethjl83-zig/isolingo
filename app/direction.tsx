@@ -17,13 +17,34 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Colors } from '@/constants/theme';
 import { useAppContext } from '@/src/context/AppContext';
 import type { StudyType, DirectionMode } from '@/src/types/state';
+import type { Language } from '@/src/types/vocab';
 import StudyButton from '@/src/components/ui/StudyButton';
 
-const DIRECTION_OPTIONS: { id: DirectionMode; label: string; desc: string }[] = [
-  { id: 'target_to_native', label: 'Target → Native', desc: 'See the foreign word, type English' },
-  { id: 'native_to_target', label: 'Native → Target', desc: 'See English, type the foreign word' },
-  { id: 'mixed', label: 'Mixed (random)', desc: 'Both directions at random' },
-];
+const LANGUAGE_NAMES: Record<Language, string> = {
+  de: 'German',
+  fr: 'French',
+  es: 'Spanish',
+};
+
+function getDirectionOptions(langName: string): { id: DirectionMode; label: string; desc: string }[] {
+  return [
+    {
+      id: 'target_to_native',
+      label: `${langName} → English`,
+      desc: `See the ${langName} word, type English`,
+    },
+    {
+      id: 'native_to_target',
+      label: `English → ${langName}`,
+      desc: `See English, type the ${langName} word`,
+    },
+    {
+      id: 'mixed',
+      label: 'Mixed (random)',
+      desc: 'Both directions at random',
+    },
+  ];
+}
 
 const MODE_LABELS: Record<StudyType, string> = {
   general_vocab: 'General Vocab',
@@ -42,6 +63,11 @@ export default function DirectionScreen() {
   // studyTypeSelected is set by the dashboard before navigating here.
   const studyType: StudyType = state.studyTypeSelected ?? 'general_vocab';
   const directionMode = state.directionMode;
+
+  const langName = state.languageSelected
+    ? (LANGUAGE_NAMES[state.languageSelected] ?? 'Target')
+    : 'Target';
+  const directionOptions = getDirectionOptions(langName);
 
   const handleStart = () => {
     router.replace({
@@ -71,7 +97,7 @@ export default function DirectionScreen() {
         </Text>
 
         <View style={styles.options}>
-          {DIRECTION_OPTIONS.map(opt => {
+          {directionOptions.map(opt => {
             const selected = directionMode === opt.id;
             return (
               <TouchableOpacity
