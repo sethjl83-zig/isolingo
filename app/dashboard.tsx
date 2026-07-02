@@ -36,6 +36,7 @@ import { loadStatsForLanguage } from '@/src/storage/statsStorage';
 import { getCompetencyLevel } from '@/src/types/stats';
 import { USER_NAME_KEY, CELEBRATION_PENDING_KEY, takePendingCelebration } from './welcome';
 import { setAddListLaunchSource } from './add-list';
+import { getDeckSizePref } from '@/src/storage/deckSizePrefs';
 
 // Warm coral-orange accent — clearly distinct from gender colours
 // (#4da3ff masc · #d66aa6 fem · #A4922D neut)
@@ -334,7 +335,10 @@ const celebStyles = StyleSheet.create({
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const { state, isReady, selectLanguage, selectStudyType, resetApp, getLanguagePools } = useAppContext();
+  const {
+    state, isReady, selectLanguage, selectStudyType, resetApp,
+    getLanguagePools, getDefaultPools,
+  } = useAppContext();
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
   const accent = scheme === 'dark' ? ACCENT_DARK : ACCENT_LIGHT;
@@ -429,7 +433,7 @@ export default function DashboardScreen() {
     if (lang !== language) selectLanguage(lang);
   };
 
-  const handleStudyModePress = (studyType: StudyType) => {
+  const handleStudyModePress = async (studyType: StudyType) => {
     if (!language) {
       setShowLangHint(true);
       setTimeout(() => setShowLangHint(false), 3500);
@@ -440,14 +444,49 @@ export default function DashboardScreen() {
 
     const pools = getLanguagePools(language);
     if (pools.length === 0) {
-      // No pools yet — send user to the creation choice screen, tagging the
-      // source so creation screens know to route into the session afterwards.
+      // No pools yet — send user to the creation choice screen.
       setAddListLaunchSource('study_mode', studyType);
       router.push('/add-list' as never);
-    } else {
-      // Pools exist — show the multi-select picker.
-      router.push('/select-study-list' as never);
+      return;
     }
+
+    // Check for a saved default pool selection for this study type + language.
+    const defaultPools = getDefaultPools(studyType, language);
+    if (defaultPools.length > 0) {
+      // A default exists — skip the list picker entirely.
+      const poolIds = defaultPools.map(p => p.id);
+      const poolIdsStr = JSON.stringify(poolIds);
+
+      // Reuse the same deck-size-pref logic as select-study-list:
+      // if the user already chose a size for this combo, jump straight to
+      // direction; otherwise show the deck-size picker first.
+      const savedDeckSize = await getDeckSizePref(poolIds);
+      if (savedDeckSize !== null) {
+        router.push({
+          pathname: '/direction',
+          params: { poolIds: poolIdsStr, deckSize: String(savedDeckSize) },
+        } as never);
+      } else {
+        // No deck size saved yet for this combo — compute available count and
+        // show the deck-size picker (gender mode counts nouns only).
+        const totalCount = defaultPools.reduce((sum, pool) => {
+          if (studyType === 'gender') {
+            return sum + pool.words.filter(
+              pw => pw.item.partOfSpeech === 'noun' && pw.item.gender !== null,
+            ).length;
+          }
+          return sum + pool.words.length;
+        }, 0);
+        router.push({
+          pathname: '/deck-size',
+          params: { poolIds: poolIdsStr, totalCount: String(totalCount) },
+        } as never);
+      }
+      return;
+    }
+
+    // No default set — show the multi-select list picker.
+    router.push('/select-study-list' as never);
   };
 
   // ── DEV ONLY — remove before publishing ─────────────────────────────────────
