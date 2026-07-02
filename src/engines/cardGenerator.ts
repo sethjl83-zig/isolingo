@@ -11,17 +11,46 @@ import { getDisplayForm, getEnglishDeterminerPrompt } from './articleHelper';
 import { selectWord } from './repetitionEngine';
 import type { StudyType } from '../types/state';
 
-// ── Identical-word guard ───────────────────────────────────────────────────────
+// ── Identical / near-identical word guard ─────────────────────────────────────
 
 /**
- * Returns true when the target-language lemma is case-insensitively identical
- * to the primary English translation, making a target-to-native card trivial.
- * Examples: German "Hotel" → "hotel", "Jeans" → "jeans".
+ * Reduce a string to its bare alphanumeric core for comparison:
+ *   1. Lowercase
+ *   2. NFD-decompose then strip combining diacritical marks (é → e, ô → o)
+ *   3. Remove every non-alphanumeric character (spaces, hyphens, apostrophes…)
+ *
+ * This means "T-Shirt", "t-shirt" and "tshirt" all normalise to "tshirt", and
+ * "hôtel" / "hotel" / "Hôtel" all normalise to "hotel".
+ */
+function normalizeForComparison(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // strip combining diacritics
+    .replace(/[^a-z0-9]/g, '');      // strip punctuation, hyphens, spaces
+}
+
+/**
+ * Returns true when the target-language lemma is identical or near-identical
+ * to any English gloss, making a target-to-native card trivially obvious.
+ *
+ * "Near-identical" covers:
+ *   - Case              : Hotel → hotel  ✓
+ *   - Diacritics        : hôtel → hotel, café → cafe  ✓
+ *   - Punctuation       : T-Shirt → t-shirt  ✓
+ *
+ * All comma-separated English glosses are checked (not just the first) so a
+ * word with a secondary gloss that matches the lemma is also caught.
+ *
+ * Call sites skip this check when studyType === 'gender' because in Gender
+ * mode the user is tested on grammatical gender, not translation — so an
+ * identical word like "Hotel" is still educationally valid.
  */
 export function isIdenticalToEnglish(item: VocabItem): boolean {
-  const lemmaKey = item.lemma.toLowerCase().replace(/\s+/g, '');
-  const englishKey = item.english.split(',')[0].trim().toLowerCase().replace(/\s+/g, '');
-  return lemmaKey === englishKey;
+  const lemmaKey = normalizeForComparison(item.lemma);
+  return item.english
+    .split(',')
+    .some(gloss => normalizeForComparison(gloss.trim()) === lemmaKey);
 }
 
 // ── Card 1001 — Matching (Gender Anchoring) ───────────────────────────────────
