@@ -14,5 +14,16 @@ export interface VocabItem {
   plural: string | null;
   category: string[];
   competencies: Competency[];
+
+  // ── Extended schema fields (V0 update) ──────────────────────────────────
+  /** Which article types are tested for this noun ('definite', 'indefinite', 'possessive'). */
+  articleTypes?: string[] | null;
+  /** ID of the grammatically gendered counterpart (e.g. Arzt ↔ Ärztin). */
+  genderedCounterpart?: string | null;
+  /** Additional accepted English glosses beyond the primary `english` field. */
+  secondaryGlosses?: string[] | null;
+  /** Alternate accepted spellings/forms for the target-language answer. */
+  alternateTargetAnswers?: string[] | null;
+
   user_added?: 'y';
 }

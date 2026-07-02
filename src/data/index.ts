@@ -6,10 +6,12 @@ import frRaw from '../../docs/V0_French_Vocab_List.json';
 import esRaw from '../../docs/V0_Spanish_Vocab_List.json';
 
 /**
- * Normalise a raw vocab record so that `category` is always `string[]`.
- * The JSON files currently ship with `category` as a plain string; this shim
- * converts those legacy values automatically so the app never breaks while the
- * JSON files are being updated to the new array format.
+ * Normalise a raw vocab record into a fully-typed VocabItem.
+ *
+ * - `category` is coerced from a legacy plain string to `string[]` if needed.
+ * - All new optional schema fields (articleTypes, genderedCounterpart,
+ *   secondaryGlosses, alternateTargetAnswers) are spread through as-is; they
+ *   are typed as optional/nullable on VocabItem so missing values are safe.
  */
 function normalizeItem(raw: unknown): VocabItem {
   const item = raw as VocabItem & { category: string | string[] };
@@ -28,6 +30,23 @@ export const MASTER_DATASET: Record<string, VocabItem[]> = {
   fr: normalizeList(frRaw as unknown[]),
   es: normalizeList(esRaw as unknown[]),
 };
+
+// ── TEMP: confirm new vocab schema fields are loaded ─────────────────────────
+(['de', 'fr', 'es'] as const).forEach(lang => {
+  const first = MASTER_DATASET[lang]?.[0];
+  if (first) {
+    console.log(`[VocabData] ${lang} first entry:`, {
+      id: first.id,
+      lemma: first.lemma,
+      articleTypes: first.articleTypes,
+      genderedCounterpart: first.genderedCounterpart,
+      secondaryGlosses: first.secondaryGlosses,
+      alternateTargetAnswers: first.alternateTargetAnswers,
+    });
+  } else {
+    console.warn(`[VocabData] ${lang} dataset is empty or failed to load`);
+  }
+});
 
 const userAddedWords: Record<string, VocabItem[]> = {
   de: [],

@@ -1,112 +1,227 @@
 ISOLINGO — LIVING APP SPEC
+
 Last updated: current session
 
 WHAT THIS DOCUMENT IS
+
 This is a plain-language description of how the Isolingo app actually works right now. It is the source of truth for all future development. When asking Cursor to make changes, reference this document, not the original flowchart PDF.
 
 APP OVERVIEW
+
 Isolingo is a language learning flashcard app targeting users who are already learning a language on another platform and want to isolate and reinforce specific skills — primarily noun gender for V0. It supports German, French, and Spanish.
 
 USER TYPES
-New user: No saved data exists. Must go through language selection and vocab bank setup before studying.
-Returning user: Has saved language and at least one vocab bank. Goes directly to the dashboard on open.
+New user: No saved data exists. Goes through welcome screen, then dashboard. Must create at least one pool before studying.
+Returning user: Has saved data. Goes directly to dashboard on open.
 
 DATA THAT PERSISTS BETWEEN SESSIONS
 
+User's name
 Selected language
-General Vocab bank (mixed words)
-Gender bank (nouns only)
-Per-word frequency settings for each bank
+All named pools per language (words, frequency settings, paused words, deck size preference per pool combination)
+Default pool assignments per study type per language
 Direction mode preference
-onboardingComplete flag (distinguishes real returning users from stale dev data)
+Stats per word per language
+onboardingComplete flag
 
 
 SCREEN FLOW — NEW USER
 
-Language Selection
-Dashboard
-Vocab bank setup (triggered automatically because no bank exists yet for the selected mode)
-Study session
+Welcome Screen (name entry, confetti animation)
+Dashboard (language dropdown defaults to "Select a language")
+Add List flow (triggered when user taps a study mode with no pools)
+Select Study List screen
+Deck Size screen (first time only for this pool combination)
+Direction Select
+Study Session
 
 SCREEN FLOW — RETURNING USER
 
-Dashboard (loads immediately with saved data)
-Study session (if they tap a mode with a saved bank)
-OR
-Vocab bank setup (if they tap a mode with no saved bank yet)
+Dashboard
+Select Study List (if no default pool set, or user wants to choose)
+Deck Size (first time only for this pool combination, skipped thereafter)
+Direction Select
+Study Session
 
 
 SCREENS
-Language Selection
+Welcome Screen
 
-Shown only to new users or users who tap "Change Language" from the dashboard
-Three buttons: German, French, Spanish, each with national flag
-Tapping a language saves it and proceeds
-Must only require one tap to proceed
+App name "Isolingua" at top
+"What's your name?" with text input
+"Get Started" button, active only when name field is non-empty
+On submit: confetti animation with "Welcome, [Name]!" text, then transition to dashboard
+Only shown once — never shown again after onboarding is complete
 
-Dashboard (TO BE BUILT)
+Dashboard
 
-Shows selected language with flag
-Two study mode buttons: General Vocab, Gender
-Access to both vocab banks for viewing and editing
-Change Language button
-This screen is the home base the app always returns to
+First screen for returning users
+Language selector dropdown at top left (shows flag and language name, down arrow indicator)
+Welcome banner: "Welcome, [Name]!" left-aligned below dropdown
+"What do you want to study?" label below welcome banner
+Two large prominent study mode buttons: General Vocab, Gender
+One "My Vocabulary" button below the study mode buttons
+Stats widget at bottom showing three metrics: Mastered (with checkmark), Accuracy (circular ring), Today (cards completed today)
+Tapping stats widget → Stats screen
+Tapping My Vocabulary → My Lists screen
+Tapping a study mode with pools → Select Study List screen
+Tapping a study mode with no pools → Add List screen (with study_mode source flag)
+If no language selected and user taps My Vocabulary or a study mode → prompt to select a language first
+Contains temporary Reset App Data button for development testing — remove before publishing
 
-List Setup
+My Lists Screen
 
-Reached when a user has no saved bank for a selected mode
-Also reachable from the dashboard for editing
-Two options: System Generated or Choose Your Own
-System Generated: user picks 10, 15, 20, or 25 words from a dropdown; system selects randomly from master list filtered by mode (nouns only for Gender mode, all words for General Vocab)
-After generation, a confirmation popup shows the generated words; user can adjust per-word frequency or remove/replace individual words before confirming
-Choose Your Own: user sees full master list filtered by mode, with search bar; selects 10–25 words; counter shows current selection count; keyboard is dismissable
-All words display with no POS label; nouns are color-coded by gender; no gender label shown
-Bank size: minimum 10, maximum 25 words
+Header: "My Lists"
+Persistent "Add List" button always visible
+Lists all existing pools for current language, each showing: name, word count, default badges (General Vocab / Gender), View/Edit button, Set as Default button (hidden if already default for both), Delete button
+Empty state: friendly message when no pools exist
+Tapping Add List → Add List screen
+Tapping View/Edit → Vocab Bank Manager for that pool
+Set as Default popup asks which study type (General Vocab, Gender, or Both) — only shows options not already set
+Delete requires confirmation
 
-Mode Select / Study Type (BEING REPLACED BY DASHBOARD)
+Add List Screen
 
-Currently shows General Vocab and Gender buttons
-Direction mode selector: Target to Native, Native to Target, Mixed
-This screen's functionality will move into the dashboard
+Three options: Curated Lists, Build Your Own, Random
+Back button
+
+Curated Lists Screen
+
+Shows all approved categories plus "Basic Words" (combines basic nouns, basic verbs, basic adjectives, basic adverbs)
+Each category shows word count for current language
+Categories with zero words are visible but dimmed and non-tappable
+Multi-select — user can select multiple categories
+Tapping "Add to My Lists" creates one separate pool per selected category
+Pool names default to category name; duplicates get numbered suffix (e.g. "Travel 2")
+No naming screen — names are automatic
+Returns to My Lists after creation
+If launched from study mode tap: routes to Select Study List after creation instead
+
+Build Your Own Screen
+
+Search bar at top
+Category filter chips below search bar
+Scrollable multi-select word list (checkboxes)
+Counter showing selected word count (minimum 10)
+"Add to My Lists" button active once 10+ words selected
+On confirm: naming screen with default name "List N"
+Returns to My Lists after creation
+If launched from study mode tap: routes to Select Study List after creation
+
+Random Screen
+
+Stepper to pick word count (minimum 10, no maximum)
+"Generate" button creates random pool from master vocab list for current language
+Naming screen with default name "List N"
+Returns to My Lists after creation
+If launched from study mode tap: routes to Select Study List after creation
+
+Select Study List Screen
+
+Header: "Choose what to study"
+Shows all pools for current language as multi-select list
+General Vocab: shows total word count per pool
+Gender: shows noun count per pool; pools with zero nouns are greyed out and disabled
+Running total of combined word/noun count across selected pools
+"Continue" button active once at least one pool selected
+On continue: checks if deck size has been saved for this pool combination
+
+If yes: skip to Direction Select using remembered deck size
+If no: go to Deck Size screen
+
+
+
+Deck Size Screen
+
+Header: "Select deck size"
+Wheel picker showing valid options: 10, 15, 20, 25
+Options exceeding combined word count of selected pools are disabled
+Largest valid option pre-selected by default
+Saves chosen size as remembered preference for this pool combination
+On continue: navigates to Direction Select
+
+Direction Select Screen
+
+Shows actual language names: "[Language] to English", "English to [Language]", "Mixed"
+User selects direction and confirms to start session
 
 Study Session
 
 Infinite loop of flashcards
+Card pool drawn from selected pools combined, subset to deck size, using existing repetition/frequency logic
 Card types for V0: Card 1001 (Matching), Card 1002 (Relationship Judgment), Card 1006 (Noun Production)
 Card distribution: 1006 dominant (40-50% General Vocab, 60-75% Gender), 1002 and 1001 support
+Card 1001 eligible in mixed mode only, Gender mode only
+Card 1002 eligible in mixed mode only
 Direction mode controls prompt/answer direction
-Each card has: Exit Study (top left), Home (top right), Flip (bottom, always visible)
+Each card has: Exit Study (top left), Home (top right), Flip and Submit/Next above word management buttons
 Flip reveals answer, disables input, shows Next button, no penalty
+Keyboard stays open after submission, only dismisses on Next
+Text input auto-focuses on card load
+Horizontal sweep transition between cards
+Correct answer triggers scale-pop animation on "Correct!" text
 No session end — infinite loop until user exits
+Word management buttons at bottom of each card: Remove, Replace, Frequency, Pause (currently non-functional — to be built)
 
 Vocab Bank Manager
 
-Accessible from dashboard
-Shows all words in current bank with color-coded gender for nouns
+Accessible from My Lists via View/Edit
+Pool mode: shows words from the specific pool (poolId param)
+Shows all words with color-coded gender for nouns
 Search bar at top
 Static column headers: Word (left), Frequency (right)
 Per-word frequency: three-position snap slider (Low, Medium, High)
 Slider indicator color: red (Low), yellow (Medium), green (High)
 No POS label, no gender label — color coding handles gender
-Counter showing current bank size
-Save and Cancel buttons: centered, same size
-No automatic word replacement when words are removed
+Two buttons at bottom: "Add Word" (opens Add Existing Word screen) and "Create New Word" (opens New Word screen)
+Paused words section below active words, separated by a dividing line labeled "Paused words" — each paused word has Unpause and Remove buttons instead of frequency slider
 
-Add Custom Word
+Add Existing Word Screen
+
+Header: "Add Word"
+Search bar and category filter chips
+Shows all master vocab words for current language, excluding words already in the pool
+Multi-select with counter
+"Add to List" button adds selected words to pool and returns to Vocab Bank Manager
+
+New Word Screen (formerly Add Custom Word)
 
 Accessible from Vocab Bank Manager
-Fields: target language word, English translation, additional accepted English meanings (optional), additional accepted target language answers (optional), part of speech (dropdown), gender (if applicable), plural (if applicable), category (optional)
+Fields: target language word, English translation, additional accepted English meanings (optional), additional accepted target language answers (optional), part of speech (dropdown), gender (if applicable), plural (if applicable), category (multi-select chips)
 Bare lemma only — no articles or determiners
-Part of speech is a dropdown menu
+Pool selection section: multi-select checklist of user's existing pools for current language (must select at least one)
+Custom words are saved only to selected pools — never added to master vocab dataset
+If no pools exist: message prompts user to create a list first, Save button disabled
 
+Stats Screen
+
+Two tabs: Current Stats and Lifetime Stats
+Current Stats: Mastered/Strong/Weak breakdown, per-word current streak, first-attempt accuracy
+Lifetime Stats: total cards completed, total unique words studied, all-time first-attempt accuracy, personal best streak per word, bar chart placeholder for study time per day
+All data currently placeholder — structure in place for real data
+
+
+POOL / LIST ARCHITECTURE
+Pools (called "lists" in the user interface) are named collections of words per language. They replace the old two-bank-per-language (general_vocab / gender) model.
+
+Each pool stores: id, name, language, words (with per-word frequency), deckSize (remembered default), createdVia (curated/custom/random), pausedWordIds
+Multiple pools per language allowed
+Default pools per study type per language stored separately — skips Select Study List screen on return visits
+Deck size is remembered per pool combination (sorted pool IDs as key)
+Frequency settings live on words within pools
+Custom words (from New Word screen) exist only in the pools they were added to — never in master dataset
+Per-language pool data persists independently — switching languages and back restores all pools
+
+Legacy modeBanks system: Still present as a bridge but no longer the primary architecture. Will be removed in Phase 6 cleanup.
 
 CARD RULES
 Card 1001 — Matching (Gender Anchoring)
 
-Direction neutral — eligible in mixed mode only
+Direction neutral — eligible in mixed mode, Gender mode only
 Shows 3-5 nouns; user matches each to a gender color tile
 German: bare noun, color-coded, no article
 French/Spanish: definite article + noun; only noun is color-coded
+Always shows all gender tiles (3 for German, 2 for French/Spanish) regardless of genders present
 Gender tiles: masculine #4da3ff, feminine #d66aa6, neuter #A4922D (German only)
 
 Card 1002 — Vocab Relationship Judgment
@@ -116,16 +231,34 @@ Shows one English word and one target language word
 User selects relationship: same meaning, same category, similar form, no clear relationship
 German nouns: capitalized, no article, color-coded
 French/Spanish nouns: shown with article, only noun color-coded
+Known issue: "same category" answers often incorrect due to vocab category data — will improve with new vocab files
 
 Card 1006 — Noun Production (Primary Card)
 
 Direction sensitive
-Native to Target (German): English prompt, user types bare German noun, selects gender tile; both validated together; typed noun changes to selected gender color
-Native to Target (French/Spanish): English determiner + noun prompt, user types determiner + noun; no gender tile
-Target to Native: target language prompt, user types English translation; no gender tile required
+Native to Target (German): English prompt, user types bare German noun, selects gender tile; both validated together; typed noun changes to selected gender color; gender tiles only shown for nouns
+Native to Target (French/Spanish): English determiner + noun prompt (definite, indefinite, or possessive), user types determiner + noun; no gender tile; determiners only shown for nouns
+Target to Native: target language prompt, user types English translation; no gender tile required; article/determiner color not applied; only noun color-coded
+Target to Native validation accepts both bare noun and article+noun as correct English answer for French/Spanish
 Max 2 attempts; Flip available at all times
-Input clears between cards
-Flip state resets between cards
+Input clears between cards; Flip state resets between cards
+Gender tile color updates immediately on each tile tap including re-selection after wrong answer
+
+
+REPETITION / SPACING RULES
+
+No word repeats until minimum unique other words have appeared:
+
+10-word deck: 4 other words
+15-word deck: 5 other words
+20-word deck: 6 other words
+25-word deck: 7 other words
+
+
+Frequency controls appearances per cycle: High = 3x, Medium = 2x, Low = 1x
+No card type repeats more than twice consecutively
+Card 1001 never shows same noun grouping consecutively
+Identical/near-identical target-to-native words excluded (e.g. Hand → hand), except in Gender mode where identical nouns may still appear since gender is being tested
 
 
 VALIDATION RULES
@@ -133,7 +266,7 @@ VALIDATION RULES
 German nouns must be capitalized
 Accents and diacritics required — no anglicized substitutions
 English verb answers accept both bare form and infinitive form
-Identical or near-identical target-to-native cards excluded (e.g. Hand → hand)
+French/Spanish target-to-native answers accept both bare noun and article+noun forms
 
 
 GENDER COLOR SYSTEM (GLOBAL)
@@ -142,12 +275,46 @@ Masculine: #4da3ff
 Feminine: #d66aa6
 Neuter (German only): #A4922D
 Color applies to noun only, never to articles or determiners
+All target language nouns color-coded everywhere in the app except: Card 1001 (user identifying gender) and Card 1006 native-to-target German (user selecting gender tile)
+
+
+STATS TRACKING SYSTEM
+
+Only Card 1006 results feed into stats
+Per-word tracking: current consecutive correct streak, last 10 results as boolean array, lifetime total attempts, lifetime first-attempt correct count
+Mastered = 10 consecutive first-attempt correct answers (resets if word removed and re-added to pool)
+Strong = 7 or more correct in last 10 attempts
+Weak = everything else
+Lifetime records persist permanently regardless of pool membership
+Current records reset when word is removed from pool and re-added
+Stats stored per language in AsyncStorage
+
+
+NAVIGATION RULES
+
+study-type.tsx deleted — all references removed
+direction.tsx is the dedicated direction selection screen
+After any list creation flow completes: returns to My Lists (or Select Study List if launched from study mode tap)
+User always consciously chooses when to start a session
+
+
+DEVELOPMENT NOTES
+
+Reset App Data button on dashboard — remove before publishing
+Diagnostic console.log statements in my-lists.tsx — remove before publishing
+Legacy modeBanks bridge still present in session.tsx — to be removed in Phase 6
+Git commits made regularly — commit after every confirmed working change
 
 
 WHAT IS NOT IN V0
 
 Drills, challenges, assessments
 Scoring or streaks
-Progress tracking
+Real stats data (structure built, data is placeholder)
 Any competency beyond vocab and gender
-Automatic word replacement in vocab bank
+Sound effects
+Settings screen
+Dark mode
+User accounts or cross-device sync
+Determiner type toggles
+Beginner/intermediate curated list tiers
