@@ -62,14 +62,33 @@ export function validateAnswer(
 /**
  * Validates a Card 1006 German native_to_target submission.
  * Both the typed noun AND the selected gender tile must be correct.
+ *
+ * @param alternateNouns - Optional alternate accepted noun spellings/forms
+ *   (from VocabItem.alternateTargetAnswers). When the user types one of these
+ *   and the gender is correct, the answer is marked correct and the canonical
+ *   noun is returned in `alsoCorrect` so the UI can show "Also accepted: X".
  */
 export function validateGermanNoun(
   typedNoun: string,
   selectedGender: string | null,
   correctNoun: string,
   correctGender: string,
+  alternateNouns: string[] = [],
 ): ValidationResult {
-  const nounOk = normalizeInput(typedNoun) === correctNoun;
+  const normalizedTyped = normalizeInput(typedNoun);
   const genderOk = selectedGender === correctGender;
-  return { correct: nounOk && genderOk, alsoCorrect: [] };
+
+  if (!genderOk) return { correct: false, alsoCorrect: [] };
+
+  // Canonical match
+  if (normalizeInput(correctNoun) === normalizedTyped) {
+    return { correct: true, alsoCorrect: [] };
+  }
+
+  // Alternate match — surface the canonical as "Also accepted"
+  if (alternateNouns.some(n => normalizeInput(n) === normalizedTyped)) {
+    return { correct: true, alsoCorrect: [correctNoun] };
+  }
+
+  return { correct: false, alsoCorrect: [] };
 }

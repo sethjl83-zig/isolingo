@@ -97,6 +97,7 @@ export default function Card1006({
         selectedGender,
         card.canonicalAnswer,
         card.item.gender ?? '',
+        card.acceptedAnswers, // alternates from alternateTargetAnswers
       );
     } else {
       result = validateAnswer(
@@ -322,7 +323,7 @@ export default function Card1006({
                 <CorrectText color={palette.correct} />
                 {alsoCorrect.length > 0 && (
                   <Text style={[styles.alsoCorrect, { color: palette.subtext }]}>
-                    Also correct: {alsoCorrect.join(', ')}
+                    Also accepted: {alsoCorrect.join(', ')}
                   </Text>
                 )}
               </View>

@@ -292,6 +292,15 @@ function card1006TargetToNative(item: VocabItem, language: Language): Card1006Da
 
   const [canonical, ...rest] = mappedValues;
 
+  // Secondary glosses are additional accepted English answers beyond the
+  // comma-separated values in `english`. Apply the same determiner transform
+  // so that e.g. "mon père" correctly accepts "my dad" alongside "my father".
+  const secondaryAccepted = (item.secondaryGlosses ?? []).map(g =>
+    usedDeterminer
+      ? getEnglishDeterminerPrompt(g.trim(), usedDeterminer!)
+      : g.trim(),
+  );
+
   return {
     type: 'CARD_1006',
     item,
@@ -299,27 +308,31 @@ function card1006TargetToNative(item: VocabItem, language: Language): Card1006Da
     determinerType: usedDeterminer,
     prompt,
     canonicalAnswer: canonical,
-    acceptedAnswers: rest,
+    acceptedAnswers: [...rest, ...secondaryAccepted],
   };
 }
 
 function card1006NativeToTarget(item: VocabItem, language: Language): Card1006Data {
   const englishBase = item.english.split(',')[0].trim().replace(/^to\s+/i, '');
+  // Alternate target-language forms (e.g. variant spellings). Null-safe.
+  const alternates: string[] = item.alternateTargetAnswers ?? [];
 
   if (item.partOfSpeech === 'noun' && item.gender) {
     if (language === 'de') {
+      // German nouns: the user types the bare noun and selects a gender tile.
+      // Alternates are treated as bare noun forms; gender validation is separate.
       return {
         type: 'CARD_1006',
         item,
         direction: 'native_to_target',
-        determinerType: null, // gender is via tile selection
+        determinerType: null,
         prompt: englishBase,
         canonicalAnswer: item.lemma,
-        acceptedAnswers: [],
+        acceptedAnswers: alternates,
       };
     }
 
-    // FR / ES: determiner + noun
+    // FR / ES: determiner + noun. Apply the same determiner to each alternate.
     const det = DETERMINER_TYPES[Math.floor(Math.random() * DETERMINER_TYPES.length)];
     return {
       type: 'CARD_1006',
@@ -328,11 +341,13 @@ function card1006NativeToTarget(item: VocabItem, language: Language): Card1006Da
       determinerType: det,
       prompt: getEnglishDeterminerPrompt(englishBase, det),
       canonicalAnswer: getDisplayForm(language, item.gender, item.lemma, det),
-      acceptedAnswers: [],
+      acceptedAnswers: alternates.map(a =>
+        getDisplayForm(language, item.gender!, a.trim(), det),
+      ),
     };
   }
 
-  // Verb / adjective / adverb
+  // Verb / adjective / adverb — alternates are bare lemma-form variants.
   return {
     type: 'CARD_1006',
     item,
@@ -340,7 +355,7 @@ function card1006NativeToTarget(item: VocabItem, language: Language): Card1006Da
     determinerType: null,
     prompt: item.english.split(',')[0].trim(),
     canonicalAnswer: item.lemma,
-    acceptedAnswers: [],
+    acceptedAnswers: alternates,
   };
 }
 
