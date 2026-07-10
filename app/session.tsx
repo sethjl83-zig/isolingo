@@ -273,7 +273,7 @@ export default function SessionScreen() {
   );
 
   const handleExit = useCallback(() => {
-    router.replace('/dashboard');
+    router.replace('/select-study-list');
   }, [router]);
 
   const handleHome = useCallback(() => {
