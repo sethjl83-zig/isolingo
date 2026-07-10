@@ -1,0 +1,19 @@
+[
+  {"specific": "fr_chien", "general": "fr_animal"},
+  {"specific": "fr_chat", "general": "fr_animal"},
+  {"specific": "fr_requin", "general": "fr_animal"},
+  {"specific": "fr_baleine", "general": "fr_animal"},
+  {"specific": "fr_dauphin", "general": "fr_animal"},
+  {"specific": "fr_pomme", "general": "fr_fruit"},
+  {"specific": "fr_banane", "general": "fr_fruit"},
+  {"specific": "fr_orange_fruit", "general": "fr_fruit"},
+  {"specific": "fr_tomate", "general": "fr_legume"},
+  {"specific": "fr_pomme_de_terre", "general": "fr_legume"},
+  {"specific": "fr_vin", "general": "fr_boisson"},
+  {"specific": "fr_cafe", "general": "fr_boisson"},
+  {"specific": "fr_the", "general": "fr_boisson"},
+  {"specific": "fr_jus", "general": "fr_boisson"},
+  {"specific": "fr_maison", "general": "fr_batiment"},
+  {"specific": "fr_chien", "general": "fr_animal_domestique"},
+  {"specific": "fr_chat", "general": "fr_animal_domestique"}
+]

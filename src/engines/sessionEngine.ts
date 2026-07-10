@@ -107,7 +107,7 @@ export function generateNextCard(
   const minSpacing = getMinSpacing(bank.length);
 
   // ── Card type & direction ─────────────────────────────────────────────────
-  const cardType = selectCardType(studyTypeSelected, directionMode, session.recentCardTypes);
+  const cardType = selectCardType(studyTypeSelected, directionMode, session.recentCardTypes, languageSelected);
   const direction = resolveDirection(directionMode, session.recentDirections);
 
   // ── Identical-word exclusion set (t-t-n, non-gender mode only) ────────────
@@ -189,7 +189,7 @@ export function generateNextCard(
     const fallbackItem =
       preSelectedItem ??
       bank[Math.floor(Math.random() * bank.length)];
-    card = generateCard1006(fallbackItem, languageSelected, direction);
+    card = generateCard1006(fallbackItem, languageSelected, direction, bankById);
   }
 
   const updatedSession: SessionState = {

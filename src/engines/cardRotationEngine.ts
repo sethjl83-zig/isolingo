@@ -1,5 +1,6 @@
 import type { CardType } from '../types/cards';
 import type { StudyType, DirectionMode } from '../types/state';
+import type { Language } from '../types/vocab';
 
 // ── Distribution targets ──────────────────────────────────────────────────────
 
@@ -24,6 +25,7 @@ const PRODUCTION_PRIORITY_WINDOW = 3;
 export function getEligibleCardTypes(
   directionMode: DirectionMode,
   studyType?: StudyType,
+  language?: Language,
 ): CardType[] {
   // CARD_1001 tests gender recognition — it is only eligible in gender mode.
   // In general vocab mode it is always excluded, regardless of direction.
@@ -47,8 +49,9 @@ export function selectCardType(
   studyType: StudyType,
   directionMode: DirectionMode,
   recentTypes: CardType[],
+  language?: Language,
 ): CardType {
-  const eligible = getEligibleCardTypes(directionMode, studyType);
+  const eligible = getEligibleCardTypes(directionMode, studyType, language);
   const dist = studyType === 'gender' ? GENDER_DIST : GENERAL_VOCAB_DIST;
 
   // Prioritise CARD_1006 if it hasn't appeared recently

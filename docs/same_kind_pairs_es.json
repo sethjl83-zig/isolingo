@@ -1,0 +1,19 @@
+[
+  {"word1": "es_perro", "word2": "es_gato"},
+  {"word1": "es_leon", "word2": "es_tigre"},
+  {"word1": "es_manzana", "word2": "es_platano"},
+  {"word1": "es_tomate", "word2": "es_patata"},
+  {"word1": "es_mesa", "word2": "es_silla"},
+  {"word1": "es_casa", "word2": "es_hotel"},
+  {"word1": "es_padre", "word2": "es_madre"},
+  {"word1": "es_hermano", "word2": "es_hermana"},
+  {"word1": "es_cafe", "word2": "es_te"},
+  {"word1": "es_sol", "word2": "es_luna"},
+  {"word1": "es_montana", "word2": "es_valle"},
+  {"word1": "es_plato", "word2": "es_vaso"},
+  {"word1": "es_tenedor", "word2": "es_cuchillo"},
+  {"word1": "es_cuchara", "word2": "es_tenedor"},
+  {"word1": "es_ventana", "word2": "es_puerta"},
+  {"word1": "es_abeja", "word2": "es_mariposa"},
+  {"word1": "es_tiburon", "word2": "es_ballena"}
+]

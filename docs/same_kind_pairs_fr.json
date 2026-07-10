@@ -1,0 +1,20 @@
+[
+  {"word1": "fr_chien", "word2": "fr_chat"},
+  {"word1": "fr_lion", "word2": "fr_tigre"},
+  {"word1": "fr_pomme", "word2": "fr_banane"},
+  {"word1": "fr_tomate", "word2": "fr_pomme_de_terre"},
+  {"word1": "fr_table", "word2": "fr_chaise"},
+  {"word1": "fr_maison", "word2": "fr_hotel"},
+  {"word1": "fr_pere", "word2": "fr_mere"},
+  {"word1": "fr_frere", "word2": "fr_soeur"},
+  {"word1": "fr_cafe", "word2": "fr_the"},
+  {"word1": "fr_pluie", "word2": "fr_neige"},
+  {"word1": "fr_soleil", "word2": "fr_lune"},
+  {"word1": "fr_montagne", "word2": "fr_vallee"},
+  {"word1": "fr_assiette", "word2": "fr_verre"},
+  {"word1": "fr_fourchette", "word2": "fr_couteau"},
+  {"word1": "fr_cuillere", "word2": "fr_fourchette"},
+  {"word1": "fr_fenetre", "word2": "fr_porte"},
+  {"word1": "fr_abeille", "word2": "fr_papillon"},
+  {"word1": "fr_requin", "word2": "fr_baleine"}
+]

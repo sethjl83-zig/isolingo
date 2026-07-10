@@ -1,3 +1,21 @@
+import type { VocabItem } from '../types/vocab';
+import type { DeterminerType } from '../types/cards';
+import {
+  findGenderedCounterpart,
+  mergeCounterpartEnglishAccepted,
+} from './genderedCounterpartHelper';
+
+export {
+  buildDisambiguatedEnglishPrompt,
+  collectCounterpartEnglishAnswers,
+  collectTargetToNativeEnglishGlosses,
+  findGenderedCounterpart,
+  getPrimaryEnglish,
+  isAmbiguousEnglishPair,
+  mergeCounterpartEnglishAccepted,
+  stripEnglishGenderPrefix,
+} from './genderedCounterpartHelper';
+
 // ── Normalization ─────────────────────────────────────────────────────────────
 
 export function normalizeInput(raw: string): string {
@@ -57,6 +75,32 @@ export function validateAnswer(
     return { correct: true, alsoCorrect: others };
   }
   return { correct: false, alsoCorrect: [] };
+}
+
+/**
+ * Resolves the full set of accepted English answers for a target-to-native
+ * Card 1006, including glosses from a gendered counterpart when present.
+ */
+export function resolveTargetToNativeEnglishAnswers(
+  item: VocabItem,
+  bankById: Map<string, VocabItem>,
+  canonicalAnswer: string,
+  acceptedAnswers: string[],
+  usedDeterminer: DeterminerType | null,
+): { canonicalAnswer: string; acceptedAnswers: string[] } {
+  const counterpart = findGenderedCounterpart(item, bankById);
+  if (!counterpart) {
+    return { canonicalAnswer, acceptedAnswers };
+  }
+  return {
+    canonicalAnswer,
+    acceptedAnswers: mergeCounterpartEnglishAccepted(
+      canonicalAnswer,
+      acceptedAnswers,
+      counterpart,
+      usedDeterminer,
+    ),
+  };
 }
 
 /**

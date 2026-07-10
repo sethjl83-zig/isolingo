@@ -1,0 +1,23 @@
+[
+  {"word1": "es_hambre", "word2": "es_comer"},
+  {"word1": "es_sed", "word2": "es_beber"},
+  {"word1": "es_cansado", "word2": "es_dormir"},
+  {"word1": "es_dormir", "word2": "es_cama"},
+  {"word1": "es_cocinar", "word2": "es_cocina"},
+  {"word1": "es_correr", "word2": "es_zapato"},
+  {"word1": "es_medico", "word2": "es_hospital"},
+  {"word1": "es_enfermo", "word2": "es_medico"},
+  {"word1": "es_escuela", "word2": "es_estudiar"},
+  {"word1": "es_tren", "word2": "es_estacion"},
+  {"word1": "es_avion", "word2": "es_aeropuerto"},
+  {"word1": "es_cancion", "word2": "es_cantar"},
+  {"word1": "es_vaca", "word2": "es_leche"},
+  {"word1": "es_gallina", "word2": "es_huevo"},
+  {"word1": "es_perro", "word2": "es_ladrar"},
+  {"word1": "es_gato", "word2": "es_maullar"},
+  {"word1": "es_dinero", "word2": "es_comprar"},
+  {"word1": "es_lluvia", "word2": "es_nube"},
+  {"word1": "es_enfermedad", "word2": "es_medicamento"},
+  {"word1": "es_farmacia", "word2": "es_medicamento"},
+  {"word1": "es_escuela", "word2": "es_libro"}
+]

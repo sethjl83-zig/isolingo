@@ -1,0 +1,23 @@
+[
+  {"word1": "fr_faim", "word2": "fr_manger"},
+  {"word1": "fr_soif", "word2": "fr_boire"},
+  {"word1": "fr_fatigue", "word2": "fr_dormir"},
+  {"word1": "fr_dormir", "word2": "fr_lit"},
+  {"word1": "fr_cuisiner", "word2": "fr_cuisine_piece"},
+  {"word1": "fr_courir", "word2": "fr_chaussure"},
+  {"word1": "fr_medecin", "word2": "fr_hopital"},
+  {"word1": "fr_malade_adj", "word2": "fr_medecin"},
+  {"word1": "fr_ecole", "word2": "fr_etudier"},
+  {"word1": "fr_train", "word2": "fr_gare"},
+  {"word1": "fr_avion", "word2": "fr_aeroport"},
+  {"word1": "fr_chanson", "word2": "fr_chanter"},
+  {"word1": "fr_vache", "word2": "fr_lait"},
+  {"word1": "fr_poule", "word2": "fr_oeuf"},
+  {"word1": "fr_chien", "word2": "fr_aboyer"},
+  {"word1": "fr_chat", "word2": "fr_miauler"},
+  {"word1": "fr_argent", "word2": "fr_acheter"},
+  {"word1": "fr_pluie", "word2": "fr_nuage"},
+  {"word1": "fr_maladie", "word2": "fr_medicament"},
+  {"word1": "fr_pharmacie", "word2": "fr_medicament"},
+  {"word1": "fr_ecole", "word2": "fr_livre"}
+]

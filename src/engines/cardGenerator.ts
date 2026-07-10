@@ -8,6 +8,13 @@ import type {
   RelationshipType,
 } from '../types/cards';
 import { getDisplayForm, getEnglishDeterminerPrompt } from './articleHelper';
+import {
+  buildDisambiguatedEnglishPrompt,
+  collectTargetToNativeEnglishGlosses,
+  findGenderedCounterpart,
+  isAmbiguousEnglishPair,
+  mergeCounterpartEnglishAccepted,
+} from './genderedCounterpartHelper';
 import { selectWord } from './repetitionEngine';
 import type { StudyType } from '../types/state';
 
@@ -119,12 +126,11 @@ export function generateCard1001(
 
   return {
     type: 'CARD_1001',
+    // All languages show the bare lemma — no article or determiner.
+    // Gender is conveyed solely through color-coding, not through an article prefix.
     nouns: shuffled.map(item => ({
       item,
-      displayForm:
-        language === 'de'
-          ? item.lemma
-          : getDisplayForm(language, item.gender!, item.lemma, 'definite'),
+      displayForm: item.lemma,
     })),
   };
 }
@@ -253,18 +259,40 @@ function generateCard1002SameMeaning(
 
 const DETERMINER_TYPES: DeterminerType[] = ['definite', 'indefinite', 'possessive'];
 
+/**
+ * Returns the pool of DeterminerType values eligible for a given noun.
+ *
+ * When a VocabItem carries an `articleTypes` array (e.g. ["definite",
+ * "indefinite"]), only those types that are also valid DeterminerType values
+ * are used. This lets the vocab data opt out of, say, the possessive form for
+ * words where "mon hôpital" would be unnatural.
+ *
+ * Falls back to all three types when `articleTypes` is absent, null, empty,
+ * or contains no recognised DeterminerType values.
+ */
+function getArticleTypesPool(articleTypes: string[] | null | undefined): DeterminerType[] {
+  if (!articleTypes || articleTypes.length === 0) return DETERMINER_TYPES;
+  const filtered = DETERMINER_TYPES.filter(d => articleTypes.includes(d));
+  return filtered.length > 0 ? filtered : DETERMINER_TYPES;
+}
+
 export function generateCard1006(
   item: VocabItem,
   language: Language,
   direction: 'native_to_target' | 'target_to_native',
+  bankById: Map<string, VocabItem> = new Map(),
 ): Card1006Data {
   if (direction === 'target_to_native') {
-    return card1006TargetToNative(item, language);
+    return card1006TargetToNative(item, language, bankById);
   }
-  return card1006NativeToTarget(item, language);
+  return card1006NativeToTarget(item, language, bankById);
 }
 
-function card1006TargetToNative(item: VocabItem, language: Language): Card1006Data {
+function card1006TargetToNative(
+  item: VocabItem,
+  language: Language,
+  bankById: Map<string, VocabItem>,
+): Card1006Data {
   let prompt: string;
   let usedDeterminer: DeterminerType | null = null;
 
@@ -281,7 +309,7 @@ function card1006TargetToNative(item: VocabItem, language: Language): Card1006Da
     prompt = item.lemma;
   }
 
-  const englishValues = item.english.split(',').map(s => s.trim()).filter(Boolean);
+  const englishValues = collectTargetToNativeEnglishGlosses(item);
 
   // When the prompt shows a determiner (FR/ES noun), the expected English
   // answer must use the matching English determiner form: "the X", "a X",
@@ -292,14 +320,16 @@ function card1006TargetToNative(item: VocabItem, language: Language): Card1006Da
 
   const [canonical, ...rest] = mappedValues;
 
-  // Secondary glosses are additional accepted English answers beyond the
-  // comma-separated values in `english`. Apply the same determiner transform
-  // so that e.g. "mon père" correctly accepts "my dad" alongside "my father".
-  const secondaryAccepted = (item.secondaryGlosses ?? []).map(g =>
-    usedDeterminer
-      ? getEnglishDeterminerPrompt(g.trim(), usedDeterminer!)
-      : g.trim(),
-  );
+  let acceptedAnswers = rest;
+  const counterpart = findGenderedCounterpart(item, bankById);
+  if (counterpart) {
+    acceptedAnswers = mergeCounterpartEnglishAccepted(
+      canonical,
+      acceptedAnswers,
+      counterpart,
+      usedDeterminer,
+    );
+  }
 
   return {
     type: 'CARD_1006',
@@ -308,12 +338,21 @@ function card1006TargetToNative(item: VocabItem, language: Language): Card1006Da
     determinerType: usedDeterminer,
     prompt,
     canonicalAnswer: canonical,
-    acceptedAnswers: [...rest, ...secondaryAccepted],
+    acceptedAnswers,
   };
 }
 
-function card1006NativeToTarget(item: VocabItem, language: Language): Card1006Data {
+function card1006NativeToTarget(
+  item: VocabItem,
+  language: Language,
+  bankById: Map<string, VocabItem>,
+): Card1006Data {
+  const counterpart = findGenderedCounterpart(item, bankById);
   const englishBase = item.english.split(',')[0].trim().replace(/^to\s+/i, '');
+  const promptEnglish =
+    counterpart && isAmbiguousEnglishPair(item, counterpart)
+      ? buildDisambiguatedEnglishPrompt(item)
+      : englishBase;
   // Alternate target-language forms (e.g. variant spellings). Null-safe.
   const alternates: string[] = item.alternateTargetAnswers ?? [];
 
@@ -326,20 +365,24 @@ function card1006NativeToTarget(item: VocabItem, language: Language): Card1006Da
         item,
         direction: 'native_to_target',
         determinerType: null,
-        prompt: englishBase,
+        prompt: promptEnglish,
         canonicalAnswer: item.lemma,
         acceptedAnswers: alternates,
       };
     }
 
-    // FR / ES: determiner + noun. Apply the same determiner to each alternate.
-    const det = DETERMINER_TYPES[Math.floor(Math.random() * DETERMINER_TYPES.length)];
+    // FR / ES: determiner + noun.
+    // Only select from determiner types permitted for this noun; fall back to
+    // all three if articleTypes is absent or empty.
+    const detPool = getArticleTypesPool(item.articleTypes);
+    const det = detPool[Math.floor(Math.random() * detPool.length)];
+
     return {
       type: 'CARD_1006',
       item,
       direction: 'native_to_target',
       determinerType: det,
-      prompt: getEnglishDeterminerPrompt(englishBase, det),
+      prompt: getEnglishDeterminerPrompt(promptEnglish, det),
       canonicalAnswer: getDisplayForm(language, item.gender, item.lemma, det),
       acceptedAnswers: alternates.map(a =>
         getDisplayForm(language, item.gender!, a.trim(), det),
@@ -353,7 +396,7 @@ function card1006NativeToTarget(item: VocabItem, language: Language): Card1006Da
     item,
     direction: 'native_to_target',
     determinerType: null,
-    prompt: item.english.split(',')[0].trim(),
+    prompt: promptEnglish,
     canonicalAnswer: item.lemma,
     acceptedAnswers: alternates,
   };
@@ -374,12 +417,14 @@ export function generateCard(
   preSelectedItem?: VocabItem,
   studyType: StudyType = 'general_vocab',
 ): CardData | null {
+  const bankById = new Map(bank.map(w => [w.id, w]));
+
   if (cardType === 'CARD_1001') {
     return (
       generateCard1001(bank, language, excludeCard1001NounIds, recentWordIds) ??
       generateCard1006Fallback(
         bank, language, direction, studyType, wordStats, sessionCardIndex,
-        wordFrequencySettings, recentWordIds,
+        wordFrequencySettings, recentWordIds, bankById,
       )
     );
   }
@@ -389,19 +434,19 @@ export function generateCard(
       generateCard1002(bank, language) ??
       generateCard1006Fallback(
         bank, language, direction, studyType, wordStats, sessionCardIndex,
-        wordFrequencySettings, recentWordIds,
+        wordFrequencySettings, recentWordIds, bankById,
       )
     );
   }
 
   // CARD_1006 — use pre-selected item if provided by the deck manager
   if (preSelectedItem) {
-    return generateCard1006(preSelectedItem, language, direction);
+    return generateCard1006(preSelectedItem, language, direction, bankById);
   }
 
   return generateCard1006Fallback(
     bank, language, direction, studyType, wordStats, sessionCardIndex,
-    wordFrequencySettings, recentWordIds,
+    wordFrequencySettings, recentWordIds, bankById,
   );
 }
 
@@ -414,6 +459,7 @@ function generateCard1006Fallback(
   sessionCardIndex: number,
   wordFrequencySettings: Record<string, import('../types/state').WordFrequencySetting>,
   recentWordIds: string[] = [],
+  bankById: Map<string, VocabItem>,
 ): CardData | null {
   let eligible = bank.filter(item => {
     // In gender mode the user is tested on gender, not translation — so identical
@@ -437,5 +483,5 @@ function generateCard1006Fallback(
   );
   if (!item) return null;
 
-  return generateCard1006(item, language, direction);
+  return generateCard1006(item, language, direction, bankById);
 }

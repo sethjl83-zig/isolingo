@@ -1,0 +1,14 @@
+[
+  {"specific": "es_perro", "general": "es_animal"},
+  {"specific": "es_gato", "general": "es_animal"},
+  {"specific": "es_tiburon", "general": "es_animal"},
+  {"specific": "es_ballena", "general": "es_animal"},
+  {"specific": "es_delfin", "general": "es_animal"},
+  {"specific": "es_manzana", "general": "es_fruta"},
+  {"specific": "es_platano", "general": "es_fruta"},
+  {"specific": "es_tomate", "general": "es_verdura"},
+  {"specific": "es_patata", "general": "es_verdura"},
+  {"specific": "es_casa", "general": "es_edificio"},
+  {"specific": "es_perro", "general": "es_mascota"},
+  {"specific": "es_gato", "general": "es_mascota"}
+]

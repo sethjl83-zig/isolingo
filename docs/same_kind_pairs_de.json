@@ -1,0 +1,22 @@
+[
+  {"word1": "de_hund", "word2": "de_katze"},
+  {"word1": "de_loewe", "word2": "de_tiger"},
+  {"word1": "de_apfel", "word2": "de_banane"},
+  {"word1": "de_tomate", "word2": "de_kartoffel"},
+  {"word1": "de_tisch", "word2": "de_stuhl"},
+  {"word1": "de_haus", "word2": "de_kirche"},
+  {"word1": "de_mutter", "word2": "de_vater"},
+  {"word1": "de_bruder", "word2": "de_schwester"},
+  {"word1": "de_kaffee", "word2": "de_tee"},
+  {"word1": "de_regen", "word2": "de_schnee"},
+  {"word1": "de_sonne", "word2": "de_mond"},
+  {"word1": "de_berg", "word2": "de_tal"},
+  {"word1": "de_zug", "word2": "de_bus"},
+  {"word1": "de_teller", "word2": "de_tasse"},
+  {"word1": "de_messer", "word2": "de_gabel"},
+  {"word1": "de_loeffel", "word2": "de_messer"},
+  {"word1": "de_fenster", "word2": "de_tuer"},
+  {"word1": "de_biene", "word2": "de_schmetterling"},
+  {"word1": "de_hai", "word2": "de_wal"},
+  {"word1": "de_park", "word2": "de_garten"}
+]
