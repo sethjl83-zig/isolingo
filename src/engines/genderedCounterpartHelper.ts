@@ -44,13 +44,34 @@ function dedupeEnglishAnswers(answers: string[]): string[] {
 /**
  * All English glosses accepted for a target-to-native card from the item itself.
  * Gender prefixes in stored glosses are stripped so "male player" accepts "player".
+ * For ambiguous gendered pairs (same plain gloss on both entries), also includes
+ * the word's own derived gender-prefixed form (e.g. "female doctor" for Ärztin).
  */
-export function collectTargetToNativeEnglishGlosses(item: VocabItem): string[] {
+export function collectTargetToNativeEnglishGlosses(
+  item: VocabItem,
+  counterpart: VocabItem | null = null,
+): string[] {
   const raw = [
     ...getEnglishGlosses(item),
     ...(item.secondaryGlosses ?? []).map(g => g.trim()).filter(Boolean),
   ];
-  return dedupeEnglishAnswers(raw.flatMap(expandTargetToNativeGloss));
+  let answers = dedupeEnglishAnswers(raw.flatMap(expandTargetToNativeGloss));
+
+  if (
+    item.genderedCounterpart &&
+    counterpart &&
+    isAmbiguousEnglishPair(item, counterpart) &&
+    (item.gender === 'masculine' || item.gender === 'feminine')
+  ) {
+    const derived = dedupeEnglishAnswers(
+      raw
+        .map(stripEnglishGenderPrefix)
+        .map(plain => `${genderModifier(item.gender!)} ${plain}`),
+    );
+    answers = dedupeEnglishAnswers([...answers, ...derived]);
+  }
+
+  return answers;
 }
 
 /** First comma-separated English gloss, with optional leading "to " stripped. */

@@ -2,7 +2,7 @@
  * CARD_1006 — Noun / Vocab Production
  * Direction-sensitive translation card. German uses gender tiles; FR/ES uses determiner+noun input.
  */
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -63,6 +63,16 @@ export default function Card1006({
   const [cardState, setCardState] = useState<CardState>('typing');
   const [alsoCorrect, setAlsoCorrect] = useState<string[]>([]);
   const attemptRef = useRef(0);
+
+  // TEMP: verify senseLabel reaches the card from vocab data / pool bank
+  useEffect(() => {
+    console.log('[Card1006] card loaded:', {
+      id: card.item.id,
+      lemma: card.item.lemma,
+      senseLabel: card.item.senseLabel,
+      direction: card.direction,
+    });
+  }, [card.item.id, card.item.lemma, card.item.senseLabel, card.direction]);
 
   const isGerman = language === 'de';
   const isNativeToTarget = card.direction === 'native_to_target';
@@ -175,6 +185,9 @@ export default function Card1006({
       ? splitDisplayForm(language, card.item.gender as Gender, card.item.lemma, card.determinerType)
       : null;
 
+  // ── Sense label subtitle (shown beneath prompt when present) ─────────────────
+  const senseLabel = card.item.senseLabel?.trim() || null;
+
   // ── Feedback text ─────────────────────────────────────────────────────────────
   let feedbackText = '';
   let feedbackColor = palette.text;
@@ -248,6 +261,11 @@ export default function Card1006({
                 </Text>
               ) : (
                 <Text style={[styles.prompt, { color: promptColor }]}>{card.prompt}</Text>
+              )}
+              {senseLabel && (
+                <Text style={[styles.senseLabel, { color: palette.subtext }]}>
+                  ({senseLabel})
+                </Text>
               )}
             </View>
 
@@ -398,6 +416,12 @@ const styles = StyleSheet.create({
   topBarBtn: { fontSize: 15, fontWeight: '500' },
   promptArea: { alignItems: 'center', marginBottom: 28 },
   prompt: { fontSize: 26, fontWeight: '700', textAlign: 'center' },
+  senseLabel: {
+    fontSize: 15,
+    fontWeight: '400',
+    textAlign: 'center',
+    marginTop: 6,
+  },
   input: {
     borderWidth: 1.5,
     borderRadius: 12,

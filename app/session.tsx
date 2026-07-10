@@ -33,6 +33,7 @@ import Card1006 from '@/src/components/cards/Card1006';
 import ErrorBoundary from '@/src/components/ErrorBoundary';
 import StudyButton from '@/src/components/ui/StudyButton';
 import { loadStatsForLanguage, saveStatsForLanguage, type LangStats } from '@/src/storage/statsStorage';
+import { enrichVocabItemsFromMaster } from '@/src/data';
 import { updateWordStats } from '@/src/types/stats';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -111,12 +112,14 @@ export default function SessionScreen() {
       return { poolDerivedBank: null, poolDerivedFreqSettings: null };
     }
 
+    const enrichedBank = enrichVocabItemsFromMaster(fullBank, language);
+
     // Apply deck size subset (selected once at session start using freq weights).
     const deckSize = deckSizeParam ? parseInt(deckSizeParam, 10) : NaN;
     const bank =
-      !isNaN(deckSize) && deckSize > 0 && deckSize < fullBank.length
-        ? selectSessionSubset(fullBank, deckSize, settings)
-        : fullBank;
+      !isNaN(deckSize) && deckSize > 0 && deckSize < enrichedBank.length
+        ? selectSessionSubset(enrichedBank, deckSize, settings)
+        : enrichedBank;
 
     return { poolDerivedBank: bank, poolDerivedFreqSettings: settings };
   }, [language, poolIds, state.languagePools, deckSizeParam]);
@@ -128,13 +131,24 @@ export default function SessionScreen() {
    */
   const withPoolBank = useCallback(
     (baseState: AppState): AppState => {
-      if (!poolDerivedBank) return baseState;
-      return {
-        ...baseState,
-        activeVocabBank: poolDerivedBank,
-        wordFrequencySettings:
-          poolDerivedFreqSettings ?? baseState.wordFrequencySettings,
-      };
+      if (poolDerivedBank) {
+        return {
+          ...baseState,
+          activeVocabBank: poolDerivedBank,
+          wordFrequencySettings:
+            poolDerivedFreqSettings ?? baseState.wordFrequencySettings,
+        };
+      }
+      if (baseState.languageSelected && baseState.activeVocabBank.length > 0) {
+        return {
+          ...baseState,
+          activeVocabBank: enrichVocabItemsFromMaster(
+            baseState.activeVocabBank,
+            baseState.languageSelected,
+          ),
+        };
+      }
+      return baseState;
     },
     [poolDerivedBank, poolDerivedFreqSettings],
   );

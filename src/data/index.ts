@@ -77,3 +77,19 @@ export function getReserve(language: string, activeBank: VocabItem[]): VocabItem
   const activIds = new Set(activeBank.map(w => w.id));
   return getMasterDataset(language).filter(w => !activIds.has(w.id));
 }
+
+/**
+ * Replace pool-persisted word snapshots with the current master-dataset entry
+ * for each ID. Keeps user-added markers from the pool copy when present.
+ */
+export function enrichVocabItemsFromMaster(
+  items: VocabItem[],
+  language: string,
+): VocabItem[] {
+  const masterById = new Map(getMasterDataset(language).map(w => [w.id, w]));
+  return items.map(item => {
+    const fresh = masterById.get(item.id);
+    if (!fresh) return item;
+    return item.user_added === 'y' ? { ...fresh, user_added: 'y' } : fresh;
+  });
+}

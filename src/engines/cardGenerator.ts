@@ -309,7 +309,8 @@ function card1006TargetToNative(
     prompt = item.lemma;
   }
 
-  const englishValues = collectTargetToNativeEnglishGlosses(item);
+  const counterpart = findGenderedCounterpart(item, bankById);
+  const englishValues = collectTargetToNativeEnglishGlosses(item, counterpart);
 
   // When the prompt shows a determiner (FR/ES noun), the expected English
   // answer must use the matching English determiner form: "the X", "a X",
@@ -321,7 +322,6 @@ function card1006TargetToNative(
   const [canonical, ...rest] = mappedValues;
 
   let acceptedAnswers = rest;
-  const counterpart = findGenderedCounterpart(item, bankById);
   if (counterpart) {
     acceptedAnswers = mergeCounterpartEnglishAccepted(
       canonical,
