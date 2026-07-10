@@ -24,6 +24,7 @@ import { useAppContext } from '@/src/context/AppContext';
 import type { AppState, WordFrequencySetting } from '@/src/types/state';
 import type { VocabItem } from '@/src/types/vocab';
 import { generateNextCard, makeSessionState, advanceSession } from '@/src/engines/sessionEngine';
+import { getCard1002PairKey } from '@/src/engines/card1002Engine';
 import { selectSessionSubset } from '@/src/engines/repetitionEngine';
 import type { CardData } from '@/src/types/cards';
 import type { SessionState } from '@/src/engines/sessionEngine';
@@ -43,7 +44,7 @@ function getCardKey(card: CardData, index: number): string {
     case 'CARD_1001':
       return `${index}-1001-${card.nouns.map(n => n.item.id).sort().join('|')}`;
     case 'CARD_1002':
-      return `${index}-1002-${card.targetItem.id}`;
+      return `${index}-1002-${card.itemA.id}-${card.itemB.id}`;
     case 'CARD_1006':
       return `${index}-1006-${card.item.id}-${card.direction}`;
   }
@@ -240,6 +241,7 @@ export default function SessionScreen() {
       direction: string,
       isFirstAttempt?: boolean,
       wordIds?: string[],
+      card1002PairKey?: string,
     ) => {
       if (vocabId) recordCardResult(vocabId, correct);
 
@@ -251,6 +253,7 @@ export default function SessionScreen() {
         direction,
         ids,
         cardType === 'CARD_1001',
+        card1002PairKey,
       );
 
       // Record detailed stats for Card1006 results
@@ -381,10 +384,13 @@ export default function SessionScreen() {
               onHome={handleHome}
               onSubmit={correct =>
                 handleSubmit(
-                  currentCard.targetItem.id,
+                  null,
                   correct,
                   'CARD_1002',
                   'neutral',
+                  undefined,
+                  [currentCard.itemA.id, currentCard.itemB.id],
+                  getCard1002PairKey(currentCard.itemA, currentCard.itemB),
                 )
               }
             />

@@ -4,6 +4,11 @@ import { selectCardType } from './cardRotationEngine';
 import { generateCard, generateCard1006, isIdenticalToEnglish } from './cardGenerator';
 import { buildDeck, selectFromDeck, getMinSpacing } from './repetitionEngine';
 import type { VocabItem } from '../types/vocab';
+import {
+  buildExtendedBankMap,
+  isCard1002Available,
+  type Card1002Context,
+} from './card1002Engine';
 
 // ── Session state ─────────────────────────────────────────────────────────────
 
@@ -26,6 +31,11 @@ export interface SessionState {
   deck: string[];
   /** Fingerprint of the bank when the deck was built; triggers a rebuild on change. */
   deckBankHash: string;
+  /**
+   * Card 1002 word-pair keys in reverse-chronological order (index 0 = most recent).
+   * A pair may not repeat until CARD1002_PAIR_SPACING other pairs have appeared.
+   */
+  recentCard1002PairKeys: string[];
 }
 
 export function makeSessionState(): SessionState {
@@ -36,6 +46,7 @@ export function makeSessionState(): SessionState {
     lastCard1001NounIds: [],
     deck: [],
     deckBankHash: '',
+    recentCard1002PairKeys: [],
   };
 }
 
@@ -106,8 +117,22 @@ export function generateNextCard(
   const bankById = new Map<string, VocabItem>(bank.map(w => [w.id, w]));
   const minSpacing = getMinSpacing(bank.length);
 
+  const card1002Context: Card1002Context = {
+    language: languageSelected,
+    activeBank: bank,
+    extendedBankById: buildExtendedBankMap(languageSelected, state.languagePools, bank),
+    recentPairKeys: session.recentCard1002PairKeys,
+  };
+  const card1002Available = isCard1002Available(card1002Context);
+
   // ── Card type & direction ─────────────────────────────────────────────────
-  const cardType = selectCardType(studyTypeSelected, directionMode, session.recentCardTypes, languageSelected);
+  const cardType = selectCardType(
+    studyTypeSelected,
+    directionMode,
+    session.recentCardTypes,
+    languageSelected,
+    card1002Available,
+  );
   const direction = resolveDirection(directionMode, session.recentDirections);
 
   // ── Identical-word exclusion set (t-t-n, non-gender mode only) ────────────
@@ -179,6 +204,7 @@ export function generateNextCard(
     new Set(session.lastCard1001NounIds),
     preSelectedItem,
     studyTypeSelected,
+    card1002Context,
   );
 
   // ── Absolute last-resort fallback ─────────────────────────────────────────
@@ -209,9 +235,10 @@ export function generateNextCard(
  * @param wordIds   IDs of all vocab words that appeared on the card.
  *                  Card1006: [item.id]
  *                  Card1001: all noun IDs in the group
- *                  Card1002: [targetItem.id]
+ *                  Card1002: [itemA.id, itemB.id]
  * @param isCard1001 Pass true when the card type is CARD_1001 so the noun
  *                   group is saved for the consecutive-group check.
+ * @param card1002PairKey Optional pair key for Card 1002 pair-spacing history.
  */
 export function advanceSession(
   session: SessionState,
@@ -219,8 +246,10 @@ export function advanceSession(
   direction: string,
   wordIds: string[] = [],
   isCard1001: boolean = false,
+  card1002PairKey?: string,
 ): SessionState {
   const MAX_RECENT_WORD_IDS = 40;
+  const MAX_RECENT_CARD1002_PAIRS = 20;
 
   // Prepend new word IDs (most-recent first), deduplicate by keeping first occurrence
   const combined = [...wordIds, ...session.recentWordIds];
@@ -234,11 +263,17 @@ export function advanceSession(
     if (newRecentWordIds.length >= MAX_RECENT_WORD_IDS) break;
   }
 
+  const newRecentCard1002PairKeys =
+    cardType === 'CARD_1002' && card1002PairKey
+      ? [card1002PairKey, ...session.recentCard1002PairKeys].slice(0, MAX_RECENT_CARD1002_PAIRS)
+      : session.recentCard1002PairKeys;
+
   return {
     ...session,
     recentCardTypes: [cardType, ...session.recentCardTypes].slice(0, 10),
     recentDirections: [direction, ...session.recentDirections].slice(0, 10),
     recentWordIds: newRecentWordIds,
     lastCard1001NounIds: isCard1001 ? wordIds : session.lastCard1001NounIds,
+    recentCard1002PairKeys: newRecentCard1002PairKeys,
   };
 }

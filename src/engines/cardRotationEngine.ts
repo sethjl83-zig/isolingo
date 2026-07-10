@@ -50,8 +50,12 @@ export function selectCardType(
   directionMode: DirectionMode,
   recentTypes: CardType[],
   language?: Language,
+  card1002Available = true,
 ): CardType {
-  const eligible = getEligibleCardTypes(directionMode, studyType, language);
+  let eligible = getEligibleCardTypes(directionMode, studyType, language);
+  if (!card1002Available) {
+    eligible = eligible.filter(t => t !== 'CARD_1002');
+  }
   const dist = studyType === 'gender' ? GENDER_DIST : GENERAL_VOCAB_DIST;
 
   // Prioritise CARD_1006 if it hasn't appeared recently

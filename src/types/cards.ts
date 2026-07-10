@@ -17,18 +17,56 @@ export interface Card1001Data {
 // ── Card 1002 — Vocab Relationship Judgment ───────────────────────────────────
 
 export type RelationshipType =
+  | 'opposites'
+  | 'go_hand_in_hand'
   | 'same_meaning'
-  | 'same_category'
-  | 'similar_form'
+  | 'same_kind'
+  | 'hyponym'
   | 'no_clear_relationship';
+
+/** Canonical answer-button labels for Card 1002. */
+export const RELATIONSHIP_LABELS: Record<RelationshipType, string> = {
+  opposites: "They're opposites",
+  go_hand_in_hand: 'They go hand in hand',
+  same_meaning: 'They mean the same thing',
+  same_kind: "They're different kinds of the same thing",
+  hyponym: 'One is a type of the other',
+  no_clear_relationship: 'No clear relationship',
+};
+
+export const ALL_RELATIONSHIP_TYPES: RelationshipType[] = [
+  'opposites',
+  'go_hand_in_hand',
+  'same_meaning',
+  'same_kind',
+  'hyponym',
+  'no_clear_relationship',
+];
+
+export function isRelationshipType(value: string): value is RelationshipType {
+  return (ALL_RELATIONSHIP_TYPES as string[]).includes(value);
+}
+
+export function getRelationshipLabel(type: RelationshipType): string {
+  return RELATIONSHIP_LABELS[type];
+}
+
+export interface Card1002WordDisplay {
+  item: VocabItem;
+  displayText: string;
+  displayLanguage: 'target' | 'english';
+  determinerType: DeterminerType | null;
+}
 
 export interface Card1002Data {
   type: 'CARD_1002';
-  englishWord: string;
-  targetWord: string;            // display form (with article for FR/ES nouns)
-  targetItem: VocabItem;
-  targetDeterminerType: DeterminerType | null; // FR/ES nouns only
+  wordA: Card1002WordDisplay;
+  wordB: Card1002WordDisplay;
+  itemA: VocabItem;
+  itemB: VocabItem;
   correctRelationship: RelationshipType;
+  /** Four relationship types shown as answer buttons (includes the correct one). */
+  choiceTypes: RelationshipType[];
 }
 
 // ── Card 1006 — Noun/Vocab Production ─────────────────────────────────────────

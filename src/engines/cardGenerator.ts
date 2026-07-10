@@ -2,10 +2,8 @@ import type { VocabItem, Language, Gender } from '../types/vocab';
 import type {
   CardData,
   Card1001Data,
-  Card1002Data,
   Card1006Data,
   DeterminerType,
-  RelationshipType,
 } from '../types/cards';
 import { getDisplayForm, getEnglishDeterminerPrompt } from './articleHelper';
 import {
@@ -17,6 +15,10 @@ import {
 } from './genderedCounterpartHelper';
 import { selectWord } from './repetitionEngine';
 import type { StudyType } from '../types/state';
+import {
+  generateCard1002,
+  type Card1002Context,
+} from './card1002Engine';
 
 // ── Identical / near-identical word guard ─────────────────────────────────────
 
@@ -132,126 +134,6 @@ export function generateCard1001(
       item,
       displayForm: item.lemma,
     })),
-  };
-}
-
-// ── Card 1002 — Vocab Relationship Judgment ───────────────────────────────────
-
-const RELATIONSHIP_POOL: { type: RelationshipType; weight: number }[] = [
-  { type: 'same_meaning', weight: 0.40 },
-  { type: 'same_category', weight: 0.35 },
-  { type: 'no_clear_relationship', weight: 0.25 },
-];
-
-function pickRelationship(): RelationshipType {
-  let rand = Math.random();
-  for (const entry of RELATIONSHIP_POOL) {
-    rand -= entry.weight;
-    if (rand <= 0) return entry.type;
-  }
-  return 'same_meaning';
-}
-
-function nounDisplayForCard1002(
-  item: VocabItem,
-  language: Language,
-): { displayForm: string; determinerType: DeterminerType | null } {
-  if (item.partOfSpeech !== 'noun' || !item.gender) {
-    return { displayForm: item.lemma, determinerType: null };
-  }
-  if (language === 'de') {
-    return { displayForm: item.lemma, determinerType: null };
-  }
-  const det = DETERMINER_TYPES[Math.floor(Math.random() * DETERMINER_TYPES.length)];
-  return {
-    displayForm: getDisplayForm(language, item.gender, item.lemma, det),
-    determinerType: det,
-  };
-}
-
-export function generateCard1002(
-  bank: VocabItem[],
-  language: Language,
-): Card1002Data | null {
-  if (bank.length < 2) return null;
-
-  const relType = pickRelationship();
-
-  if (relType === 'same_meaning') {
-    const item = bank[Math.floor(Math.random() * bank.length)];
-    const { displayForm, determinerType } = nounDisplayForCard1002(item, language);
-    return {
-      type: 'CARD_1002',
-      englishWord: item.english,
-      targetWord: displayForm,
-      targetItem: item,
-      targetDeterminerType: determinerType,
-      correctRelationship: 'same_meaning',
-    };
-  }
-
-  if (relType === 'same_category') {
-    // Flatten all per-word category arrays to find categories represented by ≥2 words
-    const categories = [...new Set(bank.flatMap(w => w.category))];
-    const validCats = categories.filter(
-      c => bank.filter(w => w.category.includes(c)).length >= 2,
-    );
-    if (validCats.length === 0) return generateCard1002SameMeaning(bank, language);
-
-    const cat = validCats[Math.floor(Math.random() * validCats.length)];
-    const catWords = bank.filter(w => w.category.includes(cat));
-    let i1 = Math.floor(Math.random() * catWords.length);
-    let i2 = Math.floor(Math.random() * catWords.length);
-    while (i2 === i1 && catWords.length > 1) i2 = Math.floor(Math.random() * catWords.length);
-
-    const w1 = catWords[i1];
-    const w2 = catWords[i2];
-    const { displayForm: df2, determinerType: dt2 } = nounDisplayForCard1002(w2, language);
-    return {
-      type: 'CARD_1002',
-      englishWord: w1.english,
-      targetWord: df2,
-      targetItem: w2,
-      targetDeterminerType: dt2,
-      correctRelationship: 'same_category',
-    };
-  }
-
-  // no_clear_relationship
-  const item1 = bank[Math.floor(Math.random() * bank.length)];
-  const diffCat = bank.filter(
-    w =>
-      // Words share no category in common
-      !w.category.some(c => item1.category.includes(c)) &&
-      w.english.toLowerCase() !== item1.english.toLowerCase(),
-  );
-  if (diffCat.length === 0) return generateCard1002SameMeaning(bank, language);
-
-  const item2 = diffCat[Math.floor(Math.random() * diffCat.length)];
-  const { displayForm: dfNcr, determinerType: dtNcr } = nounDisplayForCard1002(item2, language);
-  return {
-    type: 'CARD_1002',
-    englishWord: item1.english,
-    targetWord: dfNcr,
-    targetItem: item2,
-    targetDeterminerType: dtNcr,
-    correctRelationship: 'no_clear_relationship',
-  };
-}
-
-function generateCard1002SameMeaning(
-  bank: VocabItem[],
-  language: Language,
-): Card1002Data {
-  const item = bank[Math.floor(Math.random() * bank.length)];
-  const { displayForm, determinerType } = nounDisplayForCard1002(item, language);
-  return {
-    type: 'CARD_1002',
-    englishWord: item.english,
-    targetWord: displayForm,
-    targetItem: item,
-    targetDeterminerType: determinerType,
-    correctRelationship: 'same_meaning',
   };
 }
 
@@ -416,6 +298,7 @@ export function generateCard(
   excludeCard1001NounIds: Set<string> = new Set(),
   preSelectedItem?: VocabItem,
   studyType: StudyType = 'general_vocab',
+  card1002Context?: Card1002Context,
 ): CardData | null {
   const bankById = new Map(bank.map(w => [w.id, w]));
 
@@ -431,7 +314,7 @@ export function generateCard(
 
   if (cardType === 'CARD_1002') {
     return (
-      generateCard1002(bank, language) ??
+      (card1002Context ? generateCard1002(card1002Context) : null) ??
       generateCard1006Fallback(
         bank, language, direction, studyType, wordStats, sessionCardIndex,
         wordFrequencySettings, recentWordIds, bankById,
