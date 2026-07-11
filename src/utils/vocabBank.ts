@@ -106,26 +106,54 @@ export function buildFrequencySettings(
 
 
 
-/** Filter a vocab list by lemma, English gloss, or category. */
+/** Which field the vocab search bar filters on. */
+export type VocabSearchMode = 'target' | 'english';
 
-export function filterVocabBySearch(words: VocabItem[], query: string): VocabItem[] {
+const LANGUAGE_DISPLAY_NAMES: Record<string, string> = {
+  de: 'German',
+  fr: 'French',
+  es: 'Spanish',
+};
 
+export function getLanguageDisplayName(language: string): string {
+  return LANGUAGE_DISPLAY_NAMES[language] ?? 'Target';
+}
+
+function englishGlosses(item: VocabItem): string[] {
+  return item.english
+    .split(',')
+    .map(s => s.trim().replace(/^to\s+/i, ''))
+    .filter(Boolean);
+}
+
+/**
+ * Filter a vocab list by prefix match on lemma (target mode) or English gloss
+ * (english mode). When mode is omitted, matches if either field starts with the
+ * query (used by screens without a mode toggle).
+ */
+export function filterVocabBySearch(
+  words: VocabItem[],
+  query: string,
+  mode?: VocabSearchMode,
+): VocabItem[] {
   const q = query.trim().toLowerCase();
-
   if (!q) return words;
 
+  if (mode === 'target') {
+    return words.filter(w => w.lemma.toLowerCase().startsWith(q));
+  }
+
+  if (mode === 'english') {
+    return words.filter(w =>
+      englishGlosses(w).some(g => g.toLowerCase().startsWith(q)),
+    );
+  }
+
   return words.filter(
-
     w =>
-
-      w.lemma.toLowerCase().includes(q) ||
-
-      w.english.toLowerCase().includes(q) ||
-
-      w.category.some(c => c.toLowerCase().includes(q)),
-
+      w.lemma.toLowerCase().startsWith(q) ||
+      englishGlosses(w).some(g => g.toLowerCase().startsWith(q)),
   );
-
 }
 
 

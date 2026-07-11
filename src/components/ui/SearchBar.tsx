@@ -35,7 +35,7 @@ export default function SearchBar({
           autoCapitalize="none"
           autoCorrect={false}
           clearButtonMode="while-editing"
-          returnKeyType="search"
+          returnKeyType="done"
           onSubmitEditing={Keyboard.dismiss}
         />
       </View>

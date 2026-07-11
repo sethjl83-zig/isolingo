@@ -27,13 +27,16 @@ import { useAppContext } from '@/src/context/AppContext';
 import { getMasterDataset } from '@/src/data';
 import {
   filterVocabBySearch,
+  getLanguageDisplayName,
   getUniqueCategories,
   getWordLemmaColor,
+  type VocabSearchMode,
 } from '@/src/utils/vocabBank';
 import type { VocabItem } from '@/src/types/vocab';
 import type { Pool } from '@/src/types/pool';
 import { generatePoolId, snapToDeckSize } from '@/src/types/pool';
 import SearchBar from '@/src/components/ui/SearchBar';
+import SearchModeToggle from '@/src/components/ui/SearchModeToggle';
 import StudyButton from '@/src/components/ui/StudyButton';
 
 const MIN_WORDS = 10;
@@ -82,6 +85,7 @@ export default function BuildYourOwnScreen() {
   // ── Step 1 state ──────────────────────────────────────────────────────────
   const [step, setStep] = useState<Step>('select');
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchMode, setSearchMode] = useState<VocabSearchMode>('target');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -98,9 +102,14 @@ export default function BuildYourOwnScreen() {
   );
 
   const filteredWords = useMemo(
-    () => filterVocabBySearch(categoryFiltered, searchQuery),
-    [categoryFiltered, searchQuery],
+    () => filterVocabBySearch(categoryFiltered, searchQuery, searchMode),
+    [categoryFiltered, searchQuery, searchMode],
   );
+
+  const searchPlaceholder =
+    searchMode === 'target'
+      ? `Search ${getLanguageDisplayName(language)} words…`
+      : 'Search English words…';
 
   const selectedCount = selectedIds.size;
   const canProceed = selectedCount >= MIN_WORDS;
@@ -277,30 +286,41 @@ export default function BuildYourOwnScreen() {
   // ── Step 1: Word selection ────────────────────────────────────────────────
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: palette.background }]}>
-      {/* Top bar */}
-      <View style={[styles.topBar, { borderBottomColor: palette.border }]}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Text style={[styles.backBtn, { color: palette.tint }]}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={[styles.screenTitle, { color: palette.text }]}>
-          Build Your Own
-        </Text>
-        <View style={styles.topBarSpacer} />
-      </View>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <View>
+          {/* Top bar */}
+          <View style={[styles.topBar, { borderBottomColor: palette.border }]}>
+            <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
+              <Text style={[styles.backBtn, { color: palette.tint }]}>← Back</Text>
+            </TouchableOpacity>
+            <Text style={[styles.screenTitle, { color: palette.text }]}>
+              Build Your Own
+            </Text>
+            <View style={styles.topBarSpacer} />
+          </View>
 
-      {/* Search bar */}
-      <View style={styles.searchWrap}>
-        <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
-      </View>
+          {/* Search mode + bar */}
+          <View style={styles.searchWrap}>
+            <SearchModeToggle
+              mode={searchMode}
+              onModeChange={setSearchMode}
+              language={language}
+            />
+            <SearchBar
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder={searchPlaceholder}
+            />
+          </View>
 
-      {/* Category chips */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.chipScroll}
-        contentContainerStyle={styles.chipRow}
-        keyboardShouldPersistTaps="handled"
-      >
+          {/* Category chips */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.chipScroll}
+            contentContainerStyle={styles.chipRow}
+            keyboardShouldPersistTaps="always"
+          >
         {/* "All" chip */}
         <TouchableOpacity
           style={[
@@ -345,7 +365,9 @@ export default function BuildYourOwnScreen() {
             </Text>
           </TouchableOpacity>
         ))}
-      </ScrollView>
+          </ScrollView>
+        </View>
+      </TouchableWithoutFeedback>
 
       {/* Word list */}
       <FlatList
@@ -353,7 +375,7 @@ export default function BuildYourOwnScreen() {
         keyExtractor={item => item.id}
         renderItem={renderWord}
         style={styles.list}
-        keyboardShouldPersistTaps="handled"
+        keyboardShouldPersistTaps="never"
         keyboardDismissMode="on-drag"
         ListEmptyComponent={
           <Text style={[styles.emptyText, { color: palette.subtext }]}>
@@ -430,7 +452,7 @@ const styles = StyleSheet.create({
   topBarSpacer: { minWidth: 60 },
 
   // Search
-  searchWrap: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 4 },
+  searchWrap: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 4, gap: 8 },
 
   // Category chips
   chipScroll: { maxHeight: 48, flexGrow: 0 },

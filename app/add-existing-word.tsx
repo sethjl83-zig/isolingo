@@ -15,6 +15,8 @@ import {
   ScrollView,
   StyleSheet,
   useColorScheme,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -23,12 +25,15 @@ import { useAppContext } from '@/src/context/AppContext';
 import { getMasterDataset } from '@/src/data';
 import {
   filterVocabBySearch,
+  getLanguageDisplayName,
   getUniqueCategories,
   getWordLemmaColor,
+  type VocabSearchMode,
 } from '@/src/utils/vocabBank';
 import type { VocabItem } from '@/src/types/vocab';
 import type { PoolWord } from '@/src/types/pool';
 import SearchBar from '@/src/components/ui/SearchBar';
+import SearchModeToggle from '@/src/components/ui/SearchModeToggle';
 import StudyButton from '@/src/components/ui/StudyButton';
 
 export default function AddExistingWordScreen() {
@@ -72,6 +77,7 @@ export default function AddExistingWordScreen() {
 
   // ── Filter state ──────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchMode, setSearchMode] = useState<VocabSearchMode>('target');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -84,9 +90,14 @@ export default function AddExistingWordScreen() {
   );
 
   const filteredWords = useMemo(
-    () => filterVocabBySearch(categoryFiltered, searchQuery),
-    [categoryFiltered, searchQuery],
+    () => filterVocabBySearch(categoryFiltered, searchQuery, searchMode),
+    [categoryFiltered, searchQuery, searchMode],
   );
+
+  const searchPlaceholder =
+    searchMode === 'target'
+      ? `Search ${getLanguageDisplayName(language)} words…`
+      : 'Search English words…';
 
   const selectedCount = selectedIds.size;
   const canAdd = selectedCount > 0;
@@ -154,81 +165,94 @@ export default function AddExistingWordScreen() {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]}>
-      {/* Top bar */}
-      <View style={[styles.topBar, { borderBottomColor: palette.border }]}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Text style={[styles.backBtn, { color: palette.tint }]}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={[styles.screenTitle, { color: palette.text }]}>Add Word</Text>
-        <View style={styles.topBarSpacer} />
-      </View>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <View>
+          {/* Top bar */}
+          <View style={[styles.topBar, { borderBottomColor: palette.border }]}>
+            <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
+              <Text style={[styles.backBtn, { color: palette.tint }]}>← Back</Text>
+            </TouchableOpacity>
+            <Text style={[styles.screenTitle, { color: palette.text }]}>Add Word</Text>
+            <View style={styles.topBarSpacer} />
+          </View>
 
-      {/* Search bar */}
-      <View style={styles.searchWrap}>
-        <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
-      </View>
+          {/* Search mode + bar */}
+          <View style={styles.searchWrap}>
+            <SearchModeToggle
+              mode={searchMode}
+              onModeChange={setSearchMode}
+              language={language}
+            />
+            <SearchBar
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder={searchPlaceholder}
+            />
+          </View>
 
-      {/* Category chips */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.chipScroll}
-        contentContainerStyle={styles.chipRow}
-        keyboardShouldPersistTaps="handled"
-      >
-        <TouchableOpacity
-          style={[
-            styles.chip,
-            { borderColor: palette.border, backgroundColor: palette.card },
-            selectedCategory === null && {
-              backgroundColor: palette.tint,
-              borderColor: palette.tint,
-            },
-          ]}
-          onPress={() => setSelectedCategory(null)}
-        >
-          <Text
-            style={[
-              styles.chipText,
-              { color: selectedCategory === null ? '#fff' : palette.text },
-            ]}
+          {/* Category chips */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.chipScroll}
+            contentContainerStyle={styles.chipRow}
+            keyboardShouldPersistTaps="always"
           >
-            All
-          </Text>
-        </TouchableOpacity>
-
-        {allCategories.map(cat => (
-          <TouchableOpacity
-            key={cat}
-            style={[
-              styles.chip,
-              { borderColor: palette.border, backgroundColor: palette.card },
-              selectedCategory === cat && {
-                backgroundColor: palette.tint,
-                borderColor: palette.tint,
-              },
-            ]}
-            onPress={() => setSelectedCategory(prev => (prev === cat ? null : cat))}
-          >
-            <Text
+            <TouchableOpacity
               style={[
-                styles.chipText,
-                { color: selectedCategory === cat ? '#fff' : palette.text },
+                styles.chip,
+                { borderColor: palette.border, backgroundColor: palette.card },
+                selectedCategory === null && {
+                  backgroundColor: palette.tint,
+                  borderColor: palette.tint,
+                },
               ]}
+              onPress={() => setSelectedCategory(null)}
             >
-              {cat}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+              <Text
+                style={[
+                  styles.chipText,
+                  { color: selectedCategory === null ? '#fff' : palette.text },
+                ]}
+              >
+                All
+              </Text>
+            </TouchableOpacity>
 
-      {/* Word list */}
+            {allCategories.map(cat => (
+              <TouchableOpacity
+                key={cat}
+                style={[
+                  styles.chip,
+                  { borderColor: palette.border, backgroundColor: palette.card },
+                  selectedCategory === cat && {
+                    backgroundColor: palette.tint,
+                    borderColor: palette.tint,
+                  },
+                ]}
+                onPress={() => setSelectedCategory(prev => (prev === cat ? null : cat))}
+              >
+                <Text
+                  style={[
+                    styles.chipText,
+                    { color: selectedCategory === cat ? '#fff' : palette.text },
+                  ]}
+                >
+                  {cat}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </TouchableWithoutFeedback>
+
+      {/* Word list — taps dismiss keyboard without selecting a row */}
       <FlatList
         data={filteredWords}
         keyExtractor={item => item.id}
         renderItem={renderWord}
         style={styles.list}
-        keyboardShouldPersistTaps="handled"
+        keyboardShouldPersistTaps="never"
         keyboardDismissMode="on-drag"
         ListEmptyComponent={
           <Text style={[styles.emptyText, { color: palette.subtext }]}>
@@ -282,7 +306,7 @@ const styles = StyleSheet.create({
   screenTitle: { fontSize: 17, fontWeight: '700' },
   topBarSpacer: { minWidth: 60 },
 
-  searchWrap: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 4 },
+  searchWrap: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 4, gap: 8 },
 
   chipScroll: { maxHeight: 48, flexGrow: 0 },
   chipRow: {
