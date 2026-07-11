@@ -83,10 +83,11 @@ export default function Card1006({
     ? inputText.trim().length > 0 && selectedGender !== null
     : inputText.trim().length > 0;
 
-  const tileColor =
-    selectedGender && cardState === 'typing'
-      ? GenderColors[selectedGender]
-      : undefined;
+  const correctGender = card.item.gender as Gender | undefined;
+  const revealCorrectGenderTile =
+    showGenderTiles &&
+    !!correctGender &&
+    cardState === 'incorrect_final';
 
   // Colour of the typed noun in the input (German only, after tile selected).
   // Use !resolved so the colour updates in both 'typing' AND 'incorrect_1' states,
@@ -302,6 +303,7 @@ export default function Card1006({
                     key={g}
                     gender={g}
                     selected={selectedGender === g}
+                    showCorrect={revealCorrectGenderTile && correctGender === g}
                     onPress={() => {
                       if (!resolved) setSelectedGender(g);
                     }}
