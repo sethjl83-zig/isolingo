@@ -15,7 +15,6 @@ import {
   ScrollView,
   StyleSheet,
   useColorScheme,
-  TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -34,6 +33,7 @@ import type { VocabItem } from '@/src/types/vocab';
 import type { PoolWord } from '@/src/types/pool';
 import SearchBar from '@/src/components/ui/SearchBar';
 import SearchModeToggle from '@/src/components/ui/SearchModeToggle';
+import KeyboardDoneAccessory from '@/src/components/ui/KeyboardDoneAccessory';
 import StudyButton from '@/src/components/ui/StudyButton';
 
 export default function AddExistingWordScreen() {
@@ -80,6 +80,16 @@ export default function AddExistingWordScreen() {
   const [searchMode, setSearchMode] = useState<VocabSearchMode>('target');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const categoryFiltered = useMemo(
     () =>
@@ -143,7 +153,13 @@ export default function AddExistingWordScreen() {
             backgroundColor: isSelected ? palette.feedback : palette.background,
           },
         ]}
-        onPress={() => toggleSelection(item.id)}
+        onPress={() => {
+          if (keyboardVisible) {
+            Keyboard.dismiss();
+            return;
+          }
+          toggleSelection(item.id);
+        }}
         activeOpacity={0.7}
       >
         <View
@@ -165,94 +181,92 @@ export default function AddExistingWordScreen() {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <View>
-          {/* Top bar */}
-          <View style={[styles.topBar, { borderBottomColor: palette.border }]}>
-            <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-              <Text style={[styles.backBtn, { color: palette.tint }]}>← Back</Text>
-            </TouchableOpacity>
-            <Text style={[styles.screenTitle, { color: palette.text }]}>Add Word</Text>
-            <View style={styles.topBarSpacer} />
-          </View>
+      <KeyboardDoneAccessory />
 
-          {/* Search mode + bar */}
-          <View style={styles.searchWrap}>
-            <SearchModeToggle
-              mode={searchMode}
-              onModeChange={setSearchMode}
-              language={language}
-            />
-            <SearchBar
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder={searchPlaceholder}
-            />
-          </View>
+      {/* Top bar */}
+      <View style={[styles.topBar, { borderBottomColor: palette.border }]}>
+        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
+          <Text style={[styles.backBtn, { color: palette.tint }]}>← Back</Text>
+        </TouchableOpacity>
+        <Text style={[styles.screenTitle, { color: palette.text }]}>Add Word</Text>
+        <View style={styles.topBarSpacer} />
+      </View>
 
-          {/* Category chips */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.chipScroll}
-            contentContainerStyle={styles.chipRow}
-            keyboardShouldPersistTaps="always"
+      {/* Search mode + bar */}
+      <View style={styles.searchWrap}>
+        <SearchModeToggle
+          mode={searchMode}
+          onModeChange={setSearchMode}
+          language={language}
+        />
+        <SearchBar
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder={searchPlaceholder}
+          showKeyboardDone
+        />
+      </View>
+
+      {/* Category chips */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.chipScroll}
+        contentContainerStyle={styles.chipRow}
+        keyboardShouldPersistTaps="handled"
+      >
+        <TouchableOpacity
+          style={[
+            styles.chip,
+            { borderColor: palette.border, backgroundColor: palette.card },
+            selectedCategory === null && {
+              backgroundColor: palette.tint,
+              borderColor: palette.tint,
+            },
+          ]}
+          onPress={() => setSelectedCategory(null)}
+        >
+          <Text
+            style={[
+              styles.chipText,
+              { color: selectedCategory === null ? '#fff' : palette.text },
+            ]}
           >
-            <TouchableOpacity
+            All
+          </Text>
+        </TouchableOpacity>
+
+        {allCategories.map(cat => (
+          <TouchableOpacity
+            key={cat}
+            style={[
+              styles.chip,
+              { borderColor: palette.border, backgroundColor: palette.card },
+              selectedCategory === cat && {
+                backgroundColor: palette.tint,
+                borderColor: palette.tint,
+              },
+            ]}
+            onPress={() => setSelectedCategory(prev => (prev === cat ? null : cat))}
+          >
+            <Text
               style={[
-                styles.chip,
-                { borderColor: palette.border, backgroundColor: palette.card },
-                selectedCategory === null && {
-                  backgroundColor: palette.tint,
-                  borderColor: palette.tint,
-                },
+                styles.chipText,
+                { color: selectedCategory === cat ? '#fff' : palette.text },
               ]}
-              onPress={() => setSelectedCategory(null)}
             >
-              <Text
-                style={[
-                  styles.chipText,
-                  { color: selectedCategory === null ? '#fff' : palette.text },
-                ]}
-              >
-                All
-              </Text>
-            </TouchableOpacity>
+              {cat}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
 
-            {allCategories.map(cat => (
-              <TouchableOpacity
-                key={cat}
-                style={[
-                  styles.chip,
-                  { borderColor: palette.border, backgroundColor: palette.card },
-                  selectedCategory === cat && {
-                    backgroundColor: palette.tint,
-                    borderColor: palette.tint,
-                  },
-                ]}
-                onPress={() => setSelectedCategory(prev => (prev === cat ? null : cat))}
-              >
-                <Text
-                  style={[
-                    styles.chipText,
-                    { color: selectedCategory === cat ? '#fff' : palette.text },
-                  ]}
-                >
-                  {cat}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      </TouchableWithoutFeedback>
-
-      {/* Word list — taps dismiss keyboard without selecting a row */}
       <FlatList
         data={filteredWords}
         keyExtractor={item => item.id}
         renderItem={renderWord}
         style={styles.list}
-        keyboardShouldPersistTaps="never"
+        keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         ListEmptyComponent={
           <Text style={[styles.emptyText, { color: palette.subtext }]}>
