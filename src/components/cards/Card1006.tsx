@@ -392,7 +392,9 @@ export default function Card1006({
           </View>
 
           {/* Word management strip — always visible at the very bottom */}
-          <WordMgmtStrip />
+          <WordMgmtStrip
+            words={[{ id: card.item.id, lemma: card.item.lemma }]}
+          />
 
         </View>
     </KeyboardAvoidingView>

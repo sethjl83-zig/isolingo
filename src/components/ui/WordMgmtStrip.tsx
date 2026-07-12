@@ -1,11 +1,8 @@
 /**
- * WordMgmtStrip — non-functional word-management row shown at the bottom of
- * every study card. Functionality will be wired up in a later pass.
- *
- * The strip handles its own safe-area bottom padding and the hairline divider
- * above it so callers don't need to worry about device-specific offsets.
+ * WordMgmtStrip — word-management row shown at the bottom of every study card.
+ * Frequency is wired up; other buttons remain placeholders for a later pass.
  */
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -15,42 +12,58 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/theme';
+import WordFrequencyModal, { type WordFrequencyTarget } from './WordFrequencyModal';
 
 const BUTTONS = [
-  { id: 'remove',    label: 'Remove' },
-  { id: 'replace',   label: 'Replace' },
+  { id: 'remove', label: 'Remove' },
+  { id: 'replace', label: 'Replace' },
   { id: 'frequency', label: 'Frequency' },
-  { id: 'pause',     label: 'Pause' },
+  { id: 'pause', label: 'Pause' },
 ] as const;
 
-export default function WordMgmtStrip() {
-  const scheme  = useColorScheme() ?? 'light';
+interface Props {
+  words: WordFrequencyTarget[];
+}
+
+export default function WordMgmtStrip({ words }: Props) {
+  const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
-  const insets  = useSafeAreaInsets();
+  const insets = useSafeAreaInsets();
+  const [frequencyVisible, setFrequencyVisible] = useState(false);
 
   return (
-    <View
-      style={[
-        styles.strip,
-        {
-          borderTopColor: palette.border,
-          paddingBottom: Math.max(insets.bottom, 14),
-        },
-      ]}
-    >
-      {BUTTONS.map(btn => (
-        <TouchableOpacity
-          key={btn.id}
-          style={[styles.btn, { borderColor: palette.border }]}
-          onPress={() => {}}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.label, { color: palette.subtext }]}>
-            {btn.label}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
+    <>
+      <View
+        style={[
+          styles.strip,
+          {
+            borderTopColor: palette.border,
+            paddingBottom: Math.max(insets.bottom, 14),
+          },
+        ]}
+      >
+        {BUTTONS.map(btn => (
+          <TouchableOpacity
+            key={btn.id}
+            style={[styles.btn, { borderColor: palette.border }]}
+            onPress={() => {
+              if (btn.id === 'frequency') setFrequencyVisible(true);
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.label, { color: palette.subtext }]}>
+              {btn.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <WordFrequencyModal
+        visible={frequencyVisible}
+        words={words}
+        onDismiss={() => setFrequencyVisible(false)}
+      />
+    </>
   );
 }
 

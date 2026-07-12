@@ -198,7 +198,12 @@ export default function Card1002({
         )}
       </View>
 
-      <WordMgmtStrip />
+      <WordMgmtStrip
+        words={[
+          { id: card.itemA.id, lemma: card.itemA.lemma },
+          { id: card.itemB.id, lemma: card.itemB.lemma },
+        ]}
+      />
     </View>
   );
 }

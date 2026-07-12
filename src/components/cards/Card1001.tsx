@@ -259,7 +259,9 @@ export default function Card1001({
       </View>
 
       {/* Word management strip — fixed at the very bottom */}
-      <WordMgmtStrip />
+      <WordMgmtStrip
+        words={card.nouns.map(n => ({ id: n.item.id, lemma: n.item.lemma }))}
+      />
 
     </View>
   );

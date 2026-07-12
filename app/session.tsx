@@ -33,6 +33,7 @@ import Card1002 from '@/src/components/cards/Card1002';
 import Card1006 from '@/src/components/cards/Card1006';
 import ErrorBoundary from '@/src/components/ErrorBoundary';
 import StudyButton from '@/src/components/ui/StudyButton';
+import { SessionWordMgmtProvider } from '@/src/context/SessionWordMgmtContext';
 import { loadStatsForLanguage, saveStatsForLanguage, type LangStats } from '@/src/storage/statsStorage';
 import { enrichVocabItemsFromMaster } from '@/src/data';
 import { updateWordStats } from '@/src/types/stats';
@@ -342,7 +343,8 @@ export default function SessionScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: palette.background }]}>
-      <Animated.View style={cardSlideStyle}>
+      <SessionWordMgmtProvider language={language} poolIds={poolIds}>
+        <Animated.View style={cardSlideStyle}>
         <ErrorBoundary
           key={cardKey}
           resetKeys={[cardKey]}
@@ -417,7 +419,8 @@ export default function SessionScreen() {
             />
           )}
         </ErrorBoundary>
-      </Animated.View>
+        </Animated.View>
+      </SessionWordMgmtProvider>
     </SafeAreaView>
   );
 }
