@@ -1,6 +1,6 @@
 /**
  * WordMgmtStrip — word-management row shown at the bottom of every study card.
- * Frequency and Remove are wired up; other buttons remain placeholders.
+ * Frequency, Remove, and Replace are wired up; Pause remains a placeholder.
  */
 import React, { useCallback, useState } from 'react';
 import {
@@ -24,6 +24,8 @@ const BUTTONS = [
   { id: 'pause', label: 'Pause' },
 ] as const;
 
+type PickerFlow = 'remove' | 'replace';
+
 interface Props {
   words: WordFrequencyTarget[];
 }
@@ -32,9 +34,9 @@ export default function WordMgmtStrip({ words }: Props) {
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
   const insets = useSafeAreaInsets();
-  const { removeWord } = useSessionWordMgmt();
+  const { removeWord, replaceWord } = useSessionWordMgmt();
   const [frequencyVisible, setFrequencyVisible] = useState(false);
-  const [pickerVisible, setPickerVisible] = useState(false);
+  const [pickerFlow, setPickerFlow] = useState<PickerFlow | null>(null);
 
   const showRemoveConfirm = useCallback(
     (word: WordFrequencyTarget) => {
@@ -54,21 +56,58 @@ export default function WordMgmtStrip({ words }: Props) {
     [removeWord],
   );
 
-  const handleRemovePress = useCallback(() => {
-    if (words.length === 1) {
-      showRemoveConfirm(words[0]);
-      return;
-    }
-    setPickerVisible(true);
-  }, [words, showRemoveConfirm]);
+  const showReplaceConfirm = useCallback(
+    (word: WordFrequencyTarget) => {
+      Alert.alert(
+        'Replace this word in your current session?',
+        undefined,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Confirm',
+            style: 'destructive',
+            onPress: () => {
+              const result = replaceWord(word.id);
+              if (!result.success) {
+                Alert.alert(
+                  'Could not replace word',
+                  result.error ?? 'Please try again.',
+                );
+              }
+            },
+          },
+        ],
+      );
+    },
+    [replaceWord],
+  );
+
+  const startFlow = useCallback(
+    (flow: PickerFlow) => {
+      if (words.length === 1) {
+        if (flow === 'remove') showRemoveConfirm(words[0]);
+        else showReplaceConfirm(words[0]);
+        return;
+      }
+      setPickerFlow(flow);
+    },
+    [words, showRemoveConfirm, showReplaceConfirm],
+  );
 
   const handleWordPicked = useCallback(
     (word: WordFrequencyTarget) => {
-      setPickerVisible(false);
-      showRemoveConfirm(word);
+      const flow = pickerFlow;
+      setPickerFlow(null);
+      if (flow === 'remove') showRemoveConfirm(word);
+      else if (flow === 'replace') showReplaceConfirm(word);
     },
-    [showRemoveConfirm],
+    [pickerFlow, showRemoveConfirm, showReplaceConfirm],
   );
+
+  const pickerTitle =
+    pickerFlow === 'replace'
+      ? 'Which word would you like to replace?'
+      : 'Which word would you like to remove?';
 
   return (
     <>
@@ -87,7 +126,8 @@ export default function WordMgmtStrip({ words }: Props) {
             style={[styles.btn, { borderColor: palette.border }]}
             onPress={() => {
               if (btn.id === 'frequency') setFrequencyVisible(true);
-              if (btn.id === 'remove') handleRemovePress();
+              if (btn.id === 'remove') startFlow('remove');
+              if (btn.id === 'replace') startFlow('replace');
             }}
             activeOpacity={0.7}
           >
@@ -105,11 +145,11 @@ export default function WordMgmtStrip({ words }: Props) {
       />
 
       <WordPickerModal
-        visible={pickerVisible}
-        title="Which word would you like to remove?"
+        visible={pickerFlow !== null}
+        title={pickerTitle}
         words={words}
         onSelect={handleWordPicked}
-        onDismiss={() => setPickerVisible(false)}
+        onDismiss={() => setPickerFlow(null)}
       />
     </>
   );

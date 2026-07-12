@@ -59,6 +59,9 @@ export default function SessionScreen() {
 
   const sessionRef = useRef<SessionState>(makeSessionState());
   const sessionRemovedIdsRef = useRef<Set<string>>(new Set());
+  const sessionAddedWordsRef = useRef<
+    Map<string, { item: VocabItem; frequency: WordFrequencySetting }>
+  >(new Map());
   const statsRef = useRef<LangStats>({});
   const [currentCard, setCurrentCard] = useState<CardData | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -134,44 +137,78 @@ export default function SessionScreen() {
    */
   const withPoolBank = useCallback(
     (baseState: AppState): AppState => {
-      const filterRemovedBank = (bank: VocabItem[]) =>
-        bank.filter(w => !sessionRemovedIdsRef.current.has(w.id));
-      const filterRemovedSettings = (
+      const applySessionOverrides = (
+        bank: VocabItem[],
         settings: Record<string, WordFrequencySetting>,
-      ) =>
-        Object.fromEntries(
+      ) => {
+        let nextBank = bank.filter(w => !sessionRemovedIdsRef.current.has(w.id));
+        let nextSettings = Object.fromEntries(
           Object.entries(settings).filter(
             ([id]) => !sessionRemovedIdsRef.current.has(id),
           ),
-        );
+        ) as Record<string, WordFrequencySetting>;
+
+        for (const { item, frequency } of sessionAddedWordsRef.current.values()) {
+          if (
+            !sessionRemovedIdsRef.current.has(item.id) &&
+            !nextBank.some(w => w.id === item.id)
+          ) {
+            nextBank = [...nextBank, item];
+            nextSettings[item.id] = frequency;
+          }
+        }
+
+        return { bank: nextBank, settings: nextSettings };
+      };
 
       if (poolDerivedBank) {
+        const { bank, settings } = applySessionOverrides(
+          poolDerivedBank,
+          poolDerivedFreqSettings ?? baseState.wordFrequencySettings,
+        );
         return {
           ...baseState,
-          activeVocabBank: filterRemovedBank(poolDerivedBank),
-          wordFrequencySettings: filterRemovedSettings(
-            poolDerivedFreqSettings ?? baseState.wordFrequencySettings,
-          ),
+          activeVocabBank: bank,
+          wordFrequencySettings: settings,
         };
       }
       if (baseState.languageSelected && baseState.activeVocabBank.length > 0) {
+        const { bank, settings } = applySessionOverrides(
+          enrichVocabItemsFromMaster(
+            baseState.activeVocabBank,
+            baseState.languageSelected,
+          ),
+          baseState.wordFrequencySettings,
+        );
         return {
           ...baseState,
-          activeVocabBank: filterRemovedBank(
-            enrichVocabItemsFromMaster(
-              baseState.activeVocabBank,
-              baseState.languageSelected,
-            ),
-          ),
-          wordFrequencySettings: filterRemovedSettings(
-            baseState.wordFrequencySettings,
-          ),
+          activeVocabBank: bank,
+          wordFrequencySettings: settings,
         };
       }
       return baseState;
     },
     [poolDerivedBank, poolDerivedFreqSettings],
   );
+
+  const getSessionDeckIds = useCallback((): ReadonlySet<string> => {
+    const ids = new Set<string>();
+
+    const baseBank =
+      poolDerivedBank ??
+      (language
+        ? enrichVocabItemsFromMaster(state.activeVocabBank, language)
+        : state.activeVocabBank);
+
+    for (const w of baseBank) {
+      if (!sessionRemovedIdsRef.current.has(w.id)) ids.add(w.id);
+    }
+    for (const { item } of sessionAddedWordsRef.current.values()) {
+      if (!sessionRemovedIdsRef.current.has(item.id)) ids.add(item.id);
+    }
+
+    return ids;
+  }, [poolDerivedBank, language, state.activeVocabBank]);
 
   // Load existing stats for this language at session start
   useEffect(() => {
@@ -258,6 +295,23 @@ export default function SessionScreen() {
       sessionRef.current = {
         ...sessionRef.current,
         deck: sessionRef.current.deck.filter(id => id !== vocabId),
+        deckBankHash: '',
+      };
+      handleNext();
+    },
+    [handleNext],
+  );
+
+  const handleWordReplaced = useCallback(
+    (oldVocabId: string, newItem: VocabItem, frequency: WordFrequencySetting) => {
+      sessionRemovedIdsRef.current.add(oldVocabId);
+      sessionAddedWordsRef.current.set(newItem.id, { item: newItem, frequency });
+      sessionRef.current = {
+        ...sessionRef.current,
+        deck: [
+          ...sessionRef.current.deck.filter(id => id !== oldVocabId),
+          newItem.id,
+        ],
         deckBankHash: '',
       };
       handleNext();
@@ -377,7 +431,9 @@ export default function SessionScreen() {
       <SessionWordMgmtProvider
         language={language}
         poolIds={poolIds}
+        getSessionDeckIds={getSessionDeckIds}
         onWordRemoved={handleWordRemoved}
+        onWordReplaced={handleWordReplaced}
       >
         <Animated.View style={cardSlideStyle}>
         <ErrorBoundary
