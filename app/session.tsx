@@ -58,6 +58,7 @@ export default function SessionScreen() {
   const palette = Colors[scheme];
 
   const sessionRef = useRef<SessionState>(makeSessionState());
+  const sessionRemovedIdsRef = useRef<Set<string>>(new Set());
   const statsRef = useRef<LangStats>({});
   const [currentCard, setCurrentCard] = useState<CardData | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -133,20 +134,37 @@ export default function SessionScreen() {
    */
   const withPoolBank = useCallback(
     (baseState: AppState): AppState => {
+      const filterRemovedBank = (bank: VocabItem[]) =>
+        bank.filter(w => !sessionRemovedIdsRef.current.has(w.id));
+      const filterRemovedSettings = (
+        settings: Record<string, WordFrequencySetting>,
+      ) =>
+        Object.fromEntries(
+          Object.entries(settings).filter(
+            ([id]) => !sessionRemovedIdsRef.current.has(id),
+          ),
+        );
+
       if (poolDerivedBank) {
         return {
           ...baseState,
-          activeVocabBank: poolDerivedBank,
-          wordFrequencySettings:
+          activeVocabBank: filterRemovedBank(poolDerivedBank),
+          wordFrequencySettings: filterRemovedSettings(
             poolDerivedFreqSettings ?? baseState.wordFrequencySettings,
+          ),
         };
       }
       if (baseState.languageSelected && baseState.activeVocabBank.length > 0) {
         return {
           ...baseState,
-          activeVocabBank: enrichVocabItemsFromMaster(
-            baseState.activeVocabBank,
-            baseState.languageSelected,
+          activeVocabBank: filterRemovedBank(
+            enrichVocabItemsFromMaster(
+              baseState.activeVocabBank,
+              baseState.languageSelected,
+            ),
+          ),
+          wordFrequencySettings: filterRemovedSettings(
+            baseState.wordFrequencySettings,
           ),
         };
       }
@@ -233,6 +251,19 @@ export default function SessionScreen() {
       });
     }, 145);
   }, [loadNextCard]);
+
+  const handleWordRemoved = useCallback(
+    (vocabId: string) => {
+      sessionRemovedIdsRef.current.add(vocabId);
+      sessionRef.current = {
+        ...sessionRef.current,
+        deck: sessionRef.current.deck.filter(id => id !== vocabId),
+        deckBankHash: '',
+      };
+      handleNext();
+    },
+    [handleNext],
+  );
 
   const handleSubmit = useCallback(
     (
@@ -343,7 +374,11 @@ export default function SessionScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: palette.background }]}>
-      <SessionWordMgmtProvider language={language} poolIds={poolIds}>
+      <SessionWordMgmtProvider
+        language={language}
+        poolIds={poolIds}
+        onWordRemoved={handleWordRemoved}
+      >
         <Animated.View style={cardSlideStyle}>
         <ErrorBoundary
           key={cardKey}

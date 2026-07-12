@@ -13,6 +13,7 @@ import type { PoolWord } from '../types/pool';
 interface SessionWordMgmtContextValue {
   getFrequency: (vocabId: string) => WordFrequencySetting;
   setFrequency: (vocabId: string, frequency: WordFrequencySetting) => void;
+  removeWord: (vocabId: string) => void;
 }
 
 const SessionWordMgmtContext = createContext<SessionWordMgmtContextValue | null>(null);
@@ -21,12 +22,14 @@ interface ProviderProps {
   children: ReactNode;
   language: Language;
   poolIds: string[];
+  onWordRemoved?: (vocabId: string) => void;
 }
 
 export function SessionWordMgmtProvider({
   children,
   language,
   poolIds,
+  onWordRemoved,
 }: ProviderProps) {
   const { state, updatePool, setWordFrequency, getLanguagePools } = useAppContext();
 
@@ -70,9 +73,18 @@ export function SessionWordMgmtProvider({
     [sessionPools, updatePool, setWordFrequency],
   );
 
+  const removeWord = useCallback(
+    (vocabId: string) => {
+      // Session-only removal — excluded via sessionRemovedIdsRef in session.tsx.
+      // The word stays in the user's saved pool(s).
+      onWordRemoved?.(vocabId);
+    },
+    [onWordRemoved],
+  );
+
   const value = useMemo(
-    () => ({ getFrequency, setFrequency }),
-    [getFrequency, setFrequency],
+    () => ({ getFrequency, setFrequency, removeWord }),
+    [getFrequency, setFrequency, removeWord],
   );
 
   return (
