@@ -1,5 +1,5 @@
 import type { VocabItem, Gender } from '../types/vocab';
-import type { DeterminerType } from '../types/cards';
+import type { DeterminerType, PossessivePerson } from '../types/cards';
 import { getEnglishDeterminerPrompt } from './articleHelper';
 
 const ENGLISH_GENDER_PREFIX_RE = /^(male|female)\s+/i;
@@ -132,9 +132,12 @@ export function buildDisambiguatedEnglishPrompt(item: VocabItem): string {
 function mapEnglishGlosses(
   glosses: string[],
   usedDeterminer: DeterminerType | null,
+  possessivePerson: PossessivePerson | null = null,
 ): string[] {
   if (!usedDeterminer) return glosses;
-  return glosses.map(g => getEnglishDeterminerPrompt(g, usedDeterminer));
+  return glosses.map(g =>
+    getEnglishDeterminerPrompt(g, usedDeterminer, possessivePerson ?? 'first'),
+  );
 }
 
 /**
@@ -145,12 +148,13 @@ function mapEnglishGlosses(
 export function collectCounterpartEnglishAnswers(
   counterpart: VocabItem,
   usedDeterminer: DeterminerType | null,
+  possessivePerson: PossessivePerson | null = null,
 ): string[] {
   const glosses = dedupeEnglishAnswers([
     ...getEnglishGlosses(counterpart),
     ...(counterpart.secondaryGlosses ?? []).map(g => g.trim()).filter(Boolean),
   ].map(stripEnglishGenderPrefix));
-  return mapEnglishGlosses(glosses, usedDeterminer);
+  return mapEnglishGlosses(glosses, usedDeterminer, possessivePerson);
 }
 
 /**
@@ -162,12 +166,17 @@ export function mergeCounterpartEnglishAccepted(
   acceptedAnswers: string[],
   counterpart: VocabItem,
   usedDeterminer: DeterminerType | null,
+  possessivePerson: PossessivePerson | null = null,
 ): string[] {
   const seen = new Set(
     [canonicalAnswer, ...acceptedAnswers].map(englishAnswerKey),
   );
   const merged = [...acceptedAnswers];
-  for (const answer of collectCounterpartEnglishAnswers(counterpart, usedDeterminer)) {
+  for (const answer of collectCounterpartEnglishAnswers(
+    counterpart,
+    usedDeterminer,
+    possessivePerson,
+  )) {
     const key = englishAnswerKey(answer);
     if (!seen.has(key)) {
       seen.add(key);

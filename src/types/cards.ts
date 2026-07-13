@@ -73,11 +73,15 @@ export interface Card1002Data {
 
 export type DeterminerType = 'definite' | 'indefinite' | 'possessive';
 
+/** Possessive determiner person — only used when determinerType is 'possessive'. */
+export type PossessivePerson = 'first' | 'second' | 'third';
+
 export interface Card1006Data {
   type: 'CARD_1006';
   item: VocabItem;
   direction: 'native_to_target' | 'target_to_native';
-  determinerType: DeterminerType | null; // FR/ES native_to_target only
+  determinerType: DeterminerType | null; // FR/ES noun cards
+  possessivePerson: PossessivePerson | null; // FR/ES when determinerType is 'possessive'
   prompt: string;
   canonicalAnswer: string;
   acceptedAnswers: string[];

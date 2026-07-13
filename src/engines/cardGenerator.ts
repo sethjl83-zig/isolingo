@@ -5,7 +5,7 @@ import type {
   Card1006Data,
   DeterminerType,
 } from '../types/cards';
-import { getDisplayForm, getEnglishDeterminerPrompt } from './articleHelper';
+import { getDisplayForm, getEnglishDeterminerPrompt, pickRandomPossessivePerson } from './articleHelper';
 import {
   buildDisambiguatedEnglishPrompt,
   collectTargetToNativeEnglishGlosses,
@@ -141,6 +141,37 @@ export function generateCard1001(
 
 const DETERMINER_TYPES: DeterminerType[] = ['definite', 'indefinite', 'possessive'];
 
+/** Target mix for FR/ES Card 1006 native-to-target determiner prompts. */
+const NATIVE_TO_TARGET_DETERMINER_WEIGHTS: Record<DeterminerType, number> = {
+  definite: 0.4,
+  indefinite: 0.35,
+  possessive: 0.25,
+};
+
+/**
+ * Pick a determiner type from `pool` using the native-to-target weight targets.
+ * Weights are renormalized when the noun's articleTypes pool is a subset.
+ */
+function pickNativeToTargetDeterminerType(pool: DeterminerType[]): DeterminerType {
+  if (pool.length === 0) return 'definite';
+  if (pool.length === 1) return pool[0];
+
+  let totalWeight = 0;
+  const weighted = pool.map(type => {
+    const weight = NATIVE_TO_TARGET_DETERMINER_WEIGHTS[type];
+    totalWeight += weight;
+    return { type, weight };
+  });
+
+  let roll = Math.random() * totalWeight;
+  for (const { type, weight } of weighted) {
+    roll -= weight;
+    if (roll <= 0) return type;
+  }
+
+  return weighted[weighted.length - 1].type;
+}
+
 /**
  * Returns the pool of DeterminerType values eligible for a given noun.
  *
@@ -177,6 +208,7 @@ function card1006TargetToNative(
 ): Card1006Data {
   let prompt: string;
   let usedDeterminer: DeterminerType | null = null;
+  let possessivePerson: PossessivePerson | null = null;
 
   if (item.partOfSpeech === 'noun' && item.gender) {
     if (language === 'de') {
@@ -185,7 +217,16 @@ function card1006TargetToNative(
       // FR/ES: cycle through all three determiner types so users see all forms
       const det = DETERMINER_TYPES[Math.floor(Math.random() * DETERMINER_TYPES.length)];
       usedDeterminer = det;
-      prompt = getDisplayForm(language, item.gender, item.lemma, det);
+      if (det === 'possessive') {
+        possessivePerson = pickRandomPossessivePerson();
+      }
+      prompt = getDisplayForm(
+        language,
+        item.gender,
+        item.lemma,
+        det,
+        possessivePerson ?? 'first',
+      );
     }
   } else {
     prompt = item.lemma;
@@ -196,9 +237,15 @@ function card1006TargetToNative(
 
   // When the prompt shows a determiner (FR/ES noun), the expected English
   // answer must use the matching English determiner form: "the X", "a X",
-  // or "my X". Without this, "ma minute" would incorrectly accept "minute".
+  // or "my/your/his/her X". Without this, "ma minute" would incorrectly accept "minute".
   const mappedValues = usedDeterminer
-    ? englishValues.map(e => getEnglishDeterminerPrompt(e, usedDeterminer!))
+    ? englishValues.map(e =>
+        getEnglishDeterminerPrompt(
+          e,
+          usedDeterminer!,
+          possessivePerson ?? 'first',
+        ),
+      )
     : englishValues;
 
   const [canonical, ...rest] = mappedValues;
@@ -210,6 +257,7 @@ function card1006TargetToNative(
       acceptedAnswers,
       counterpart,
       usedDeterminer,
+      possessivePerson,
     );
   }
 
@@ -218,6 +266,7 @@ function card1006TargetToNative(
     item,
     direction: 'target_to_native',
     determinerType: usedDeterminer,
+    possessivePerson,
     prompt,
     canonicalAnswer: canonical,
     acceptedAnswers,
@@ -247,6 +296,7 @@ function card1006NativeToTarget(
         item,
         direction: 'native_to_target',
         determinerType: null,
+        possessivePerson: null,
         prompt: promptEnglish,
         canonicalAnswer: item.lemma,
         acceptedAnswers: alternates,
@@ -257,17 +307,35 @@ function card1006NativeToTarget(
     // Only select from determiner types permitted for this noun; fall back to
     // all three if articleTypes is absent or empty.
     const detPool = getArticleTypesPool(item.articleTypes);
-    const det = detPool[Math.floor(Math.random() * detPool.length)];
+    const det = pickNativeToTargetDeterminerType(detPool);
+    const possessivePerson = det === 'possessive' ? pickRandomPossessivePerson() : null;
 
     return {
       type: 'CARD_1006',
       item,
       direction: 'native_to_target',
       determinerType: det,
-      prompt: getEnglishDeterminerPrompt(promptEnglish, det),
-      canonicalAnswer: getDisplayForm(language, item.gender, item.lemma, det),
+      possessivePerson,
+      prompt: getEnglishDeterminerPrompt(
+        promptEnglish,
+        det,
+        possessivePerson ?? 'first',
+      ),
+      canonicalAnswer: getDisplayForm(
+        language,
+        item.gender,
+        item.lemma,
+        det,
+        possessivePerson ?? 'first',
+      ),
       acceptedAnswers: alternates.map(a =>
-        getDisplayForm(language, item.gender!, a.trim(), det),
+        getDisplayForm(
+          language,
+          item.gender!,
+          a.trim(),
+          det,
+          possessivePerson ?? 'first',
+        ),
       ),
     };
   }
@@ -278,6 +346,7 @@ function card1006NativeToTarget(
     item,
     direction: 'native_to_target',
     determinerType: null,
+    possessivePerson: null,
     prompt: promptEnglish,
     canonicalAnswer: item.lemma,
     acceptedAnswers: alternates,

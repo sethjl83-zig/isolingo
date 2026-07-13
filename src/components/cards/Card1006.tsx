@@ -166,6 +166,8 @@ export default function Card1006({
   // ── Split article/noun for FR/ES — only the noun gets the gender colour ────────
   const isFrEs = language === 'fr' || language === 'es';
 
+  const possessivePerson = card.possessivePerson ?? 'first';
+
   // Prompt split: target_to_native FR/ES noun with determiner
   const promptParts =
     isFrEs &&
@@ -173,7 +175,13 @@ export default function Card1006({
     isNoun &&
     card.item.gender &&
     card.determinerType
-      ? splitDisplayForm(language, card.item.gender as Gender, card.item.lemma, card.determinerType)
+      ? splitDisplayForm(
+          language,
+          card.item.gender as Gender,
+          card.item.lemma,
+          card.determinerType,
+          possessivePerson,
+        )
       : null;
 
   // Answer reveal split: native_to_target FR/ES noun — canonical answer is "le chien" etc.
@@ -183,7 +191,13 @@ export default function Card1006({
     isNoun &&
     card.item.gender &&
     card.determinerType
-      ? splitDisplayForm(language, card.item.gender as Gender, card.item.lemma, card.determinerType)
+      ? splitDisplayForm(
+          language,
+          card.item.gender as Gender,
+          card.item.lemma,
+          card.determinerType,
+          possessivePerson,
+        )
       : null;
 
   // ── Sense label subtitle (shown beneath prompt when present) ─────────────────
