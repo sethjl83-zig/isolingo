@@ -30,6 +30,7 @@ import {
   getLanguageDisplayName,
   getUniqueCategories,
   getWordLemmaColor,
+  sortVocabByLemma,
   type VocabSearchMode,
 } from '@/src/utils/vocabBank';
 import type { VocabItem } from '@/src/types/vocab';
@@ -102,8 +103,12 @@ export default function BuildYourOwnScreen() {
   );
 
   const filteredWords = useMemo(
-    () => filterVocabBySearch(categoryFiltered, searchQuery, searchMode),
-    [categoryFiltered, searchQuery, searchMode],
+    () =>
+      sortVocabByLemma(
+        filterVocabBySearch(categoryFiltered, searchQuery, searchMode),
+        language ?? undefined,
+      ),
+    [categoryFiltered, searchQuery, searchMode, language],
   );
 
   const searchPlaceholder =

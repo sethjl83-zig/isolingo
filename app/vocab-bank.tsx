@@ -30,7 +30,7 @@ import type { VocabItem } from '@/src/types/vocab';
 import type { StudyType, WordFrequencySetting } from '@/src/types/state';
 import { normalizeFrequencySetting } from '@/src/types/state';
 import type { Pool, PoolWord } from '@/src/types/pool';
-import { filterVocabBySearch, getWordLemmaColor } from '@/src/utils/vocabBank';
+import { filterVocabBySearch, getWordLemmaColor, sortVocabByLemma } from '@/src/utils/vocabBank';
 import StudyButton from '@/src/components/ui/StudyButton';
 import SearchBar from '@/src/components/ui/SearchBar';
 import FrequencySnapSlider from '@/src/components/ui/FrequencySnapSlider';
@@ -49,7 +49,8 @@ type BankSection = {
 
 export default function VocabBankScreen() {
   const router = useRouter();
-  const { poolId } = useLocalSearchParams<{ poolId?: string }>();
+  const { poolId: poolIdParam } = useLocalSearchParams<{ poolId?: string | string[] }>();
+  const poolId = Array.isArray(poolIdParam) ? poolIdParam[0] : poolIdParam;
   const {
     state,
     setWordFrequency,
@@ -92,34 +93,51 @@ export default function VocabBankScreen() {
       }
       return { activeWords: active, pausedWords: paused };
     }
-    return { activeWords: state.activeVocabBank, pausedWords: [] as VocabItem[] };
+    return {
+      activeWords: state.activeVocabBank,
+      pausedWords: [] as VocabItem[],
+    };
   }, [isPoolMode, pool, state.activeVocabBank]);
 
-  const sortByLemma = (items: VocabItem[]) =>
-    [...items].sort((a, b) =>
-      a.lemma.localeCompare(b.lemma, undefined, { sensitivity: 'base' }),
-    );
-
   const sections = useMemo((): BankSection[] => {
-    const filteredActive = filterVocabBySearch(sortByLemma(activeWords), searchQuery);
+    const sortLocale = pool?.language ?? language ?? undefined;
+    const sortedActive = sortVocabByLemma(
+      filterVocabBySearch(activeWords, searchQuery),
+      sortLocale,
+    );
     const result: BankSection[] = [
-      { key: 'active', title: null, paused: false, data: filteredActive },
+      { key: 'active', title: null, paused: false, data: sortedActive },
     ];
 
+    let sortedPaused: VocabItem[] = [];
     if (isPoolMode && pausedWords.length > 0) {
-      const filteredPaused = filterVocabBySearch(sortByLemma(pausedWords), searchQuery);
-      if (filteredPaused.length > 0) {
+      sortedPaused = sortVocabByLemma(
+        filterVocabBySearch(pausedWords, searchQuery),
+        sortLocale,
+      );
+      if (sortedPaused.length > 0) {
         result.push({
           key: 'paused',
           title: 'Paused words',
           paused: true,
-          data: filteredPaused,
+          data: sortedPaused,
         });
       }
     }
 
+    // TEMP: confirm sorted data passed to SectionList
+    console.log('[VocabBank] display sections', {
+      poolId,
+      poolFound: !!pool,
+      sortLocale,
+      activeCount: sortedActive.length,
+      activeLemmas: sortedActive.map(w => w.lemma),
+      pausedCount: sortedPaused.length,
+      pausedLemmas: sortedPaused.map(w => w.lemma),
+    });
+
     return result;
-  }, [activeWords, pausedWords, searchQuery, isPoolMode]);
+  }, [activeWords, pausedWords, searchQuery, isPoolMode, pool, language, poolId]);
 
   const wordCount = activeWords.length + (isPoolMode ? pausedWords.length : 0);
 
@@ -307,6 +325,7 @@ export default function VocabBankScreen() {
       <SectionList
         sections={sections}
         keyExtractor={item => item.id}
+        extraData={sections.map(s => s.data.map(w => w.id).join(',')).join('|')}
         renderItem={renderItem}
         renderSectionHeader={renderSectionHeader}
         style={styles.list}

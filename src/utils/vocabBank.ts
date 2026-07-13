@@ -156,6 +156,43 @@ export function filterVocabBySearch(
   );
 }
 
+const LOCALE_BY_LANGUAGE: Record<string, string> = {
+  de: 'de',
+  fr: 'fr',
+  es: 'es',
+};
+
+/** Display-order sort by target-language lemma (does not mutate the input). */
+export function sortVocabByLemma(
+  words: VocabItem[],
+  language?: string,
+): VocabItem[] {
+  const locale = language ? LOCALE_BY_LANGUAGE[language] : undefined;
+  const sorted = [...words].sort((a, b) => {
+    const lemmaA = (a.lemma ?? '').trim();
+    const lemmaB = (b.lemma ?? '').trim();
+    return lemmaA.localeCompare(lemmaB, locale, {
+      sensitivity: 'base',
+      numeric: true,
+    });
+  });
+
+  // TEMP: confirm sort is applied
+  if (words.length > 1) {
+    const orderChanged = words.some((word, index) => word.id !== sorted[index]?.id);
+    console.log('[sortVocabByLemma]', {
+      language,
+      locale,
+      count: words.length,
+      orderChanged,
+      before: words.map(w => w.lemma),
+      after: sorted.map(w => w.lemma),
+    });
+  }
+
+  return sorted;
+}
+
 
 
 export function getUniqueCategories(words: VocabItem[]): string[] {
