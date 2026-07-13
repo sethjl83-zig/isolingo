@@ -6,6 +6,7 @@
  *   Pool mode   — navigated with a `poolId` param (from My Lists).
  *                 Reads words and frequencies directly from state.languagePools.
  *                 Frequency changes are written back via updatePool.
+ *                 Paused words appear in a separate section below a divider.
  *
  *   Legacy mode — navigated without a poolId (from the old word-banks flow).
  *                 Reads from state.activeVocabBank / state.wordFrequencySettings.
@@ -15,10 +16,11 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
-  FlatList,
+  SectionList,
   TouchableOpacity,
   StyleSheet,
   useColorScheme,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -38,6 +40,13 @@ const MODE_LABELS: Record<StudyType, string> = {
   gender: 'Gender',
 };
 
+type BankSection = {
+  key: string;
+  title: string | null;
+  paused: boolean;
+  data: VocabItem[];
+};
+
 export default function VocabBankScreen() {
   const router = useRouter();
   const { poolId } = useLocalSearchParams<{ poolId?: string }>();
@@ -52,55 +61,68 @@ export default function VocabBankScreen() {
 
   const [searchQuery, setSearchQuery] = useState('');
 
-  // ── Mode detection ──────────────────────────────────────────────────────────
   const isPoolMode = !!poolId;
   const language = state.languageSelected;
 
-  // Resolve the pool object when in pool mode
   const pool: Pool | null = useMemo(() => {
     if (!isPoolMode || !language) return null;
     return getLanguagePools(language).find(p => p.id === poolId) ?? null;
-  }, [isPoolMode, language, poolId, getLanguagePools]);
+  }, [isPoolMode, language, poolId, getLanguagePools, state.languagePools]);
 
   const studyType = state.studyTypeSelected;
 
-  // ── Guards ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!language) {
       router.replace('/');
       return;
     }
-    // Only redirect when in legacy mode without a study type.
-    // Pool mode never needs studyType.
     if (!isPoolMode && !studyType) {
       router.replace('/dashboard');
     }
   }, [language, studyType, isPoolMode, router]);
 
-  // ── Word data ───────────────────────────────────────────────────────────────
-  const rawWords: VocabItem[] = useMemo(() => {
+  const { activeWords, pausedWords } = useMemo(() => {
     if (isPoolMode && pool) {
-      return pool.words.map(pw => pw.item);
+      const pausedSet = new Set(pool.pausedWordIds ?? []);
+      const active: VocabItem[] = [];
+      const paused: VocabItem[] = [];
+      for (const pw of pool.words) {
+        if (pausedSet.has(pw.item.id)) paused.push(pw.item);
+        else active.push(pw.item);
+      }
+      return { activeWords: active, pausedWords: paused };
     }
-    return state.activeVocabBank;
+    return { activeWords: state.activeVocabBank, pausedWords: [] as VocabItem[] };
   }, [isPoolMode, pool, state.activeVocabBank]);
 
-  const sortedWords = useMemo(
-    () =>
-      [...rawWords].sort((a, b) =>
-        a.lemma.localeCompare(b.lemma, undefined, { sensitivity: 'base' }),
-      ),
-    [rawWords],
-  );
+  const sortByLemma = (items: VocabItem[]) =>
+    [...items].sort((a, b) =>
+      a.lemma.localeCompare(b.lemma, undefined, { sensitivity: 'base' }),
+    );
 
-  const filteredWords = useMemo(
-    () => filterVocabBySearch(sortedWords, searchQuery),
-    [sortedWords, searchQuery],
-  );
+  const sections = useMemo((): BankSection[] => {
+    const filteredActive = filterVocabBySearch(sortByLemma(activeWords), searchQuery);
+    const result: BankSection[] = [
+      { key: 'active', title: null, paused: false, data: filteredActive },
+    ];
 
-  const wordCount = rawWords.length;
+    if (isPoolMode && pausedWords.length > 0) {
+      const filteredPaused = filterVocabBySearch(sortByLemma(pausedWords), searchQuery);
+      if (filteredPaused.length > 0) {
+        result.push({
+          key: 'paused',
+          title: 'Paused words',
+          paused: true,
+          data: filteredPaused,
+        });
+      }
+    }
 
-  // ── Frequency helpers ───────────────────────────────────────────────────────
+    return result;
+  }, [activeWords, pausedWords, searchQuery, isPoolMode]);
+
+  const wordCount = activeWords.length + (isPoolMode ? pausedWords.length : 0);
+
   const getFrequency = useCallback(
     (id: string): WordFrequencySetting => {
       if (isPoolMode && pool) {
@@ -115,7 +137,6 @@ export default function VocabBankScreen() {
   const handleFrequencyChange = useCallback(
     (id: string, frequency: WordFrequencySetting) => {
       if (isPoolMode && pool) {
-        // Update the word's frequency inside the pool
         const updatedWords: PoolWord[] = pool.words.map((pw: PoolWord) =>
           pw.item.id === id
             ? { ...pw, frequency: frequency as PoolWord['frequency'] }
@@ -129,18 +150,49 @@ export default function VocabBankScreen() {
     [isPoolMode, pool, updatePool, setWordFrequency],
   );
 
-  // ── Screen label ────────────────────────────────────────────────────────────
+  const handleUnpause = useCallback(
+    (id: string) => {
+      if (!pool) return;
+      updatePool(pool.id, {
+        pausedWordIds: pool.pausedWordIds.filter(pid => pid !== id),
+      });
+    },
+    [pool, updatePool],
+  );
+
+  const handleRemoveFromPool = useCallback(
+    (item: VocabItem) => {
+      if (!pool) return;
+      Alert.alert(
+        'Remove this word from your list?',
+        `“${item.lemma}” will be permanently removed from this pool.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Remove',
+            style: 'destructive',
+            onPress: () => {
+              updatePool(pool.id, {
+                words: pool.words.filter(pw => pw.item.id !== item.id),
+                pausedWordIds: pool.pausedWordIds.filter(pid => pid !== item.id),
+              });
+            },
+          },
+        ],
+      );
+    },
+    [pool, updatePool],
+  );
+
   const screenLabel = isPoolMode && pool
     ? pool.name
     : studyType
     ? MODE_LABELS[studyType]
     : 'Vocab Bank';
 
-  // ── Render guard ────────────────────────────────────────────────────────────
   if (!isPoolMode && !studyType) return null;
 
-  // ── Row renderer ────────────────────────────────────────────────────────────
-  const renderItem = ({ item }: { item: VocabItem }) => {
+  const renderActiveRow = (item: VocabItem) => {
     const lemmaColor = getWordLemmaColor(item, palette.text, GenderColors);
     const frequency = getFrequency(item.id);
 
@@ -162,6 +214,61 @@ export default function VocabBankScreen() {
     );
   };
 
+  const renderPausedRow = (item: VocabItem) => {
+    const lemmaColor = getWordLemmaColor(item, palette.text, GenderColors);
+
+    return (
+      <View style={[styles.pausedRow, { borderBottomColor: palette.border }]}>
+        <View style={styles.rowLeft}>
+          <Text style={[styles.lemma, { color: lemmaColor, opacity: 0.75 }]}>
+            {item.lemma}
+          </Text>
+          <Text style={[styles.english, { color: palette.subtext }]}>{item.english}</Text>
+        </View>
+        <View style={styles.pausedActions}>
+          <TouchableOpacity
+            onPress={() => handleUnpause(item.id)}
+            hitSlop={8}
+          >
+            <Text style={[styles.actionLink, { color: palette.tint }]}>Unpause</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleRemoveFromPool(item)}
+            hitSlop={8}
+          >
+            <Text style={[styles.actionLink, { color: palette.incorrect }]}>Remove</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+
+  const renderItem = ({
+    item,
+    section,
+  }: {
+    item: VocabItem;
+    section: BankSection;
+  }) => (section.paused ? renderPausedRow(item) : renderActiveRow(item));
+
+  const renderSectionHeader = ({ section }: { section: BankSection }) => {
+    if (!section.title) return null;
+    return (
+      <View
+        style={[
+          styles.pausedHeader,
+          { borderTopColor: palette.border, backgroundColor: palette.background },
+        ]}
+      >
+        <Text style={[styles.pausedHeaderText, { color: palette.subtext }]}>
+          {section.title}
+        </Text>
+      </View>
+    );
+  };
+
+  const isEmpty = sections.every(s => s.data.length === 0);
+
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]}>
       <View style={[styles.topBar, { borderBottomColor: palette.border }]}>
@@ -181,27 +288,31 @@ export default function VocabBankScreen() {
         <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
       </View>
 
-      <View
-        style={[
-          styles.columnHeader,
-          { borderBottomColor: palette.border, backgroundColor: palette.background },
-        ]}
-      >
-        <Text style={[styles.columnTitle, { color: palette.subtext }]}>Word</Text>
-        <Text
-          style={[styles.columnTitle, styles.columnRight, { color: palette.subtext }]}
+      {!isEmpty && (
+        <View
+          style={[
+            styles.columnHeader,
+            { borderBottomColor: palette.border, backgroundColor: palette.background },
+          ]}
         >
-          Frequency
-        </Text>
-      </View>
+          <Text style={[styles.columnTitle, { color: palette.subtext }]}>Word</Text>
+          <Text
+            style={[styles.columnTitle, styles.columnRight, { color: palette.subtext }]}
+          >
+            Frequency
+          </Text>
+        </View>
+      )}
 
-      <FlatList
-        data={filteredWords}
+      <SectionList
+        sections={sections}
         keyExtractor={item => item.id}
         renderItem={renderItem}
+        renderSectionHeader={renderSectionHeader}
         style={styles.list}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
+        stickySectionHeadersEnabled={false}
         ListEmptyComponent={
           <Text style={[styles.emptyText, { color: palette.subtext }]}>
             {searchQuery
@@ -282,6 +393,37 @@ const styles = StyleSheet.create({
   lemma: { fontSize: 17, fontWeight: '700' },
   english: { fontSize: 14 },
   customTag: { fontSize: 11, fontWeight: '600', marginTop: 2 },
+
+  pausedHeader: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 8,
+  },
+  pausedHeaderText: {
+    fontSize: 13,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  pausedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: 12,
+  },
+  pausedActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  actionLink: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
 
   bottomBar: {
     flexDirection: 'row',

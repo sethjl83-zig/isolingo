@@ -1,6 +1,5 @@
 /**
  * WordMgmtStrip — word-management row shown at the bottom of every study card.
- * Frequency, Remove, and Replace are wired up; Pause remains a placeholder.
  */
 import React, { useCallback, useState } from 'react';
 import {
@@ -24,7 +23,7 @@ const BUTTONS = [
   { id: 'pause', label: 'Pause' },
 ] as const;
 
-type PickerFlow = 'remove' | 'replace';
+type PickerFlow = 'remove' | 'replace' | 'pause';
 
 interface Props {
   words: WordFrequencyTarget[];
@@ -34,7 +33,7 @@ export default function WordMgmtStrip({ words }: Props) {
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
   const insets = useSafeAreaInsets();
-  const { removeWord, replaceWord } = useSessionWordMgmt();
+  const { removeWord, replaceWord, pauseWord } = useSessionWordMgmt();
   const [frequencyVisible, setFrequencyVisible] = useState(false);
   const [pickerFlow, setPickerFlow] = useState<PickerFlow | null>(null);
 
@@ -82,16 +81,42 @@ export default function WordMgmtStrip({ words }: Props) {
     [replaceWord],
   );
 
+  const showPauseConfirm = useCallback(
+    (word: WordFrequencyTarget) => {
+      Alert.alert(
+        'Pause this word?',
+        undefined,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Confirm',
+            onPress: () => {
+              const result = pauseWord(word.id);
+              if (!result.success) {
+                Alert.alert(
+                  'Could not pause word',
+                  result.error ?? 'Please try again.',
+                );
+              }
+            },
+          },
+        ],
+      );
+    },
+    [pauseWord],
+  );
+
   const startFlow = useCallback(
     (flow: PickerFlow) => {
       if (words.length === 1) {
         if (flow === 'remove') showRemoveConfirm(words[0]);
-        else showReplaceConfirm(words[0]);
+        else if (flow === 'replace') showReplaceConfirm(words[0]);
+        else showPauseConfirm(words[0]);
         return;
       }
       setPickerFlow(flow);
     },
-    [words, showRemoveConfirm, showReplaceConfirm],
+    [words, showRemoveConfirm, showReplaceConfirm, showPauseConfirm],
   );
 
   const handleWordPicked = useCallback(
@@ -100,13 +125,16 @@ export default function WordMgmtStrip({ words }: Props) {
       setPickerFlow(null);
       if (flow === 'remove') showRemoveConfirm(word);
       else if (flow === 'replace') showReplaceConfirm(word);
+      else if (flow === 'pause') showPauseConfirm(word);
     },
-    [pickerFlow, showRemoveConfirm, showReplaceConfirm],
+    [pickerFlow, showRemoveConfirm, showReplaceConfirm, showPauseConfirm],
   );
 
   const pickerTitle =
     pickerFlow === 'replace'
       ? 'Which word would you like to replace?'
+      : pickerFlow === 'pause'
+      ? 'Which word would you like to pause?'
       : 'Which word would you like to remove?';
 
   return (
@@ -128,6 +156,7 @@ export default function WordMgmtStrip({ words }: Props) {
               if (btn.id === 'frequency') setFrequencyVisible(true);
               if (btn.id === 'remove') startFlow('remove');
               if (btn.id === 'replace') startFlow('replace');
+              if (btn.id === 'pause') startFlow('pause');
             }}
             activeOpacity={0.7}
           >

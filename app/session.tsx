@@ -105,7 +105,9 @@ export default function SessionScreen() {
     const settings: Record<string, WordFrequencySetting> = {};
 
     for (const pool of selectedPools) {
+      const pausedIds = new Set(pool.pausedWordIds ?? []);
       for (const pw of pool.words) {
+        if (pausedIds.has(pw.item.id)) continue;
         if (!seenIds.has(pw.item.id)) {
           seenIds.add(pw.item.id);
           fullBank.push(pw.item);

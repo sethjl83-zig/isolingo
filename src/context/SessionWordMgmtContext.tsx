@@ -11,7 +11,7 @@ import type { Language, VocabItem } from '../types/vocab';
 import type { PoolWord } from '../types/pool';
 import { enrichVocabItemsFromMaster } from '../data';
 
-export interface ReplaceWordResult {
+export interface ActionResult {
   success: boolean;
   error?: string;
 }
@@ -20,7 +20,8 @@ interface SessionWordMgmtContextValue {
   getFrequency: (vocabId: string) => WordFrequencySetting;
   setFrequency: (vocabId: string, frequency: WordFrequencySetting) => void;
   removeWord: (vocabId: string) => void;
-  replaceWord: (vocabId: string) => ReplaceWordResult;
+  replaceWord: (vocabId: string) => ActionResult;
+  pauseWord: (vocabId: string) => ActionResult;
 }
 
 const SessionWordMgmtContext = createContext<SessionWordMgmtContextValue | null>(null);
@@ -97,7 +98,7 @@ export function SessionWordMgmtProvider({
   );
 
   const replaceWord = useCallback(
-    (vocabId: string): ReplaceWordResult => {
+    (vocabId: string): ActionResult => {
       const sessionDeckIds = getSessionDeckIds();
       if (!sessionDeckIds.has(vocabId)) {
         return { success: false, error: 'This word is not in your current session deck.' };
@@ -108,7 +109,9 @@ export function SessionWordMgmtProvider({
 
       if (sessionPools.length > 0) {
         for (const pool of sessionPools) {
+          const pausedIds = new Set(pool.pausedWordIds ?? []);
           for (const pw of pool.words) {
+            if (pausedIds.has(pw.item.id)) continue;
             if (
               !seenCandidateIds.has(pw.item.id) &&
               !sessionDeckIds.has(pw.item.id)
@@ -159,9 +162,39 @@ export function SessionWordMgmtProvider({
     ],
   );
 
+  const pauseWord = useCallback(
+    (vocabId: string): ActionResult => {
+      if (sessionPools.length === 0) {
+        return {
+          success: false,
+          error: 'Pause is only available when studying from a pool.',
+        };
+      }
+
+      const poolsWithWord = sessionPools.filter(pool =>
+        pool.words.some(pw => pw.item.id === vocabId),
+      );
+      if (poolsWithWord.length === 0) {
+        return { success: false, error: 'This word is not in your pool.' };
+      }
+
+      for (const pool of poolsWithWord) {
+        if (!pool.pausedWordIds.includes(vocabId)) {
+          updatePool(pool.id, {
+            pausedWordIds: [...pool.pausedWordIds, vocabId],
+          });
+        }
+      }
+
+      onWordRemoved?.(vocabId);
+      return { success: true };
+    },
+    [sessionPools, updatePool, onWordRemoved],
+  );
+
   const value = useMemo(
-    () => ({ getFrequency, setFrequency, removeWord, replaceWord }),
-    [getFrequency, setFrequency, removeWord, replaceWord],
+    () => ({ getFrequency, setFrequency, removeWord, replaceWord, pauseWord }),
+    [getFrequency, setFrequency, removeWord, replaceWord, pauseWord],
   );
 
   return (
