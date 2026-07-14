@@ -6,7 +6,7 @@ import React, {
   type ReactNode,
 } from 'react';
 import { useAppContext } from './AppContext';
-import { normalizeFrequencySetting, type WordFrequencySetting } from '../types/state';
+import type { WordFrequencySetting } from '../types/state';
 import type { Language, VocabItem } from '../types/vocab';
 import type { PoolWord } from '../types/pool';
 import { enrichVocabItemsFromMaster } from '../data';
@@ -48,46 +48,40 @@ export function SessionWordMgmtProvider({
   onWordRemoved,
   onWordReplaced,
 }: ProviderProps) {
-  const { state, updatePool, setWordFrequency, getLanguagePools } = useAppContext();
+  const { updatePool, getLanguagePools } = useAppContext();
 
   const sessionPools = useMemo(
     () =>
       poolIds.length > 0
         ? getLanguagePools(language).filter(p => poolIds.includes(p.id))
         : [],
-    [poolIds, language, getLanguagePools, state.languagePools],
+    [poolIds, language, getLanguagePools],
   );
 
   const getFrequency = useCallback(
     (vocabId: string): WordFrequencySetting => {
-      if (sessionPools.length > 0) {
-        for (const pool of sessionPools) {
-          const pw = pool.words.find((w: PoolWord) => w.item.id === vocabId);
-          if (pw) return pw.frequency as WordFrequencySetting;
-        }
+      for (const pool of sessionPools) {
+        const pw = pool.words.find((w: PoolWord) => w.item.id === vocabId);
+        if (pw) return pw.frequency as WordFrequencySetting;
       }
-      return normalizeFrequencySetting(state.wordFrequencySettings[vocabId]);
+      return 'normal';
     },
-    [sessionPools, state.wordFrequencySettings],
+    [sessionPools],
   );
 
   const setFrequency = useCallback(
     (vocabId: string, frequency: WordFrequencySetting) => {
-      if (sessionPools.length > 0) {
-        for (const pool of sessionPools) {
-          if (!pool.words.some(pw => pw.item.id === vocabId)) continue;
-          const updatedWords: PoolWord[] = pool.words.map(pw =>
-            pw.item.id === vocabId
-              ? { ...pw, frequency: frequency as PoolWord['frequency'] }
-              : pw,
-          );
-          updatePool(pool.id, { words: updatedWords });
-        }
-        return;
+      for (const pool of sessionPools) {
+        if (!pool.words.some(pw => pw.item.id === vocabId)) continue;
+        const updatedWords: PoolWord[] = pool.words.map(pw =>
+          pw.item.id === vocabId
+            ? { ...pw, frequency: frequency as PoolWord['frequency'] }
+            : pw,
+        );
+        updatePool(pool.id, { words: updatedWords });
       }
-      setWordFrequency(vocabId, frequency);
     },
-    [sessionPools, updatePool, setWordFrequency],
+    [sessionPools, updatePool],
   );
 
   const removeWord = useCallback(
@@ -107,32 +101,18 @@ export function SessionWordMgmtProvider({
       const candidates: { item: VocabItem; frequency: WordFrequencySetting }[] = [];
       const seenCandidateIds = new Set<string>();
 
-      if (sessionPools.length > 0) {
-        for (const pool of sessionPools) {
-          const pausedIds = new Set(pool.pausedWordIds ?? []);
-          for (const pw of pool.words) {
-            if (pausedIds.has(pw.item.id)) continue;
-            if (
-              !seenCandidateIds.has(pw.item.id) &&
-              !sessionDeckIds.has(pw.item.id)
-            ) {
-              seenCandidateIds.add(pw.item.id);
-              candidates.push({
-                item: pw.item,
-                frequency: pw.frequency as WordFrequencySetting,
-              });
-            }
-          }
-        }
-      } else {
-        for (const item of state.activeVocabBank) {
-          if (!sessionDeckIds.has(item.id) && !seenCandidateIds.has(item.id)) {
-            seenCandidateIds.add(item.id);
+      for (const pool of sessionPools) {
+        const pausedIds = new Set(pool.pausedWordIds ?? []);
+        for (const pw of pool.words) {
+          if (pausedIds.has(pw.item.id)) continue;
+          if (
+            !seenCandidateIds.has(pw.item.id) &&
+            !sessionDeckIds.has(pw.item.id)
+          ) {
+            seenCandidateIds.add(pw.item.id);
             candidates.push({
-              item,
-              frequency: normalizeFrequencySetting(
-                state.wordFrequencySettings[item.id],
-              ),
+              item: pw.item,
+              frequency: pw.frequency as WordFrequencySetting,
             });
           }
         }
@@ -148,18 +128,10 @@ export function SessionWordMgmtProvider({
       const pick = candidates[Math.floor(Math.random() * candidates.length)];
       const [enriched] = enrichVocabItemsFromMaster([pick.item], language);
 
-      // Session-only swap — pool data is unchanged.
       onWordReplaced?.(vocabId, enriched, pick.frequency);
       return { success: true };
     },
-    [
-      getSessionDeckIds,
-      sessionPools,
-      state.activeVocabBank,
-      state.wordFrequencySettings,
-      language,
-      onWordReplaced,
-    ],
+    [getSessionDeckIds, sessionPools, language, onWordReplaced],
   );
 
   const pauseWord = useCallback(

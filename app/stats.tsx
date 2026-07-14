@@ -2,7 +2,7 @@
  * SCREEN — STATS
  * Two tabs: Current Stats (active-bank words) and Lifetime Stats (all words ever studied).
  */
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -46,12 +46,21 @@ function competencyCounts(entries: WordStatsEntry[]) {
 
 export default function StatsScreen() {
   const router = useRouter();
-  const { state, isReady } = useAppContext();
+  const { state, isReady, getLanguagePools } = useAppContext();
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
 
   const language = state.languageSelected;
-  const activeBankIds = new Set(state.activeVocabBank.map(w => w.id));
+  const activeBankIds = useMemo(() => {
+    if (!language) return new Set<string>();
+    const ids = new Set<string>();
+    for (const pool of getLanguagePools(language)) {
+      for (const pw of pool.words) {
+        ids.add(pw.item.id);
+      }
+    }
+    return ids;
+  }, [language, getLanguagePools, state.languagePools]);
 
   const [tab, setTab] = useState<Tab>('current');
   const [langStats, setLangStats] = useState<LangStats>({});

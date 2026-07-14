@@ -23,7 +23,7 @@ import GenderTile from '../ui/GenderTile';
 import StudyButton from '../ui/StudyButton';
 import CorrectText from '../ui/CorrectText';
 import WordMgmtStrip from '../ui/WordMgmtStrip';
-import { validateAnswer, validateGermanNoun } from '@/src/engines/validationEngine';
+import { validateAnswer, validateGermanNoun, getGermanNounErrorHints } from '@/src/engines/validationEngine';
 
 const GENDERS: Gender[] = ['masculine', 'feminine', 'neuter'];
 
@@ -203,7 +203,7 @@ export default function Card1006({
   // ── Sense label subtitle (shown beneath prompt when present) ─────────────────
   const senseLabel = card.item.senseLabel?.trim() || null;
 
-  // ── Feedback text ─────────────────────────────────────────────────────────────
+  // ── Feedback text (non-German answer reveal uses plain feedback string) ─────
   let feedbackText = '';
   let feedbackColor = palette.text;
   if (cardState === 'correct') {
@@ -212,13 +212,26 @@ export default function Card1006({
   } else if (cardState === 'incorrect_1') {
     feedbackText = 'Not quite — try again';
     feedbackColor = palette.incorrect;
-  } else if (cardState === 'incorrect_final') {
+  } else if (cardState === 'incorrect_final' && !showGenderTiles) {
     feedbackText = `Correct answer: ${card.canonicalAnswer}`;
     feedbackColor = palette.incorrect;
-  } else if (cardState === 'flipped') {
+  } else if (cardState === 'flipped' && !showGenderTiles) {
     feedbackText = 'Answer shown';
     feedbackColor = palette.subtext;
   }
+
+  const germanErrorHints =
+    showGenderTiles &&
+    (cardState === 'incorrect_final' || cardState === 'flipped') &&
+    correctGender
+      ? getGermanNounErrorHints(
+          inputText,
+          selectedGender,
+          card.canonicalAnswer,
+          card.item.gender ?? '',
+          card.acceptedAnswers,
+        )
+      : [];
 
   // ── Placeholder text ─────────────────────────────────────────────────────────
   const placeholder =
@@ -327,8 +340,9 @@ export default function Card1006({
               </View>
             )}
 
-            {/* Correct answer reveal */}
-            {(cardState === 'incorrect_final' || cardState === 'flipped') && (
+            {/* Correct answer reveal — FR/ES and non-gender cards only */}
+            {(cardState === 'incorrect_final' || cardState === 'flipped') &&
+              !showGenderTiles && (
               <View style={styles.answerReveal}>
                 {answerParts && correctDisplayGender ? (
                   <Text style={styles.answerText}>
@@ -358,6 +372,22 @@ export default function Card1006({
                 {alsoCorrect.length > 0 && (
                   <Text style={[styles.alsoCorrect, { color: palette.subtext }]}>
                     Also accepted: {alsoCorrect.join(', ')}
+                  </Text>
+                )}
+              </View>
+            ) : (cardState === 'incorrect_final' || cardState === 'flipped') &&
+              showGenderTiles &&
+              correctDisplayGender ? (
+              <View style={styles.feedbackArea}>
+                <Text style={[styles.feedback, { color: palette.incorrect }]}>
+                  {'Correct answer: '}
+                  <Text style={{ color: GenderColors[correctDisplayGender] }}>
+                    {correctDisplayNoun}
+                  </Text>
+                </Text>
+                {germanErrorHints.length > 0 && (
+                  <Text style={[styles.errorHints, { color: palette.subtext }]}>
+                    {germanErrorHints.join(' ')}
                   </Text>
                 )}
               </View>
@@ -460,6 +490,7 @@ const styles = StyleSheet.create({
   answerText: { fontSize: 20, fontWeight: '700' },
   feedbackArea: { alignItems: 'center', marginTop: 8, gap: 4 },
   feedback: { fontSize: 16, fontWeight: '600', textAlign: 'center' },
+  errorHints: { fontSize: 14, fontWeight: '500', textAlign: 'center' },
   alsoCorrect: { fontSize: 13, textAlign: 'center' },
   bottomBar: {
     flexDirection: 'row',

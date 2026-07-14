@@ -18,7 +18,6 @@ export default function RootLayout() {
             <Stack.Screen name="welcome"   options={{ animation: 'none' }} />
             <Stack.Screen name="dashboard" options={{ animation: 'none' }} />
             <Stack.Screen name="direction" />
-            <Stack.Screen name="word-banks" />
             <Stack.Screen name="my-lists" />
             <Stack.Screen name="add-list" />
             <Stack.Screen name="curated-list" />
@@ -27,7 +26,6 @@ export default function RootLayout() {
             <Stack.Screen name="select-study-list" />
             <Stack.Screen name="deck-size" />
             <Stack.Screen name="stats" />
-            <Stack.Screen name="list-setup" />
             <Stack.Screen name="session" />
             <Stack.Screen name="vocab-bank" />
             <Stack.Screen name="add-word" />

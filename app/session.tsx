@@ -21,9 +21,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Colors } from '@/constants/theme';
 import { useAppContext } from '@/src/context/AppContext';
-import type { AppState, WordFrequencySetting } from '@/src/types/state';
+import type { WordFrequencySetting } from '@/src/types/state';
 import type { VocabItem } from '@/src/types/vocab';
-import { generateNextCard, makeSessionState, advanceSession } from '@/src/engines/sessionEngine';
+import { generateNextCard, makeSessionState, advanceSession, type SessionVocabContext } from '@/src/engines/sessionEngine';
 import { getCard1002PairKey } from '@/src/engines/card1002Engine';
 import { selectSessionSubset } from '@/src/engines/repetitionEngine';
 import type { CardData } from '@/src/types/cards';
@@ -69,10 +69,8 @@ export default function SessionScreen() {
 
   const language = state.languageSelected;
 
-  // ── Pool-derived bank (bridge until deck-size step is built) ─────────────
-  // When pool IDs are passed via navigation params (new flow from
-  // select-study-list), combine those pools into a temporary in-memory bank
-  // that the engines use in place of the legacy modeBanks / activeVocabBank.
+  // ── Pool-derived session vocab ─────────────────────────────────────────────
+  // Pool IDs are passed via navigation params from select-study-list / deck-size.
 
   const { poolIds: poolIdsParam, deckSize: deckSizeParam } =
     useLocalSearchParams<{ poolIds?: string; deckSize?: string }>();
@@ -83,23 +81,13 @@ export default function SessionScreen() {
     catch { return []; }
   }, [poolIdsParam]);
 
-  // Build the combined bank + freq settings from selected pools, then trim to
-  // the chosen deck size using frequency-weighted random sampling.
-  // Computed once: none of these deps change during an active session.
-  const { poolDerivedBank, poolDerivedFreqSettings } = useMemo<{
-    poolDerivedBank: VocabItem[] | null;
-    poolDerivedFreqSettings: Record<string, WordFrequencySetting> | null;
-  }>(() => {
-    if (!language || poolIds.length === 0) {
-      return { poolDerivedBank: null, poolDerivedFreqSettings: null };
-    }
+  const baseSessionVocab = useMemo<SessionVocabContext | null>(() => {
+    if (!language || poolIds.length === 0) return null;
 
     const selectedPools = (state.languagePools[language] ?? []).filter(p =>
       poolIds.includes(p.id),
     );
 
-    // Merge words across pools, deduplicating by word ID. First pool wins for
-    // frequency settings when the same word appears in multiple pools.
     const seenIds = new Set<string>();
     const fullBank: VocabItem[] = [];
     const settings: Record<string, WordFrequencySetting> = {};
@@ -116,93 +104,49 @@ export default function SessionScreen() {
       }
     }
 
-    if (fullBank.length === 0) {
-      return { poolDerivedBank: null, poolDerivedFreqSettings: null };
-    }
+    if (fullBank.length === 0) return null;
 
     const enrichedBank = enrichVocabItemsFromMaster(fullBank, language);
-
-    // Apply deck size subset (selected once at session start using freq weights).
     const deckSize = deckSizeParam ? parseInt(deckSizeParam, 10) : NaN;
-    const bank =
+    const vocabBank =
       !isNaN(deckSize) && deckSize > 0 && deckSize < enrichedBank.length
         ? selectSessionSubset(enrichedBank, deckSize, settings)
         : enrichedBank;
 
-    return { poolDerivedBank: bank, poolDerivedFreqSettings: settings };
+    return { vocabBank, wordFrequencySettings: settings };
   }, [language, poolIds, state.languagePools, deckSizeParam]);
 
-  /**
-   * Inject the pool-derived bank into any AppState snapshot before handing
-   * it to the session/card engines. When no pool IDs are present this is a
-   * no-op and the legacy activeVocabBank path is preserved.
-   */
-  const withPoolBank = useCallback(
-    (baseState: AppState): AppState => {
-      const applySessionOverrides = (
-        bank: VocabItem[],
-        settings: Record<string, WordFrequencySetting>,
-      ) => {
-        let nextBank = bank.filter(w => !sessionRemovedIdsRef.current.has(w.id));
-        let nextSettings = Object.fromEntries(
-          Object.entries(settings).filter(
-            ([id]) => !sessionRemovedIdsRef.current.has(id),
-          ),
-        ) as Record<string, WordFrequencySetting>;
+  const getSessionVocab = useCallback((): SessionVocabContext | null => {
+    if (!baseSessionVocab) return null;
 
-        for (const { item, frequency } of sessionAddedWordsRef.current.values()) {
-          if (
-            !sessionRemovedIdsRef.current.has(item.id) &&
-            !nextBank.some(w => w.id === item.id)
-          ) {
-            nextBank = [...nextBank, item];
-            nextSettings[item.id] = frequency;
-          }
-        }
+    let vocabBank = baseSessionVocab.vocabBank.filter(
+      w => !sessionRemovedIdsRef.current.has(w.id),
+    );
+    let wordFrequencySettings = Object.fromEntries(
+      Object.entries(baseSessionVocab.wordFrequencySettings).filter(
+        ([id]) => !sessionRemovedIdsRef.current.has(id),
+      ),
+    ) as Record<string, WordFrequencySetting>;
 
-        return { bank: nextBank, settings: nextSettings };
-      };
-
-      if (poolDerivedBank) {
-        const { bank, settings } = applySessionOverrides(
-          poolDerivedBank,
-          poolDerivedFreqSettings ?? baseState.wordFrequencySettings,
-        );
-        return {
-          ...baseState,
-          activeVocabBank: bank,
-          wordFrequencySettings: settings,
-        };
+    for (const { item, frequency } of sessionAddedWordsRef.current.values()) {
+      if (
+        !sessionRemovedIdsRef.current.has(item.id) &&
+        !vocabBank.some(w => w.id === item.id)
+      ) {
+        vocabBank = [...vocabBank, item];
+        wordFrequencySettings[item.id] = frequency;
       }
-      if (baseState.languageSelected && baseState.activeVocabBank.length > 0) {
-        const { bank, settings } = applySessionOverrides(
-          enrichVocabItemsFromMaster(
-            baseState.activeVocabBank,
-            baseState.languageSelected,
-          ),
-          baseState.wordFrequencySettings,
-        );
-        return {
-          ...baseState,
-          activeVocabBank: bank,
-          wordFrequencySettings: settings,
-        };
-      }
-      return baseState;
-    },
-    [poolDerivedBank, poolDerivedFreqSettings],
-  );
+    }
+
+    return { vocabBank, wordFrequencySettings };
+  }, [baseSessionVocab]);
 
   const getSessionDeckIds = useCallback((): ReadonlySet<string> => {
+    const vocab = getSessionVocab();
     const ids = new Set<string>();
+    if (!vocab) return ids;
 
-    const baseBank =
-      poolDerivedBank ??
-      (language
-        ? enrichVocabItemsFromMaster(state.activeVocabBank, language)
-        : state.activeVocabBank);
-
-    for (const w of baseBank) {
+    for (const w of vocab.vocabBank) {
       if (!sessionRemovedIdsRef.current.has(w.id)) ids.add(w.id);
     }
     for (const { item } of sessionAddedWordsRef.current.values()) {
@@ -210,7 +154,7 @@ export default function SessionScreen() {
     }
 
     return ids;
-  }, [poolDerivedBank, language, state.activeVocabBank]);
+  }, [getSessionVocab]);
 
   // Load existing stats for this language at session start
   useEffect(() => {
@@ -226,9 +170,16 @@ export default function SessionScreen() {
     (stateOverride?: typeof state) => {
       try {
         setLoadError(null);
+        const vocab = getSessionVocab();
+        if (!vocab) {
+          setLoadError('No vocabulary is available for this session.');
+          setCurrentCard(null);
+          return;
+        }
         const { card, updatedSession } = generateNextCard(
-          withPoolBank(stateOverride ?? state),
+          stateOverride ?? state,
           sessionRef.current,
+          vocab,
         );
         // Persist deck advancement even when no card is returned
         sessionRef.current = updatedSession;
@@ -249,7 +200,7 @@ export default function SessionScreen() {
         setHasAttemptedLoad(true);
       }
     },
-    [state, withPoolBank],
+    [state, getSessionVocab],
   );
 
   useEffect(() => {
@@ -382,9 +333,8 @@ export default function SessionScreen() {
     );
   }
 
-  // Use pool-derived bank if available (new flow), else fall back to legacy activeVocabBank.
-  const effectiveBank = poolDerivedBank ?? state.activeVocabBank;
-  if (!state.studyTypeSelected || effectiveBank.length === 0) {
+  const sessionVocab = getSessionVocab();
+  if (!state.studyTypeSelected || !sessionVocab || sessionVocab.vocabBank.length === 0) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: palette.background }]}>
         <View style={styles.messageBox}>

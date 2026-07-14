@@ -1,6 +1,6 @@
 import type { VocabItem } from '../types/vocab';
 
-import type { ModeBankData, StudyType, WordFrequencySetting } from '../types/state';
+import type { StudyType, WordFrequencySetting } from '../types/state';
 
 import { getMasterDataset } from '../data';
 
@@ -57,26 +57,6 @@ export function pickReplacementWord(
   if (pool.length === 0) return null;
 
   return pool[Math.floor(Math.random() * pool.length)];
-
-}
-
-
-
-/** Extract nouns from a general vocab bank to seed a gender bank. */
-
-export function extractNounsFromBank(bank: ModeBankData): ModeBankData {
-
-  const nouns = bank.activeVocabBank.filter(w => w.partOfSpeech === 'noun');
-
-  const wordFrequencySettings: Record<string, WordFrequencySetting> = {};
-
-  for (const noun of nouns) {
-
-    wordFrequencySettings[noun.id] = bank.wordFrequencySettings[noun.id] ?? 'normal';
-
-  }
-
-  return { activeVocabBank: nouns, wordFrequencySettings };
 
 }
 

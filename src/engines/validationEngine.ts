@@ -136,3 +136,37 @@ export function validateGermanNoun(
 
   return { correct: false, alsoCorrect: [] };
 }
+
+/**
+ * Builds user-facing hints for a wrong German native-to-target noun submission.
+ * Returns an empty array when the typed noun spelling does not match the answer.
+ */
+export function getGermanNounErrorHints(
+  typedNoun: string,
+  selectedGender: string | null,
+  correctNoun: string,
+  correctGender: string,
+  alternateNouns: string[] = [],
+): string[] {
+  const normalizedTyped = normalizeInput(typedNoun);
+  const allForms = [correctNoun, ...alternateNouns].map(normalizeInput);
+  const spellingOk = allForms.some(
+    a => a.toLowerCase() === normalizedTyped.toLowerCase(),
+  );
+  if (!spellingOk) return [];
+
+  const hints: string[] = [];
+  if (selectedGender !== correctGender) {
+    hints.push('(wrong gender)');
+  }
+
+  const exactOk = allForms.some(a => a === normalizedTyped);
+  const capitalizationIssue =
+    normalizedTyped.length > 0 &&
+    normalizedTyped[0] !== normalizedTyped[0].toUpperCase();
+  if (!exactOk && capitalizationIssue) {
+    hints.push('(check capitalization)');
+  }
+
+  return hints;
+}

@@ -1,16 +1,9 @@
 /**
  * SCREEN — VOCAB BANK MANAGER
  *
- * Supports two entry modes:
- *
- *   Pool mode   — navigated with a `poolId` param (from My Lists).
- *                 Reads words and frequencies directly from state.languagePools.
- *                 Frequency changes are written back via updatePool.
- *                 Paused words appear in a separate section below a divider.
- *
- *   Legacy mode — navigated without a poolId (from the old word-banks flow).
- *                 Reads from state.activeVocabBank / state.wordFrequencySettings.
- *                 Frequency changes use setWordFrequency.
+ * Navigated with a `poolId` param from My Lists. Reads words and frequencies
+ * from state.languagePools. Frequency changes are written back via updatePool.
+ * Paused words appear in a separate section below a divider.
  */
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import {
@@ -27,18 +20,12 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Colors, GenderColors } from '@/constants/theme';
 import { useAppContext } from '@/src/context/AppContext';
 import type { VocabItem } from '@/src/types/vocab';
-import type { StudyType, WordFrequencySetting } from '@/src/types/state';
-import { normalizeFrequencySetting } from '@/src/types/state';
+import type { WordFrequencySetting } from '@/src/types/state';
 import type { Pool, PoolWord } from '@/src/types/pool';
 import { filterVocabBySearch, getWordLemmaColor, sortVocabByLemma } from '@/src/utils/vocabBank';
 import StudyButton from '@/src/components/ui/StudyButton';
 import SearchBar from '@/src/components/ui/SearchBar';
 import FrequencySnapSlider from '@/src/components/ui/FrequencySnapSlider';
-
-const MODE_LABELS: Record<StudyType, string> = {
-  general_vocab: 'General Vocab',
-  gender: 'Gender',
-};
 
 type BankSection = {
   key: string;
@@ -53,7 +40,6 @@ export default function VocabBankScreen() {
   const poolId = Array.isArray(poolIdParam) ? poolIdParam[0] : poolIdParam;
   const {
     state,
-    setWordFrequency,
     updatePool,
     getLanguagePools,
   } = useAppContext();
@@ -70,34 +56,29 @@ export default function VocabBankScreen() {
     return getLanguagePools(language).find(p => p.id === poolId) ?? null;
   }, [isPoolMode, language, poolId, getLanguagePools, state.languagePools]);
 
-  const studyType = state.studyTypeSelected;
-
   useEffect(() => {
     if (!language) {
       router.replace('/');
       return;
     }
-    if (!isPoolMode && !studyType) {
-      router.replace('/dashboard');
+    if (!poolId) {
+      router.replace('/my-lists');
     }
-  }, [language, studyType, isPoolMode, router]);
+  }, [language, poolId, router]);
 
   const { activeWords, pausedWords } = useMemo(() => {
-    if (isPoolMode && pool) {
-      const pausedSet = new Set(pool.pausedWordIds ?? []);
-      const active: VocabItem[] = [];
-      const paused: VocabItem[] = [];
-      for (const pw of pool.words) {
-        if (pausedSet.has(pw.item.id)) paused.push(pw.item);
-        else active.push(pw.item);
-      }
-      return { activeWords: active, pausedWords: paused };
+    if (!pool) {
+      return { activeWords: [] as VocabItem[], pausedWords: [] as VocabItem[] };
     }
-    return {
-      activeWords: state.activeVocabBank,
-      pausedWords: [] as VocabItem[],
-    };
-  }, [isPoolMode, pool, state.activeVocabBank]);
+    const pausedSet = new Set(pool.pausedWordIds ?? []);
+    const active: VocabItem[] = [];
+    const paused: VocabItem[] = [];
+    for (const pw of pool.words) {
+      if (pausedSet.has(pw.item.id)) paused.push(pw.item);
+      else active.push(pw.item);
+    }
+    return { activeWords: active, pausedWords: paused };
+  }, [pool]);
 
   const sections = useMemo((): BankSection[] => {
     const sortLocale = pool?.language ?? language ?? undefined;
@@ -110,7 +91,7 @@ export default function VocabBankScreen() {
     ];
 
     let sortedPaused: VocabItem[] = [];
-    if (isPoolMode && pausedWords.length > 0) {
+    if (pausedWords.length > 0) {
       sortedPaused = sortVocabByLemma(
         filterVocabBySearch(pausedWords, searchQuery),
         sortLocale,
@@ -137,35 +118,30 @@ export default function VocabBankScreen() {
     });
 
     return result;
-  }, [activeWords, pausedWords, searchQuery, isPoolMode, pool, language, poolId]);
+  }, [activeWords, pausedWords, searchQuery, pool, language, poolId]);
 
-  const wordCount = activeWords.length + (isPoolMode ? pausedWords.length : 0);
+  const wordCount = activeWords.length + pausedWords.length;
 
   const getFrequency = useCallback(
     (id: string): WordFrequencySetting => {
-      if (isPoolMode && pool) {
-        const pw = pool.words.find((w: PoolWord) => w.item.id === id);
-        return pw ? (pw.frequency as WordFrequencySetting) : 'normal';
-      }
-      return normalizeFrequencySetting(state.wordFrequencySettings[id]);
+      if (!pool) return 'normal';
+      const pw = pool.words.find((w: PoolWord) => w.item.id === id);
+      return pw ? (pw.frequency as WordFrequencySetting) : 'normal';
     },
-    [isPoolMode, pool, state.wordFrequencySettings],
+    [pool],
   );
 
   const handleFrequencyChange = useCallback(
     (id: string, frequency: WordFrequencySetting) => {
-      if (isPoolMode && pool) {
-        const updatedWords: PoolWord[] = pool.words.map((pw: PoolWord) =>
-          pw.item.id === id
-            ? { ...pw, frequency: frequency as PoolWord['frequency'] }
-            : pw,
-        );
-        updatePool(pool.id, { words: updatedWords });
-      } else {
-        setWordFrequency(id, frequency);
-      }
+      if (!pool) return;
+      const updatedWords: PoolWord[] = pool.words.map((pw: PoolWord) =>
+        pw.item.id === id
+          ? { ...pw, frequency: frequency as PoolWord['frequency'] }
+          : pw,
+      );
+      updatePool(pool.id, { words: updatedWords });
     },
-    [isPoolMode, pool, updatePool, setWordFrequency],
+    [pool, updatePool],
   );
 
   const handleUnpause = useCallback(
@@ -202,13 +178,9 @@ export default function VocabBankScreen() {
     [pool, updatePool],
   );
 
-  const screenLabel = isPoolMode && pool
-    ? pool.name
-    : studyType
-    ? MODE_LABELS[studyType]
-    : 'Vocab Bank';
+  const screenLabel = pool?.name ?? 'Vocab Bank';
 
-  if (!isPoolMode && !studyType) return null;
+  if (!pool) return null;
 
   const renderActiveRow = (item: VocabItem) => {
     const lemmaColor = getWordLemmaColor(item, palette.text, GenderColors);
@@ -341,7 +313,7 @@ export default function VocabBankScreen() {
         }
       />
 
-      {isPoolMode && (
+      {pool && (
         <View style={[styles.bottomBar, { borderTopColor: palette.border }]}>
           <StudyButton
             label="Add Word"

@@ -1,14 +1,21 @@
 import type { CardData, CardType } from '../types/cards';
-import type { AppState, DirectionMode } from '../types/state';
+import type { AppState, DirectionMode, WordFrequencySetting } from '../types/state';
+import type { VocabItem } from '../types/vocab';
 import { selectCardType } from './cardRotationEngine';
 import { generateCard, generateCard1006, isIdenticalToEnglish } from './cardGenerator';
 import { buildDeck, selectFromDeck, getMinSpacing } from './repetitionEngine';
-import type { VocabItem } from '../types/vocab';
 import {
   buildExtendedBankMap,
   isCard1002Available,
   type Card1002Context,
 } from './card1002Engine';
+
+// ── Session vocab (derived from selected pools at session start) ──────────────
+
+export interface SessionVocabContext {
+  vocabBank: VocabItem[];
+  wordFrequencySettings: Record<string, WordFrequencySetting>;
+}
 
 // ── Session state ─────────────────────────────────────────────────────────────
 
@@ -84,16 +91,17 @@ function computeBankHash(bank: VocabItem[]): string {
 export function generateNextCard(
   state: AppState,
   session: SessionState,
+  vocab: SessionVocabContext,
 ): { card: CardData | null; updatedSession: SessionState } {
   const {
     languageSelected,
     studyTypeSelected,
     directionMode,
-    activeVocabBank,
     wordStats,
-    wordFrequencySettings,
     sessionCardIndex,
   } = state;
+
+  const { vocabBank, wordFrequencySettings } = vocab;
 
   if (!languageSelected || !studyTypeSelected) {
     return { card: null, updatedSession: session };
@@ -102,8 +110,8 @@ export function generateNextCard(
   // Bank for this study type
   const bank: VocabItem[] =
     studyTypeSelected === 'gender'
-      ? activeVocabBank.filter(w => w.partOfSpeech === 'noun' && w.gender !== null)
-      : activeVocabBank;
+      ? vocabBank.filter(w => w.partOfSpeech === 'noun' && w.gender !== null)
+      : vocabBank;
 
   if (bank.length === 0) return { card: null, updatedSession: session };
 

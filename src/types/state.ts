@@ -1,4 +1,4 @@
-import type { Language, VocabItem } from './vocab';
+import type { Language } from './vocab';
 import type { Pool, DefaultPoolIds } from './pool';
 
 export type { Pool, DefaultPoolIds };
@@ -19,31 +19,12 @@ export interface WordStats {
   status: WordStatus;
 }
 
-/** Saved vocabulary data for one study mode. */
-export interface ModeBankData {
-  activeVocabBank: VocabItem[];
-  wordFrequencySettings: Record<string, WordFrequencySetting>;
-}
-
-/** Per-language map of mode banks — each language keeps its own saved banks. */
-export type LanguageBanks = Partial<
-  Record<Language, Record<StudyType, ModeBankData | null>>
->;
-
 export interface AppState {
   languageSelected: Language | null;
   studyTypeSelected: StudyType | null;
   directionMode: DirectionMode;
-  /** Banks for ALL languages. Kept for backward compat while UI migrates. */
-  languageBanks: LanguageBanks;
-  /** Banks for the currently selected language (view into languageBanks). */
-  modeBanks: Record<StudyType, ModeBankData | null>;
-  activeVocabBank: VocabItem[];
   wordStats: Record<string, WordStats>;
-  wordFrequencySettings: Record<string, WordFrequencySetting>;
   sessionCardIndex: number;
-
-  // ── NEW: named pools (source of truth going forward) ──────────────────────
   /** All pools for every language. */
   languagePools: Partial<Record<Language, Pool[]>>;
   /** Which pool ID(s) are the session default per study type + language. */
@@ -52,13 +33,10 @@ export interface AppState {
 
 export interface PersistedAppData {
   selectedLanguage: Language;
-  languageBanks: LanguageBanks;
   directionMode: DirectionMode;
   /** Written only after the user explicitly picks a language. Absent in stale/legacy data. */
   onboardingComplete?: boolean;
-
-  // ── NEW: named pools ──────────────────────────────────────────────────────
-  /** All pools for every language. Present once the user has been migrated. */
+  /** All pools for every language. */
   languagePools?: Partial<Record<Language, Pool[]>>;
   /** Default pool selections per study type + language. */
   defaultPoolIds?: DefaultPoolIds;
