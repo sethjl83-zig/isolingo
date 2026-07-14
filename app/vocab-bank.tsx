@@ -154,9 +154,33 @@ export default function VocabBankScreen() {
     [pool, updatePool],
   );
 
-  const handleRemoveFromPool = useCallback(
+  const removeWordFromPool = useCallback(
     (item: VocabItem) => {
       if (!pool) return;
+      updatePool(pool.id, {
+        words: pool.words.filter(pw => pw.item.id !== item.id),
+        pausedWordIds: pool.pausedWordIds.filter(pid => pid !== item.id),
+      });
+    },
+    [pool, updatePool],
+  );
+
+  const handleRemoveActiveWord = useCallback(
+    (item: VocabItem) => {
+      Alert.alert('Remove this word from this list?', undefined, [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: () => removeWordFromPool(item),
+        },
+      ]);
+    },
+    [removeWordFromPool],
+  );
+
+  const handleRemovePausedWord = useCallback(
+    (item: VocabItem) => {
       Alert.alert(
         'Remove this word from your list?',
         `“${item.lemma}” will be permanently removed from this pool.`,
@@ -165,17 +189,12 @@ export default function VocabBankScreen() {
           {
             text: 'Remove',
             style: 'destructive',
-            onPress: () => {
-              updatePool(pool.id, {
-                words: pool.words.filter(pw => pw.item.id !== item.id),
-                pausedWordIds: pool.pausedWordIds.filter(pid => pid !== item.id),
-              });
-            },
+            onPress: () => removeWordFromPool(item),
           },
         ],
       );
     },
-    [pool, updatePool],
+    [removeWordFromPool],
   );
 
   const screenLabel = pool?.name ?? 'Vocab Bank';
@@ -187,19 +206,28 @@ export default function VocabBankScreen() {
     const frequency = getFrequency(item.id);
 
     return (
-      <View style={[styles.row, { borderBottomColor: palette.border }]}>
-        <View style={styles.rowLeft}>
-          <Text style={[styles.lemma, { color: lemmaColor }]}>{item.lemma}</Text>
-          <Text style={[styles.english, { color: palette.subtext }]}>{item.english}</Text>
-          {item.user_added === 'y' && (
-            <Text style={[styles.customTag, { color: palette.tint }]}>Custom</Text>
-          )}
+      <View style={[styles.activeRow, { borderBottomColor: palette.border }]}>
+        <View style={styles.activeMain}>
+          <View style={styles.rowLeft}>
+            <Text style={[styles.lemma, { color: lemmaColor }]}>{item.lemma}</Text>
+            <Text style={[styles.english, { color: palette.subtext }]}>{item.english}</Text>
+            {item.user_added === 'y' && (
+              <Text style={[styles.customTag, { color: palette.tint }]}>Custom</Text>
+            )}
+          </View>
+          <FrequencySnapSlider
+            value={frequency}
+            onChange={freq => handleFrequencyChange(item.id, freq)}
+            compact
+          />
         </View>
-        <FrequencySnapSlider
-          value={frequency}
-          onChange={freq => handleFrequencyChange(item.id, freq)}
-          compact
-        />
+        <TouchableOpacity
+          onPress={() => handleRemoveActiveWord(item)}
+          hitSlop={8}
+          style={styles.removeBtn}
+        >
+          <Text style={[styles.actionLink, { color: palette.incorrect }]}>Remove</Text>
+        </TouchableOpacity>
       </View>
     );
   };
@@ -223,7 +251,7 @@ export default function VocabBankScreen() {
             <Text style={[styles.actionLink, { color: palette.tint }]}>Unpause</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => handleRemoveFromPool(item)}
+            onPress={() => handleRemovePausedWord(item)}
             hitSlop={8}
           >
             <Text style={[styles.actionLink, { color: palette.incorrect }]}>Remove</Text>
@@ -371,14 +399,20 @@ const styles = StyleSheet.create({
   list: { flex: 1 },
   emptyText: { textAlign: 'center', fontSize: 15, marginTop: 32, paddingHorizontal: 20 },
 
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  activeRow: {
     paddingVertical: 14,
     paddingHorizontal: 20,
     borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: 8,
+  },
+  activeMain: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 12,
+  },
+  removeBtn: {
+    alignSelf: 'flex-start',
   },
   rowLeft: { flex: 1, gap: 2 },
   lemma: { fontSize: 17, fontWeight: '700' },
