@@ -65,7 +65,7 @@ export default function WelcomeScreen() {
       >
         {/* App name */}
         <View style={styles.titleSection}>
-          <Text style={[styles.appName, { color: palette.text }]}>Isolingua</Text>
+          <Text style={[styles.appName, { color: palette.text }]}>Akuity</Text>
         </View>
 
         {/* Prompt + input */}
