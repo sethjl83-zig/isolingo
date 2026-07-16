@@ -1,6 +1,6 @@
 /**
  * SCREEN — CURATED LISTS
- * Browse approved categories, multi-select, then create one pool per category.
+ * Browse approved categories, multi-select, then create pools per category or combined.
  */
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { getAddListLaunchSource } from './add-list';
@@ -11,6 +11,13 @@ import {
   FlatList,
   StyleSheet,
   useColorScheme,
+  Alert,
+  TextInput,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -67,6 +74,8 @@ interface CuratedEntry {
   words: VocabItem[];
 }
 
+type ScreenStep = 'select' | 'naming';
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 /** Capitalise the first letter of a string. */
@@ -83,6 +92,48 @@ function uniquePoolName(baseName: string, takenNames: Set<string>): string {
   let n = 2;
   while (takenNames.has(`${baseName} ${n}`)) n++;
   return `${baseName} ${n}`;
+}
+
+function nextCombinedListName(existingPools: Pool[]): string {
+  const nums = existingPools
+    .map(p => {
+      const m = p.name.match(/^Combined List (\d+)$/);
+      return m ? parseInt(m[1], 10) : 0;
+    })
+    .filter(n => n > 0);
+  const max = nums.length > 0 ? Math.max(...nums) : 0;
+  return `Combined List ${max + 1}`;
+}
+
+function getSelectedEntries(
+  entries: CuratedEntry[],
+  selectedKeys: Set<string>,
+): CuratedEntry[] {
+  return entries.filter(e => selectedKeys.has(e.key) && e.words.length > 0);
+}
+
+function defaultCombinedListName(
+  selectedEntries: CuratedEntry[],
+  existingPools: Pool[],
+): string {
+  if (selectedEntries.length > 3) {
+    return nextCombinedListName(existingPools);
+  }
+  return selectedEntries.map(e => e.displayName).join(' + ');
+}
+
+function combineWords(selectedEntries: CuratedEntry[]): VocabItem[] {
+  const seen = new Set<string>();
+  const result: VocabItem[] = [];
+  for (const entry of selectedEntries) {
+    for (const word of entry.words) {
+      if (!seen.has(word.id)) {
+        seen.add(word.id);
+        result.push(word);
+      }
+    }
+  }
+  return result;
 }
 
 // ── Screen ────────────────────────────────────────────────────────────────────
@@ -106,7 +157,6 @@ export default function CuratedListScreen() {
 
     const result: CuratedEntry[] = [];
 
-    // "Basic Words" combined entry goes first
     const basicWords = master.filter(w =>
       w.category.some(c => BASIC_SUBCATEGORIES.has(c.toLowerCase())),
     );
@@ -116,7 +166,6 @@ export default function CuratedListScreen() {
       words: basicWords,
     });
 
-    // Regular per-category entries
     for (const cat of CURATED_CATEGORIES) {
       const words = master.filter(w => w.category.includes(cat));
       result.push({ key: cat, displayName: capitalise(cat), words });
@@ -127,6 +176,9 @@ export default function CuratedListScreen() {
 
   // ── Selection state ───────────────────────────────────────────────────────
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
+  const [step, setStep] = useState<ScreenStep>('select');
+  const [listName, setListName] = useState('');
+  const [combinedWordCount, setCombinedWordCount] = useState(0);
 
   const toggleCategory = useCallback((key: string) => {
     setSelectedKeys(prev => {
@@ -143,12 +195,19 @@ export default function CuratedListScreen() {
   const selectedCount = selectedKeys.size;
   const canProceed = selectedCount > 0;
 
-  // ── Confirm — create one pool per selected category ───────────────────────
-  const handleConfirm = useCallback(() => {
+  const navigateAfterCreate = useCallback(() => {
+    const { source } = getAddListLaunchSource();
+    if (source === 'study_mode') {
+      router.replace('/select-study-list' as never);
+    } else {
+      router.dismiss(2);
+    }
+  }, [router]);
+
+  const createSeparatePools = useCallback(() => {
     if (!language || !canProceed) return;
 
     const existingPools = getLanguagePools(language);
-    // Track names assigned in this batch to handle duplicates within the batch
     const takenNames = new Set(existingPools.map(p => p.name));
 
     for (const key of selectedKeys) {
@@ -156,7 +215,7 @@ export default function CuratedListScreen() {
       if (!entry || entry.words.length === 0) continue;
 
       const poolName = uniquePoolName(entry.displayName, takenNames);
-      takenNames.add(poolName); // reserve this name for subsequent iterations
+      takenNames.add(poolName);
 
       const pool: Pool = {
         id: generatePoolId(),
@@ -171,16 +230,176 @@ export default function CuratedListScreen() {
       createPool(pool);
     }
 
-    const { source } = getAddListLaunchSource();
-    if (source === 'study_mode') {
-      router.replace('/select-study-list' as never);
-    } else {
-      router.dismiss(2);
+    navigateAfterCreate();
+  }, [
+    language,
+    canProceed,
+    selectedKeys,
+    entries,
+    getLanguagePools,
+    createPool,
+    navigateAfterCreate,
+  ]);
+
+  const startCombineFlow = useCallback(() => {
+    if (!language || !canProceed) return;
+
+    const selectedEntries = getSelectedEntries(entries, selectedKeys);
+    const words = combineWords(selectedEntries);
+    if (words.length === 0) return;
+
+    const existingPools = getLanguagePools(language);
+    setCombinedWordCount(words.length);
+    setListName(defaultCombinedListName(selectedEntries, existingPools));
+    setStep('naming');
+  }, [language, canProceed, entries, selectedKeys, getLanguagePools]);
+
+  const handleConfirmCombined = useCallback(() => {
+    if (!language || !canProceed) return;
+
+    const selectedEntries = getSelectedEntries(entries, selectedKeys);
+    const words = combineWords(selectedEntries);
+    if (words.length === 0) return;
+
+    const existingPools = getLanguagePools(language);
+    const takenNames = new Set(existingPools.map(p => p.name));
+    const trimmed = listName.trim();
+    const baseName =
+      trimmed || defaultCombinedListName(selectedEntries, existingPools);
+    const poolName = uniquePoolName(baseName, takenNames);
+
+    const pool: Pool = {
+      id: generatePoolId(),
+      name: poolName,
+      language,
+      words: words.map(item => ({ item, frequency: 'normal' })),
+      deckSize: snapToDeckSize(Math.min(words.length, 25)),
+      createdVia: 'curated',
+      pausedWordIds: [],
+    };
+
+    createPool(pool);
+    navigateAfterCreate();
+  }, [
+    language,
+    canProceed,
+    entries,
+    selectedKeys,
+    listName,
+    getLanguagePools,
+    createPool,
+    navigateAfterCreate,
+  ]);
+
+  const handleAddPress = useCallback(() => {
+    if (!canProceed) return;
+
+    if (selectedCount === 1) {
+      createSeparatePools();
+      return;
     }
-  }, [language, canProceed, selectedKeys, entries, getLanguagePools, createPool, router]);
+
+    Alert.alert('Create separate lists or combine into one?', undefined, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Separate Lists',
+        onPress: createSeparatePools,
+      },
+      {
+        text: 'Combine into One List',
+        onPress: startCombineFlow,
+      },
+    ]);
+  }, [canProceed, selectedCount, createSeparatePools, startCombineFlow]);
 
   // ── Guard ─────────────────────────────────────────────────────────────────
   if (!isReady || !language) return null;
+
+  // ── Naming step (combined list) ───────────────────────────────────────────
+  if (step === 'naming') {
+    return (
+      <KeyboardAvoidingView
+        style={[styles.flex, { backgroundColor: palette.background }]}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <SafeAreaView style={styles.flex}>
+            <View style={[styles.topBar, { borderBottomColor: palette.border }]}>
+              <TouchableOpacity onPress={() => setStep('select')} hitSlop={8}>
+                <Text style={[styles.backBtn, { color: palette.tint }]}>← Back</Text>
+              </TouchableOpacity>
+              <Text style={[styles.screenTitle, { color: palette.text }]}>
+                Name Your List
+              </Text>
+              <View style={styles.topBarSpacer} />
+            </View>
+
+            <ScrollView
+              contentContainerStyle={styles.namingContent}
+              keyboardShouldPersistTaps="handled"
+            >
+              <Text style={[styles.stepHeading, { color: palette.text }]}>
+                Name your list
+              </Text>
+              <Text style={[styles.stepSub, { color: palette.subtext }]}>
+                {combinedWordCount} {combinedWordCount === 1 ? 'word' : 'words'} from{' '}
+                {selectedCount} {selectedCount === 1 ? 'category' : 'categories'}
+              </Text>
+
+              <TextInput
+                style={[
+                  styles.nameInput,
+                  {
+                    backgroundColor: palette.card,
+                    borderColor: palette.border,
+                    color: palette.text,
+                  },
+                ]}
+                value={listName}
+                onChangeText={setListName}
+                placeholder="Enter list name"
+                placeholderTextColor={palette.subtext}
+                autoFocus
+                returnKeyType="done"
+                onSubmitEditing={handleConfirmCombined}
+                maxLength={60}
+                selectTextOnFocus
+              />
+
+              <View
+                style={[
+                  styles.summaryCard,
+                  { backgroundColor: palette.card, borderColor: palette.border },
+                ]}
+              >
+                <View style={styles.summaryRow}>
+                  <Text style={[styles.summaryLabel, { color: palette.subtext }]}>Words</Text>
+                  <Text style={[styles.summaryValue, { color: palette.text }]}>
+                    {combinedWordCount}
+                  </Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={[styles.summaryLabel, { color: palette.subtext }]}>
+                    Created via
+                  </Text>
+                  <Text style={[styles.summaryValue, { color: palette.text }]}>Curated</Text>
+                </View>
+              </View>
+
+              <StudyButton
+                label="Confirm"
+                variant="primary"
+                size="large"
+                onPress={handleConfirmCombined}
+                disabled={listName.trim().length === 0}
+                style={styles.confirmBtn}
+              />
+            </ScrollView>
+          </SafeAreaView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+    );
+  }
 
   // ── Row renderer ──────────────────────────────────────────────────────────
   const renderEntry = ({ item: entry }: { item: CuratedEntry }) => {
@@ -234,7 +453,6 @@ export default function CuratedListScreen() {
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]}>
-      {/* Top bar */}
       <View style={[styles.topBar, { borderBottomColor: palette.border }]}>
         <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
           <Text style={[styles.backBtn, { color: palette.tint }]}>← Back</Text>
@@ -243,7 +461,6 @@ export default function CuratedListScreen() {
         <View style={styles.topBarSpacer} />
       </View>
 
-      {/* Selection summary */}
       <View style={[styles.summaryBar, { borderBottomColor: palette.border }]}>
         <Text style={[styles.summaryText, { color: palette.subtext }]}>
           {selectedCount === 0
@@ -252,7 +469,6 @@ export default function CuratedListScreen() {
         </Text>
       </View>
 
-      {/* Category list */}
       <FlatList
         data={entries}
         keyExtractor={e => e.key}
@@ -261,7 +477,6 @@ export default function CuratedListScreen() {
         showsVerticalScrollIndicator
       />
 
-      {/* Bottom action bar */}
       <View
         style={[
           styles.bottomBar,
@@ -272,7 +487,7 @@ export default function CuratedListScreen() {
           label="Add to My Lists"
           variant={canProceed ? 'primary' : 'inactive'}
           size="large"
-          onPress={handleConfirm}
+          onPress={handleAddPress}
           disabled={!canProceed}
           style={styles.confirmBtn}
         />
@@ -285,6 +500,7 @@ export default function CuratedListScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
+  flex: { flex: 1 },
 
   topBar: {
     flexDirection: 'row',
@@ -336,4 +552,34 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
   },
   confirmBtn: { width: '100%' },
+
+  namingContent: {
+    paddingHorizontal: 24,
+    paddingTop: 28,
+    paddingBottom: 32,
+    gap: 16,
+  },
+  stepHeading: { fontSize: 24, fontWeight: '700' },
+  stepSub: { fontSize: 15, marginTop: -8 },
+  nameInput: {
+    borderWidth: 1.5,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: Platform.OS === 'ios' ? 14 : 10,
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  summaryCard: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 16,
+    gap: 10,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  summaryLabel: { fontSize: 14, fontWeight: '500' },
+  summaryValue: { fontSize: 14, fontWeight: '700' },
 });
