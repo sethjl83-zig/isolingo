@@ -7,7 +7,7 @@
  * lives only in the pool(s) the user selects and will never appear in Curated
  * Lists, Build Your Own, or Random.
  */
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,9 +17,7 @@ import {
   StyleSheet,
   useColorScheme,
   Alert,
-  Platform,
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/theme';
@@ -137,6 +135,12 @@ export default function AddWordScreen() {
   const [plural, setPlural] = useState('');
   const [categories, setCategories] = useState<string[]>(['general']);
   const [selectedPoolIds, setSelectedPoolIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (isGenderMode) {
+      setPos('noun');
+    }
+  }, [isGenderMode]);
 
   const toggleCategory = (cat: string) => {
     setCategories(prev =>
@@ -266,32 +270,31 @@ export default function AddWordScreen() {
 
         {/* Part of speech */}
         <Text style={labelStyle}>Part of speech</Text>
-        <View style={[styles.pickerWrap, { backgroundColor: palette.card, borderColor: palette.border }]}>
-          <Picker
-            selectedValue={pos ?? ''}
-            onValueChange={value => {
-              const selected = value as PartOfSpeech | '';
-              if (selected === '') {
-                setPos(null);
-                setGender(null);
-              } else {
-                setPos(selected);
-                if (selected !== 'noun') setGender(null);
-              }
-            }}
-            style={[styles.picker, { color: palette.text }]}
-            itemStyle={
-              Platform.OS === 'ios'
-                ? { color: palette.text, fontSize: 16, height: 72 }
-                : undefined
-            }
-            dropdownIconColor={palette.text}
-          >
-            <Picker.Item label="Select part of speech…" value="" />
-            {posOptions.map(option => (
-              <Picker.Item key={option} label={option} value={option} />
-            ))}
-          </Picker>
+        <View style={styles.chipRow}>
+          {posOptions.map(option => (
+            <TouchableOpacity
+              key={option}
+              style={[
+                styles.chip,
+                { borderColor: palette.border, backgroundColor: palette.card },
+                pos === option && { backgroundColor: palette.tint, borderColor: palette.tint },
+              ]}
+              onPress={() => {
+                setPos(option);
+                if (option !== 'noun') setGender(null);
+              }}
+            >
+              <Text
+                style={[
+                  styles.chipText,
+                  { color: palette.text },
+                  pos === option && { color: '#fff' },
+                ]}
+              >
+                {option}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         {/* Gender (nouns only) */}
@@ -406,15 +409,17 @@ export default function AddWordScreen() {
           <StudyButton
             label="Save"
             variant="primary"
-            size="large"
+            size="medium"
             onPress={handleSave}
             disabled={!canSave}
+            style={styles.actionBtn}
           />
           <StudyButton
             label="Cancel"
             variant="secondary"
             size="medium"
             onPress={() => router.back()}
+            style={styles.actionBtn}
           />
         </View>
       </ScrollView>
@@ -447,18 +452,6 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     fontSize: 16,
     marginTop: 4,
-  },
-  pickerWrap: {
-    borderWidth: 1.5,
-    borderRadius: 10,
-    overflow: 'hidden',
-    marginTop: 4,
-    justifyContent: 'center',
-  },
-  picker: {
-    height: Platform.OS === 'ios' ? 72 : 50,
-    marginTop: Platform.OS === 'ios' ? -8 : 0,
-    marginBottom: Platform.OS === 'ios' ? -8 : 0,
   },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 6 },
   chip: {
@@ -503,5 +496,13 @@ const styles = StyleSheet.create({
   },
   noPoolsText: { fontSize: 14, lineHeight: 21 },
 
-  saveRow: { flexDirection: 'row', gap: 12, marginTop: 28, alignItems: 'center' },
+  saveRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 28,
+    alignItems: 'stretch',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  actionBtn: { flex: 1, minWidth: 0 },
 });
