@@ -23,7 +23,13 @@ import GenderTile from '../ui/GenderTile';
 import StudyButton from '../ui/StudyButton';
 import CorrectText from '../ui/CorrectText';
 import WordMgmtStrip from '../ui/WordMgmtStrip';
-import { validateAnswer, validateGermanNoun, getGermanNounErrorHints } from '@/src/engines/validationEngine';
+import {
+  validateAnswer,
+  validateGermanNoun,
+  getGermanNounErrorHints,
+  shouldShowTypoHint,
+  shouldShowTypoHintForGermanNoun,
+} from '@/src/engines/validationEngine';
 
 const GENDERS: Gender[] = ['masculine', 'feminine', 'neuter'];
 
@@ -62,6 +68,7 @@ export default function Card1006({
   const [selectedGender, setSelectedGender] = useState<Gender | null>(null);
   const [cardState, setCardState] = useState<CardState>('typing');
   const [alsoCorrect, setAlsoCorrect] = useState<string[]>([]);
+  const [showTypoHint, setShowTypoHint] = useState(false);
   const attemptRef = useRef(0);
 
   // TEMP: verify senseLabel reaches the card from vocab data / pool bank
@@ -124,12 +131,27 @@ export default function Card1006({
     if (result.correct) {
       setCardState('correct');
       setAlsoCorrect(result.alsoCorrect);
+      setShowTypoHint(false);
       onSubmit(true, attemptRef.current === 1);
     } else {
       if (attemptRef.current >= 2) {
         setCardState('incorrect_final');
+        setShowTypoHint(false);
         onSubmit(false, false);
       } else {
+        const typoHint = showGenderTiles
+          ? shouldShowTypoHintForGermanNoun(
+              inputText,
+              selectedGender,
+              card.canonicalAnswer,
+              card.item.gender ?? '',
+              card.acceptedAnswers,
+            )
+          : shouldShowTypoHint(inputText, [
+              card.canonicalAnswer,
+              ...card.acceptedAnswers,
+            ]);
+        setShowTypoHint(typoHint);
         setCardState('incorrect_1');
       }
     }
@@ -210,7 +232,9 @@ export default function Card1006({
     feedbackText = 'Correct!';
     feedbackColor = palette.correct;
   } else if (cardState === 'incorrect_1') {
-    feedbackText = 'Not quite — try again';
+    feedbackText = showTypoHint
+      ? 'Almost! Check your spelling'
+      : 'Not quite — try again';
     feedbackColor = palette.incorrect;
   } else if (cardState === 'incorrect_final' && !showGenderTiles) {
     feedbackText = `Correct answer: ${card.canonicalAnswer}`;

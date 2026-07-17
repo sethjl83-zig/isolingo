@@ -3,50 +3,45 @@ import type { Language } from './vocab';
 export interface WordStatsEntry {
   wordId: string;
   language: Language;
-  /** Current consecutive first-attempt correct streak. Resets when word is removed+re-added or on any non-first-attempt-correct result. */
-  consecutiveFirstAttemptStreak: number;
-  /** Last 10 resolved card results — true = correct on any attempt. */
-  last10: boolean[];
-  /** Total cards resolved (each card counts once regardless of attempt count). */
-  lifetimeTotalAttempts: number;
-  /** Cards answered correctly on the very first attempt, lifetime. */
+  /** Consecutive first-attempt correct answers. Resets on any wrong first attempt. */
+  currentStreak: number;
+  /** Last up to 10 results — true = first-attempt correct. */
+  last10Results: boolean[];
+  lifetimeAttempts: number;
   lifetimeFirstAttemptCorrect: number;
-  /** Cards answered correctly on any attempt, lifetime. */
-  lifetimeTotalCorrect: number;
-  /** All-time best consecutive first-attempt streak. */
   personalBestStreak: number;
+  /** Unix timestamp (ms) of the most recent Card 1006 result. */
+  lastStudied: number;
 }
 
 export type CompetencyLevel = 'mastered' | 'strong' | 'weak';
 
 /**
- * Mastered = 10+ consecutive first-attempt correct.
- * Strong   = 7+ correct (any attempt) in last 10.
- * Weak     = everything else.
+ * Mastered = currentStreak >= 10
+ * Strong   = 7+ true values in last10Results
+ * Weak     = everything else
  */
 export function getCompetencyLevel(entry: WordStatsEntry): CompetencyLevel {
-  if (entry.consecutiveFirstAttemptStreak >= 10) return 'mastered';
-  const correctInLast10 = entry.last10.filter(Boolean).length;
-  if (entry.last10.length >= 10 && correctInLast10 >= 7) return 'strong';
+  if (entry.currentStreak >= 10) return 'mastered';
+  if (entry.last10Results.filter(Boolean).length >= 7) return 'strong';
   return 'weak';
 }
 
-/** Return a fresh zeroed entry for a word that has never been studied. */
 function emptyEntry(wordId: string, language: Language): WordStatsEntry {
   return {
     wordId,
     language,
-    consecutiveFirstAttemptStreak: 0,
-    last10: [],
-    lifetimeTotalAttempts: 0,
+    currentStreak: 0,
+    last10Results: [],
+    lifetimeAttempts: 0,
     lifetimeFirstAttemptCorrect: 0,
-    lifetimeTotalCorrect: 0,
     personalBestStreak: 0,
+    lastStudied: 0,
   };
 }
 
 /**
- * Compute an updated entry after one resolved card result.
+ * Compute an updated entry after one resolved Card 1006 result.
  * `isFirstAttempt` = the user answered correctly on their very first submit.
  */
 export function updateWordStats(
@@ -57,17 +52,17 @@ export function updateWordStats(
   isFirstAttempt: boolean,
 ): WordStatsEntry {
   const base = existing ?? emptyEntry(wordId, language);
+  const firstAttemptCorrect = isFirstAttempt && correct;
 
-  const newLast10 = [...base.last10.slice(-9), correct];
-  const newTotalAttempts = base.lifetimeTotalAttempts + 1;
-  const newTotalCorrect = base.lifetimeTotalCorrect + (correct ? 1 : 0);
+  const newLast10 = [...base.last10Results.slice(-9), firstAttemptCorrect];
+  const newAttempts = base.lifetimeAttempts + 1;
 
   let newStreak: number;
   let newFirstAttemptCorrect: number;
   let newPersonalBest: number;
 
-  if (isFirstAttempt && correct) {
-    newStreak = base.consecutiveFirstAttemptStreak + 1;
+  if (firstAttemptCorrect) {
+    newStreak = base.currentStreak + 1;
     newFirstAttemptCorrect = base.lifetimeFirstAttemptCorrect + 1;
     newPersonalBest = Math.max(base.personalBestStreak, newStreak);
   } else {
@@ -78,11 +73,32 @@ export function updateWordStats(
 
   return {
     ...base,
-    consecutiveFirstAttemptStreak: newStreak,
-    last10: newLast10,
-    lifetimeTotalAttempts: newTotalAttempts,
+    currentStreak: newStreak,
+    last10Results: newLast10,
+    lifetimeAttempts: newAttempts,
     lifetimeFirstAttemptCorrect: newFirstAttemptCorrect,
-    lifetimeTotalCorrect: newTotalCorrect,
     personalBestStreak: newPersonalBest,
+    lastStudied: Date.now(),
+  };
+}
+
+/** @deprecated Use currentStreak — kept for migration reads only. */
+export type LegacyWordStatsEntry = WordStatsEntry & {
+  consecutiveFirstAttemptStreak?: number;
+  last10?: boolean[];
+  lifetimeTotalAttempts?: number;
+  lifetimeTotalCorrect?: number;
+};
+
+export function normalizeWordStatsEntry(raw: LegacyWordStatsEntry): WordStatsEntry {
+  return {
+    wordId: raw.wordId,
+    language: raw.language,
+    currentStreak: raw.currentStreak ?? raw.consecutiveFirstAttemptStreak ?? 0,
+    last10Results: raw.last10Results ?? raw.last10 ?? [],
+    lifetimeAttempts: raw.lifetimeAttempts ?? raw.lifetimeTotalAttempts ?? 0,
+    lifetimeFirstAttemptCorrect: raw.lifetimeFirstAttemptCorrect ?? 0,
+    personalBestStreak: raw.personalBestStreak ?? 0,
+    lastStudied: raw.lastStudied ?? 0,
   };
 }

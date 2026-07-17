@@ -2,7 +2,8 @@
  * SCREEN — SELECT STUDY LIST
  * Shown after tapping a study-mode button on the Dashboard when pools already
  * exist. The user multi-selects which pool(s) to include in the upcoming
- * session, sees a live running total, then taps Continue → direction screen.
+ * session, sees a live running total, then taps Continue → deck-size (first time)
+ * or direction screen (when a deck size is already saved for this context).
  *
  * Back always returns to the Dashboard (not to intermediate creation screens).
  */
@@ -22,7 +23,7 @@ import { useAppContext } from '@/src/context/AppContext';
 import type { StudyType } from '@/src/types/state';
 import type { Pool } from '@/src/types/pool';
 import StudyButton from '@/src/components/ui/StudyButton';
-import { getDeckSizePref } from '@/src/storage/deckSizePrefs';
+import { countStudyWords, getDeckSizeLaunchDecision } from '@/src/utils/studyLaunch';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -87,26 +88,22 @@ export default function SelectStudyListScreen() {
   const countLabel = isGender ? 'nouns' : 'words';
 
   const handleContinue = useCallback(async () => {
-    if (!canContinue || isNavigating) return;
+    if (!canContinue || isNavigating || !language) return;
     setIsNavigating(true);
 
     const ids = Array.from(selectedIds);
     const poolIdsStr = JSON.stringify(ids);
+    const selectedPools = pools.filter(p => selectedIds.has(p.id));
 
     try {
-      const savedDeckSize = await getDeckSizePref(ids);
+      const { showDeckSizePicker, deckSize } = await getDeckSizeLaunchDecision(
+        language,
+        studyType,
+        ids,
+        countStudyWords(selectedPools, studyType),
+      );
 
-      if (savedDeckSize !== null) {
-        // Previously chosen deck size for this exact pool combo — skip picker.
-        router.push({
-          pathname: '/direction',
-          params: {
-            poolIds: poolIdsStr,
-            deckSize: String(savedDeckSize),
-          },
-        } as never);
-      } else {
-        // First time for this combination — show deck-size picker.
+      if (showDeckSizePicker) {
         router.push({
           pathname: '/deck-size',
           params: {
@@ -114,11 +111,19 @@ export default function SelectStudyListScreen() {
             totalCount: String(totalCount),
           },
         } as never);
+      } else {
+        router.push({
+          pathname: '/direction',
+          params: {
+            poolIds: poolIdsStr,
+            deckSize: deckSize !== null ? String(deckSize) : '',
+          },
+        } as never);
       }
     } finally {
       setIsNavigating(false);
     }
-  }, [canContinue, isNavigating, selectedIds, totalCount, router]);
+  }, [canContinue, isNavigating, language, studyType, selectedIds, pools, totalCount, router]);
 
   const handleBack = () => {
     // Navigate to dashboard, popping any intermediate creation screens from

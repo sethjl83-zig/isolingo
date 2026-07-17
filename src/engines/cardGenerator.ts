@@ -218,7 +218,7 @@ function card1006TargetToNative(
       const det = DETERMINER_TYPES[Math.floor(Math.random() * DETERMINER_TYPES.length)];
       usedDeterminer = det;
       if (det === 'possessive') {
-        possessivePerson = pickRandomPossessivePerson();
+        possessivePerson = pickRandomPossessivePerson(language);
       }
       prompt = getDisplayForm(
         language,
@@ -308,7 +308,7 @@ function card1006NativeToTarget(
     // all three if articleTypes is absent or empty.
     const detPool = getArticleTypesPool(item.articleTypes);
     const det = pickNativeToTargetDeterminerType(detPool);
-    const possessivePerson = det === 'possessive' ? pickRandomPossessivePerson() : null;
+    const possessivePerson = det === 'possessive' ? pickRandomPossessivePerson(language) : null;
 
     return {
       type: 'CARD_1006',

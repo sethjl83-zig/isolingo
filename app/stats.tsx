@@ -1,6 +1,6 @@
 /**
  * SCREEN — STATS
- * Two tabs: Current Stats (active-bank words) and Lifetime Stats (all words ever studied).
+ * Two tabs: Current Stats (pool words) and Lifetime Stats (all words ever studied).
  */
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
@@ -17,32 +17,23 @@ import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '@/constants/theme';
 import { useAppContext } from '@/src/context/AppContext';
-import { loadStatsForLanguage, type LangStats } from '@/src/storage/statsStorage';
-import { getCompetencyLevel, type WordStatsEntry } from '@/src/types/stats';
+import { loadLanguageStatsBundle, type LangStats, type DailyCardCounts } from '@/src/storage/statsStorage';
+import type { WordStatsEntry } from '@/src/types/stats';
+import {
+  getPoolWords,
+  competencyCountsForWords,
+  getCurrentPoolEntries,
+  last7DayBarData,
+  topWordsByPersonalBest,
+  buildLemmaLookup,
+  formatLemma,
+  computeLanguageAccuracy,
+  type DayBarDatum,
+} from '@/src/utils/statsHelpers';
 
 type Tab = 'current' | 'lifetime';
 
 const LANGUAGE_LABELS: Record<string, string> = { de: 'German', fr: 'French', es: 'Spanish' };
-
-// ── helpers ──────────────────────────────────────────────────────────────────
-
-function pct(num: number, denom: number): string {
-  if (denom === 0) return '—';
-  return `${Math.round((num / denom) * 100)}%`;
-}
-
-function competencyCounts(entries: WordStatsEntry[]) {
-  let mastered = 0, strong = 0, weak = 0;
-  for (const e of entries) {
-    const lvl = getCompetencyLevel(e);
-    if (lvl === 'mastered') mastered++;
-    else if (lvl === 'strong') strong++;
-    else weak++;
-  }
-  return { mastered, strong, weak };
-}
-
-// ── component ─────────────────────────────────────────────────────────────────
 
 export default function StatsScreen() {
   const router = useRouter();
@@ -51,19 +42,14 @@ export default function StatsScreen() {
   const palette = Colors[scheme];
 
   const language = state.languageSelected;
-  const activeBankIds = useMemo(() => {
-    if (!language) return new Set<string>();
-    const ids = new Set<string>();
-    for (const pool of getLanguagePools(language)) {
-      for (const pw of pool.words) {
-        ids.add(pw.item.id);
-      }
-    }
-    return ids;
-  }, [language, getLanguagePools, state.languagePools]);
+  const pools = language ? getLanguagePools(language) : [];
+  const poolWords = useMemo(() => getPoolWords(pools), [pools]);
+  const poolWordIds = useMemo(() => new Set(poolWords.map(w => w.id)), [poolWords]);
+  const lemmaLookup = useMemo(() => buildLemmaLookup(pools), [pools]);
 
   const [tab, setTab] = useState<Tab>('current');
   const [langStats, setLangStats] = useState<LangStats>({});
+  const [dailyCounts, setDailyCounts] = useState<DailyCardCounts>({});
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -74,8 +60,9 @@ export default function StatsScreen() {
     if (!language) return;
     setLoading(true);
     try {
-      const stats = await loadStatsForLanguage(language);
-      setLangStats(stats);
+      const bundle = await loadLanguageStatsBundle(language);
+      setLangStats(bundle.wordStats);
+      setDailyCounts(bundle.dailyCounts);
     } finally {
       setLoading(false);
     }
@@ -89,55 +76,28 @@ export default function StatsScreen() {
 
   if (!isReady || !language) return null;
 
-  // All entries for this language
   const allEntries = Object.values(langStats);
 
-  // Entries that belong to the currently active bank
-  const currentBankEntries = allEntries.filter(e => activeBankIds.has(e.wordId));
+  const currentCounts = competencyCountsForWords(poolWordIds, langStats, true);
+  const poolEntries = getCurrentPoolEntries(poolWords, langStats);
 
-  // ── Current stats derived values ─────────────────────────────────────────
-  const currentCounts = competencyCounts(currentBankEntries);
-  const currentFirstAttemptCorrect = currentBankEntries.reduce(
-    (sum, e) => sum + e.lifetimeFirstAttemptCorrect,
-    0,
-  );
-  const currentTotalAttempts = currentBankEntries.reduce(
-    (sum, e) => sum + e.lifetimeTotalAttempts,
-    0,
-  );
-  const currentAccuracy = pct(currentFirstAttemptCorrect, currentTotalAttempts);
-
-  // Top words by streak
-  const topByStreak = [...currentBankEntries]
-    .sort((a, b) => b.consecutiveFirstAttemptStreak - a.consecutiveFirstAttemptStreak)
-    .slice(0, 8);
-
-  // ── Lifetime stats derived values ─────────────────────────────────────────
-  const lifetimeTotalCards = allEntries.reduce((sum, e) => sum + e.lifetimeTotalAttempts, 0);
+  const lifetimeTotalCards = allEntries.reduce((sum, e) => sum + e.lifetimeAttempts, 0);
   const lifetimeUniqueWords = allEntries.length;
   const lifetimeFirstAttemptCorrect = allEntries.reduce(
     (sum, e) => sum + e.lifetimeFirstAttemptCorrect,
     0,
   );
   const lifetimeTotalAttempts = allEntries.reduce(
-    (sum, e) => sum + e.lifetimeTotalAttempts,
+    (sum, e) => sum + e.lifetimeAttempts,
     0,
   );
-  const lifetimeAccuracy = pct(lifetimeFirstAttemptCorrect, lifetimeTotalAttempts);
-  const personalBestStreak = allEntries.reduce(
-    (best, e) => Math.max(best, e.personalBestStreak),
-    0,
-  );
-
-  // Words with highest lifetime first-attempt accuracy (min 5 attempts)
-  const topLifetimeWords = [...allEntries]
-    .filter(e => e.lifetimeTotalAttempts >= 5)
-    .sort((a, b) => b.personalBestStreak - a.personalBestStreak)
-    .slice(0, 8);
+  const lifetimeAccuracyPct = computeLanguageAccuracy(langStats);
+  const lifetimeAccuracy = lifetimeAccuracyPct >= 0 ? `${lifetimeAccuracyPct}%` : '—';
+  const topPersonalBest = topWordsByPersonalBest(langStats, 5);
+  const barData = last7DayBarData(dailyCounts);
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]}>
-      {/* Top bar */}
       <View style={[styles.topBar, { borderBottomColor: palette.border }]}>
         <TouchableOpacity onPress={() => router.back()}>
           <Text style={[styles.backBtn, { color: palette.tint }]}>← Back</Text>
@@ -148,7 +108,6 @@ export default function StatsScreen() {
         </Text>
       </View>
 
-      {/* Tabs */}
       <View style={[styles.tabBar, { borderBottomColor: palette.border }]}>
         {(['current', 'lifetime'] as Tab[]).map(t => (
           <TouchableOpacity
@@ -179,10 +138,7 @@ export default function StatsScreen() {
             <CurrentStatsTab
               palette={palette}
               counts={currentCounts}
-              accuracy={currentAccuracy}
-              totalAttempts={currentTotalAttempts}
-              topByStreak={topByStreak}
-              langStats={langStats}
+              poolEntries={poolEntries}
             />
           ) : (
             <LifetimeStatsTab
@@ -190,9 +146,9 @@ export default function StatsScreen() {
               totalCards={lifetimeTotalCards}
               uniqueWords={lifetimeUniqueWords}
               accuracy={lifetimeAccuracy}
-              personalBestStreak={personalBestStreak}
-              topWords={topLifetimeWords}
-              langStats={langStats}
+              topWords={topPersonalBest}
+              lemmaLookup={lemmaLookup}
+              barData={barData}
             />
           )}
         </ScrollView>
@@ -200,8 +156,6 @@ export default function StatsScreen() {
     </SafeAreaView>
   );
 }
-
-// ── Sub-components ─────────────────────────────────────────────────────────────
 
 interface Palette {
   text: string; subtext: string; card: string; border: string;
@@ -211,65 +165,92 @@ interface Palette {
 interface CurrentProps {
   palette: Palette;
   counts: { mastered: number; strong: number; weak: number };
-  accuracy: string;
-  totalAttempts: number;
-  topByStreak: WordStatsEntry[];
-  langStats: LangStats;
+  poolEntries: Array<{ word: { id: string; lemma: string }; entry: WordStatsEntry | null }>;
 }
 
-function CurrentStatsTab({ palette, counts, accuracy, totalAttempts, topByStreak }: CurrentProps) {
-  const hasData = totalAttempts > 0;
+function CurrentStatsTab({ palette, counts, poolEntries }: CurrentProps) {
+  const total = counts.mastered + counts.strong + counts.weak;
+  const hasData = total > 0;
 
   return (
     <View style={styles.tabContent}>
       {!hasData && (
         <Text style={[styles.emptyNote, { color: palette.subtext }]}>
-          Study some cards to see your current stats.
+          Add words to your vocabulary lists to see current stats.
         </Text>
       )}
 
-      {/* Competency breakdown */}
       <SectionTitle palette={palette} title="Competency Breakdown" />
-      <View style={[styles.triCard, { backgroundColor: palette.card, borderColor: palette.border }]}>
-        <StatCell palette={palette} value={String(counts.mastered)} label="Mastered" color={palette.correct} />
-        <Divider palette={palette} />
-        <StatCell palette={palette} value={String(counts.strong)} label="Strong" color={palette.tint} />
-        <Divider palette={palette} />
-        <StatCell palette={palette} value={String(counts.weak)} label="Weak" color={palette.incorrect} />
+      <View style={[styles.breakdownCard, { backgroundColor: palette.card, borderColor: palette.border }]}>
+        <View style={styles.triRow}>
+          <StatCell palette={palette} value={String(counts.mastered)} label="Mastered" color={palette.correct} />
+          <Divider palette={palette} />
+          <StatCell palette={palette} value={String(counts.strong)} label="Strong" color={palette.tint} />
+          <Divider palette={palette} />
+          <StatCell palette={palette} value={String(counts.weak)} label="Weak" color={palette.incorrect} />
+        </View>
+        {total > 0 && (
+          <View style={[styles.breakdownBar, { backgroundColor: palette.border }]}>
+            {counts.mastered > 0 && (
+              <View
+                style={[
+                  styles.breakdownSegment,
+                  { flex: counts.mastered, backgroundColor: palette.correct },
+                ]}
+              />
+            )}
+            {counts.strong > 0 && (
+              <View
+                style={[
+                  styles.breakdownSegment,
+                  { flex: counts.strong, backgroundColor: palette.tint },
+                ]}
+              />
+            )}
+            {counts.weak > 0 && (
+              <View
+                style={[
+                  styles.breakdownSegment,
+                  { flex: counts.weak, backgroundColor: palette.incorrect },
+                ]}
+              />
+            )}
+          </View>
+        )}
       </View>
       <Text style={[styles.noteText, { color: palette.subtext }]}>
         Mastered = 10 consecutive first-attempt correct · Strong = 7+ correct in last 10
       </Text>
 
-      {/* Accuracy */}
-      <SectionTitle palette={palette} title="First-Attempt Accuracy" />
-      <View style={[styles.bigStatCard, { backgroundColor: palette.card, borderColor: palette.border }]}>
-        <Text style={[styles.bigStatNumber, { color: palette.tint }]}>{accuracy}</Text>
-        <Text style={[styles.bigStatLabel, { color: palette.subtext }]}>
-          {totalAttempts > 0 ? `across ${totalAttempts} cards` : 'No cards yet'}
-        </Text>
-      </View>
-
-      {/* Per-word streaks */}
-      {topByStreak.length > 0 && (
+      {poolEntries.length > 0 && (
         <>
-          <SectionTitle palette={palette} title="Current Streak (top words)" />
+          <SectionTitle palette={palette} title="Words in Your Lists" />
           <View style={[styles.listCard, { backgroundColor: palette.card, borderColor: palette.border }]}>
-            {topByStreak.map((entry, idx) => (
+            {poolEntries.map(({ word, entry }, idx) => (
               <View
-                key={entry.wordId}
+                key={word.id}
                 style={[
-                  styles.listRow,
-                  idx < topByStreak.length - 1 && {
+                  styles.wordRow,
+                  idx < poolEntries.length - 1 && {
                     borderBottomWidth: StyleSheet.hairlineWidth,
                     borderBottomColor: palette.border,
                   },
                 ]}
               >
-                <Text style={[styles.listWordId, { color: palette.text }]}>{entry.wordId}</Text>
-                <Text style={[styles.listValue, { color: palette.tint }]}>
-                  🔥 {entry.consecutiveFirstAttemptStreak}
-                </Text>
+                <View style={styles.wordRowMain}>
+                  <Text style={[styles.wordLemma, { color: palette.text }]} numberOfLines={1}>
+                    {word.lemma}
+                  </Text>
+                  <Text style={[styles.wordStreak, { color: palette.tint }]}>
+                    🔥 {entry?.currentStreak ?? 0}
+                  </Text>
+                </View>
+                <ResultDots
+                  results={entry?.last10Results ?? []}
+                  correctColor={palette.correct}
+                  incorrectColor={palette.incorrect}
+                  emptyColor={palette.border}
+                />
               </View>
             ))}
           </View>
@@ -284,9 +265,9 @@ interface LifetimeProps {
   totalCards: number;
   uniqueWords: number;
   accuracy: string;
-  personalBestStreak: number;
   topWords: WordStatsEntry[];
-  langStats: LangStats;
+  lemmaLookup: Map<string, string>;
+  barData: DayBarDatum[];
 }
 
 function LifetimeStatsTab({
@@ -294,10 +275,12 @@ function LifetimeStatsTab({
   totalCards,
   uniqueWords,
   accuracy,
-  personalBestStreak,
   topWords,
+  lemmaLookup,
+  barData,
 }: LifetimeProps) {
   const hasData = totalCards > 0;
+  const maxBar = Math.max(...barData.map(d => d.count), 1);
 
   return (
     <View style={styles.tabContent}>
@@ -307,7 +290,6 @@ function LifetimeStatsTab({
         </Text>
       )}
 
-      {/* Summary row */}
       <SectionTitle palette={palette} title="Summary" />
       <View style={[styles.triCard, { backgroundColor: palette.card, borderColor: palette.border }]}>
         <StatCell palette={palette} value={String(totalCards)} label="Cards Done" color={palette.text} />
@@ -317,21 +299,9 @@ function LifetimeStatsTab({
         <StatCell palette={palette} value={accuracy} label="1st-Attempt" color={palette.tint} />
       </View>
 
-      {/* Personal best streak */}
-      <SectionTitle palette={palette} title="Personal Best Streak" />
-      <View style={[styles.bigStatCard, { backgroundColor: palette.card, borderColor: palette.border }]}>
-        <Text style={[styles.bigStatNumber, { color: palette.correct }]}>
-          🔥 {personalBestStreak}
-        </Text>
-        <Text style={[styles.bigStatLabel, { color: palette.subtext }]}>
-          consecutive first-attempt correct
-        </Text>
-      </View>
-
-      {/* Top words by personal best */}
       {topWords.length > 0 && (
         <>
-          <SectionTitle palette={palette} title="Best Streak by Word" />
+          <SectionTitle palette={palette} title="Top Personal Best Streaks" />
           <View style={[styles.listCard, { backgroundColor: palette.card, borderColor: palette.border }]}>
             {topWords.map((entry, idx) => (
               <View
@@ -344,9 +314,11 @@ function LifetimeStatsTab({
                   },
                 ]}
               >
-                <Text style={[styles.listWordId, { color: palette.text }]}>{entry.wordId}</Text>
-                <Text style={[styles.listValue, { color: palette.tint }]}>
-                  best: {entry.personalBestStreak}
+                <Text style={[styles.listWordLemma, { color: palette.text }]} numberOfLines={1}>
+                  {formatLemma(entry.wordId, lemmaLookup)}
+                </Text>
+                <Text style={[styles.listValue, { color: palette.correct }]}>
+                  🔥 {entry.personalBestStreak}
                 </Text>
               </View>
             ))}
@@ -354,24 +326,66 @@ function LifetimeStatsTab({
         </>
       )}
 
-      {/* Study time placeholder */}
-      <SectionTitle palette={palette} title="Study Time per Day" />
-      <View
-        style={[
-          styles.placeholderCard,
-          { backgroundColor: palette.card, borderColor: palette.border },
-        ]}
-      >
-        <Text style={styles.placeholderIcon}>📊</Text>
-        <Text style={[styles.placeholderText, { color: palette.subtext }]}>
-          Session duration tracking coming soon
-        </Text>
+      <SectionTitle palette={palette} title="Cards per Day (Last 7 Days)" />
+      <View style={[styles.chartCard, { backgroundColor: palette.card, borderColor: palette.border }]}>
+        <View style={styles.barChart}>
+          {barData.map(datum => (
+            <View key={datum.dateKey} style={styles.barColumn}>
+              <Text style={[styles.barCount, { color: palette.subtext }]}>
+                {datum.count > 0 ? datum.count : ''}
+              </Text>
+              <View style={[styles.barTrack, { backgroundColor: palette.border }]}>
+                <View
+                  style={[
+                    styles.barFill,
+                    {
+                      height: `${Math.max(4, (datum.count / maxBar) * 100)}%`,
+                      backgroundColor: palette.tint,
+                    },
+                  ]}
+                />
+              </View>
+              <Text style={[styles.barLabel, { color: palette.subtext }]}>{datum.label}</Text>
+            </View>
+          ))}
+        </View>
       </View>
     </View>
   );
 }
 
-// ── Small helpers ─────────────────────────────────────────────────────────────
+function ResultDots({
+  results,
+  correctColor,
+  incorrectColor,
+  emptyColor,
+}: {
+  results: boolean[];
+  correctColor: string;
+  incorrectColor: string;
+  emptyColor: string;
+}) {
+  const slots = 10;
+  const padded: (boolean | null)[] = Array(slots - results.length).fill(null).concat(results);
+
+  return (
+    <View style={styles.dotsRow}>
+      {padded.map((val, i) => (
+        <View
+          key={i}
+          style={[
+            styles.dot,
+            {
+              backgroundColor:
+                val === null ? emptyColor : val ? correctColor : incorrectColor,
+              opacity: val === null ? 0.35 : 1,
+            },
+          ]}
+        />
+      ))}
+    </View>
+  );
+}
 
 function SectionTitle({ palette, title }: { palette: Palette; title: string }) {
   return <Text style={[styles.sectionTitle, { color: palette.subtext }]}>{title.toUpperCase()}</Text>;
@@ -399,8 +413,6 @@ function StatCell({
 function Divider({ palette }: { palette: Palette }) {
   return <View style={[styles.divider, { backgroundColor: palette.border }]} />;
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
@@ -452,23 +464,31 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 18,
   },
+  breakdownCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 18,
+    gap: 14,
+  },
+  triRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  breakdownBar: {
+    flexDirection: 'row',
+    height: 8,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  breakdownSegment: {
+    minWidth: 4,
+  },
   statCell: { flex: 1, alignItems: 'center', gap: 4 },
   statNumber: { fontSize: 28, fontWeight: '800' },
   statLabel: { fontSize: 12, fontWeight: '600', textAlign: 'center' },
   divider: { width: StyleSheet.hairlineWidth, height: 44, marginHorizontal: 8 },
 
   noteText: { fontSize: 12, lineHeight: 17 },
-
-  bigStatCard: {
-    borderRadius: 16,
-    borderWidth: 1,
-    paddingVertical: 24,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    gap: 6,
-  },
-  bigStatNumber: { fontSize: 42, fontWeight: '800' },
-  bigStatLabel: { fontSize: 14 },
 
   listCard: {
     borderRadius: 16,
@@ -481,17 +501,75 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
+    gap: 12,
   },
-  listWordId: { flex: 1, fontSize: 13, fontWeight: '500' },
+  listWordLemma: { flex: 1, fontSize: 15, fontWeight: '600' },
   listValue: { fontSize: 14, fontWeight: '700' },
 
-  placeholderCard: {
+  wordRow: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 8,
+  },
+  wordRowMain: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  wordLemma: { flex: 1, fontSize: 15, fontWeight: '600' },
+  wordStreak: { fontSize: 14, fontWeight: '700' },
+
+  dotsRow: {
+    flexDirection: 'row',
+    gap: 4,
+    alignItems: 'center',
+  },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+
+  chartCard: {
     borderRadius: 16,
     borderWidth: 1,
-    paddingVertical: 32,
-    alignItems: 'center',
-    gap: 10,
+    paddingVertical: 20,
+    paddingHorizontal: 12,
   },
-  placeholderIcon: { fontSize: 36 },
-  placeholderText: { fontSize: 14 },
+  barChart: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    height: 120,
+    gap: 6,
+  },
+  barColumn: {
+    flex: 1,
+    alignItems: 'center',
+    height: '100%',
+    justifyContent: 'flex-end',
+    gap: 4,
+  },
+  barCount: {
+    fontSize: 10,
+    fontWeight: '600',
+    minHeight: 14,
+  },
+  barTrack: {
+    width: '100%',
+    flex: 1,
+    borderRadius: 4,
+    justifyContent: 'flex-end',
+    overflow: 'hidden',
+  },
+  barFill: {
+    width: '100%',
+    borderRadius: 4,
+    minHeight: 4,
+  },
+  barLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
 });

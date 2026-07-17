@@ -18,6 +18,7 @@ import type { Pool } from '../types/pool';
 import { EMPTY_DEFAULT_POOL_IDS } from '../types/pool';
 import { getOrInitStats, updateStatsAfterCard } from '../engines/repetitionEngine';
 import { loadPersistedState, savePersistedState } from '../storage/persistedState';
+import { preloadLanguageStats } from '../storage/statsStorage';
 
 type Action =
   | { type: 'HYDRATE'; payload: Partial<AppState> }
@@ -196,11 +197,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
             defaultPoolIds: stored.defaultPoolIds,
           },
         });
+        preloadLanguageStats(stored.selectedLanguage);
       }
       hasHydrated.current = true;
       setIsReady(true);
     });
   }, []);
+
+  useEffect(() => {
+    if (!isReady) return;
+    preloadLanguageStats(state.languageSelected);
+  }, [isReady, state.languageSelected]);
 
   useEffect(() => {
     if (!hasHydrated.current || !isReady) return;

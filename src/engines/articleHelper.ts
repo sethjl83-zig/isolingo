@@ -18,6 +18,7 @@ const FRENCH_INDEFINITE: Record<Gender, string> = {
 const FRENCH_POSSESSIVE: Record<PossessivePerson, Record<Gender, string>> = {
   first: { masculine: 'mon', feminine: 'ma', neuter: 'mon' },
   second: { masculine: 'ton', feminine: 'ta', neuter: 'ton' },
+  formal_second: { masculine: 'votre', feminine: 'votre', neuter: 'votre' },
   third: { masculine: 'son', feminine: 'sa', neuter: 'son' },
 };
 
@@ -36,14 +37,17 @@ const SPANISH_INDEFINITE: Record<Gender, string> = {
 const SPANISH_POSSESSIVE: Record<PossessivePerson, string> = {
   first: 'mi',
   second: 'tu',
+  formal_second: 'su', // unused — formal second is French-only
   third: 'su',
 };
 
-const POSSESSIVE_PERSONS: PossessivePerson[] = ['first', 'second', 'third'];
+const POSSESSIVE_PERSONS_FR: PossessivePerson[] = ['first', 'second', 'formal_second', 'third'];
+const POSSESSIVE_PERSONS_ES: PossessivePerson[] = ['first', 'second', 'third'];
 
-/** Randomly pick 1st / 2nd / 3rd person when a possessive determiner is used. */
-export function pickRandomPossessivePerson(): PossessivePerson {
-  return POSSESSIVE_PERSONS[Math.floor(Math.random() * POSSESSIVE_PERSONS.length)];
+/** Randomly pick a possessive person with equal weight (FR: four options; ES: three). */
+export function pickRandomPossessivePerson(language: Language): PossessivePerson {
+  const persons = language === 'fr' ? POSSESSIVE_PERSONS_FR : POSSESSIVE_PERSONS_ES;
+  return persons[Math.floor(Math.random() * persons.length)];
 }
 
 // ── Core helpers ──────────────────────────────────────────────────────────────
@@ -133,6 +137,8 @@ export function getEnglishDeterminerPrompt(
           return `my ${englishNoun}`;
         case 'second':
           return `your ${englishNoun}`;
+        case 'formal_second':
+          return `your (formal) ${englishNoun}`;
         case 'third':
           return `his/her ${englishNoun}`;
       }

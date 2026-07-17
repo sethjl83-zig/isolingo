@@ -26,19 +26,24 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Colors } from '@/constants/theme';
 import type { PoolDeckSize } from '@/src/types/pool';
 import { saveDeckSizePref } from '@/src/storage/deckSizePrefs';
+import { parsePoolIdsParam } from '@/src/utils/studyLaunch';
+import { useAppContext } from '@/src/context/AppContext';
 import StudyButton from '@/src/components/ui/StudyButton';
 
 const ALL_SIZES: PoolDeckSize[] = [10, 15, 20, 25];
 
 export default function DeckSizeScreen() {
   const router = useRouter();
+  const { state } = useAppContext();
   const { poolIds: poolIdsParam, totalCount: totalCountParam } =
-    useLocalSearchParams<{ poolIds?: string; totalCount?: string }>();
+    useLocalSearchParams<{ poolIds?: string | string[]; totalCount?: string }>();
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
 
-  const poolIds: string[] = poolIdsParam ? (JSON.parse(poolIdsParam) as string[]) : [];
+  const poolIds = parsePoolIdsParam(poolIdsParam);
   const totalCount = parseInt(totalCountParam ?? '0', 10);
+  const language = state.languageSelected;
+  const studyType = state.studyTypeSelected ?? 'general_vocab';
 
   // Only expose sizes that do not exceed the available word count.
   const validSizes = useMemo(
@@ -55,14 +60,14 @@ export default function DeckSizeScreen() {
   const noValidSizes = validSizes.length === 0;
 
   const handleContinue = async () => {
-    if (!selected || saving) return;
+    if (!selected || saving || !language || poolIds.length === 0) return;
     setSaving(true);
-    await saveDeckSizePref(poolIds, selected);
+    await saveDeckSizePref(language, studyType, poolIds, selected);
     setSaving(false);
     router.push({
       pathname: '/direction',
       params: {
-        poolIds: poolIdsParam ?? '',
+        poolIds: JSON.stringify(poolIds),
         deckSize: String(selected),
       },
     } as never);

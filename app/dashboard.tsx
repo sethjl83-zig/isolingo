@@ -32,11 +32,15 @@ import { Colors } from '@/constants/theme';
 import { useAppContext } from '@/src/context/AppContext';
 import type { Language } from '@/src/types/vocab';
 import type { StudyType } from '@/src/types/state';
-import { loadStatsForLanguage } from '@/src/storage/statsStorage';
-import { getCompetencyLevel } from '@/src/types/stats';
+import { ensureLanguageStatsLoaded } from '@/src/storage/statsStorage';
+import {
+  countMasteredInPools,
+  computeLanguageAccuracy,
+  getTodayCardCount,
+} from '@/src/utils/statsHelpers';
 import { USER_NAME_KEY, CELEBRATION_PENDING_KEY, takePendingCelebration } from './welcome';
 import { setAddListLaunchSource } from './add-list';
-import { getDeckSizePref } from '@/src/storage/deckSizePrefs';
+import { countStudyWords, getDeckSizeLaunchDecision } from '@/src/utils/studyLaunch';
 
 // Warm coral-orange accent — clearly distinct from gender colours
 // (#4da3ff masc · #d66aa6 fem · #A4922D neut)
@@ -59,6 +63,7 @@ const LANGUAGES: { id: Language; label: string; flag: string }[] = [
 interface StatsSnapshot {
   mastered: number;
   accuracy: number; // 0–100, or -1 when no attempts yet
+  today: number;
 }
 
 // ── Accuracy progress ring ────────────────────────────────────────────────────
@@ -349,7 +354,7 @@ export default function DashboardScreen() {
   const language = state.languageSelected;
 
   const [langModalVisible,  setLangModalVisible]  = useState(false);
-  const [statsSnap,         setStatsSnap]         = useState<StatsSnapshot>({ mastered: 0, accuracy: -1 });
+  const [statsSnap,         setStatsSnap]         = useState<StatsSnapshot>({ mastered: 0, accuracy: -1, today: 0 });
   const [statsLoading,      setStatsLoading]      = useState(false);
   const [showLangHint,      setShowLangHint]      = useState(false);
   const [welcomeLayout,     setWelcomeLayout]     = useState<WelcomeLayout | null>(null);
@@ -400,26 +405,16 @@ export default function DashboardScreen() {
     if (!language) return;
     setStatsLoading(true);
     try {
-      const langStats = await loadStatsForLanguage(language);
-      let mastered = 0;
-      let totalAttempts = 0;
-      let firstAttemptCorrect = 0;
-
-      for (const entry of Object.values(langStats)) {
-        if (getCompetencyLevel(entry) === 'mastered') mastered++;
-        totalAttempts += entry.lifetimeTotalAttempts ?? 0;
-        firstAttemptCorrect += entry.lifetimeFirstAttemptCorrect ?? 0;
-      }
-
-      const accuracy = totalAttempts > 0
-        ? Math.round((firstAttemptCorrect / totalAttempts) * 100)
-        : -1;
-
-      setStatsSnap({ mastered, accuracy });
+      const { wordStats, dailyCounts } = await ensureLanguageStatsLoaded(language);
+      const pools = getLanguagePools(language);
+      const mastered = countMasteredInPools(pools, wordStats);
+      const accuracy = computeLanguageAccuracy(wordStats);
+      const today = getTodayCardCount(dailyCounts);
+      setStatsSnap({ mastered, accuracy, today });
     } finally {
       setStatsLoading(false);
     }
-  }, [language]);
+  }, [language, getLanguagePools]);
 
   useFocusEffect(useCallback(() => { refreshStats(); }, [refreshStats]));
 
@@ -456,30 +451,27 @@ export default function DashboardScreen() {
       // A default exists — skip the list picker entirely.
       const poolIds = defaultPools.map(p => p.id);
       const poolIdsStr = JSON.stringify(poolIds);
+      const totalCount = countStudyWords(defaultPools, studyType);
 
-      // Reuse the same deck-size-pref logic as select-study-list:
-      // if the user already chose a size for this combo, jump straight to
-      // direction; otherwise show the deck-size picker first.
-      const savedDeckSize = await getDeckSizePref(poolIds);
-      if (savedDeckSize !== null) {
-        router.push({
-          pathname: '/direction',
-          params: { poolIds: poolIdsStr, deckSize: String(savedDeckSize) },
-        } as never);
-      } else {
-        // No deck size saved yet for this combo — compute available count and
-        // show the deck-size picker (gender mode counts nouns only).
-        const totalCount = defaultPools.reduce((sum, pool) => {
-          if (studyType === 'gender') {
-            return sum + pool.words.filter(
-              pw => pw.item.partOfSpeech === 'noun' && pw.item.gender !== null,
-            ).length;
-          }
-          return sum + pool.words.length;
-        }, 0);
+      const { showDeckSizePicker, deckSize } = await getDeckSizeLaunchDecision(
+        language,
+        studyType,
+        poolIds,
+        totalCount,
+      );
+
+      if (showDeckSizePicker) {
         router.push({
           pathname: '/deck-size',
           params: { poolIds: poolIdsStr, totalCount: String(totalCount) },
+        } as never);
+      } else {
+        router.push({
+          pathname: '/direction',
+          params: {
+            poolIds: poolIdsStr,
+            deckSize: deckSize !== null ? String(deckSize) : '',
+          },
         } as never);
       }
       return;
@@ -669,9 +661,9 @@ export default function DashboardScreen() {
 
               <View style={[styles.metricDivider, { backgroundColor: modeCardText + '40' }]} />
 
-              {/* Today — no icon */}
+              {/* Today */}
               <View style={styles.metric}>
-                <Text style={[styles.metricValue, { color: modeCardText }]}>—</Text>
+                <Text style={[styles.metricValue, { color: modeCardText }]}>{statsSnap.today}</Text>
                 <Text style={[styles.metricLabel, { color: modeCardText + '99' }]}>Today</Text>
               </View>
 

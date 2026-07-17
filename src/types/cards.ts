@@ -74,7 +74,7 @@ export interface Card1002Data {
 export type DeterminerType = 'definite' | 'indefinite' | 'possessive';
 
 /** Possessive determiner person — only used when determinerType is 'possessive'. */
-export type PossessivePerson = 'first' | 'second' | 'third';
+export type PossessivePerson = 'first' | 'second' | 'formal_second' | 'third';
 
 export interface Card1006Data {
   type: 'CARD_1006';

@@ -34,8 +34,15 @@ import Card1006 from '@/src/components/cards/Card1006';
 import ErrorBoundary from '@/src/components/ErrorBoundary';
 import StudyButton from '@/src/components/ui/StudyButton';
 import { SessionWordMgmtProvider } from '@/src/context/SessionWordMgmtContext';
-import { loadStatsForLanguage, saveStatsForLanguage, type LangStats } from '@/src/storage/statsStorage';
+import {
+  ensureLanguageStatsLoaded,
+  saveWordStats,
+  incrementDailyCardCountInMemory,
+  type LangStats,
+  type DailyCardCounts,
+} from '@/src/storage/statsStorage';
 import { enrichVocabItemsFromMaster } from '@/src/data';
+import { parsePoolIdsParam } from '@/src/utils/studyLaunch';
 import { updateWordStats } from '@/src/types/stats';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -63,6 +70,8 @@ export default function SessionScreen() {
     Map<string, { item: VocabItem; frequency: WordFrequencySetting }>
   >(new Map());
   const statsRef = useRef<LangStats>({});
+  const dailyCountsRef = useRef<DailyCardCounts>({});
+  const statsSaveChainRef = useRef(Promise.resolve());
   const [currentCard, setCurrentCard] = useState<CardData | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
@@ -75,11 +84,10 @@ export default function SessionScreen() {
   const { poolIds: poolIdsParam, deckSize: deckSizeParam } =
     useLocalSearchParams<{ poolIds?: string; deckSize?: string }>();
 
-  const poolIds = useMemo<string[]>(() => {
-    if (!poolIdsParam) return [];
-    try { return JSON.parse(poolIdsParam) as string[]; }
-    catch { return []; }
-  }, [poolIdsParam]);
+  const poolIds = useMemo<string[]>(
+    () => parsePoolIdsParam(poolIdsParam),
+    [poolIdsParam],
+  );
 
   const baseSessionVocab = useMemo<SessionVocabContext | null>(() => {
     if (!language || poolIds.length === 0) return null;
@@ -155,16 +163,6 @@ export default function SessionScreen() {
 
     return ids;
   }, [getSessionVocab]);
-
-  // Load existing stats for this language at session start
-  useEffect(() => {
-    if (language) {
-      loadStatsForLanguage(language).then(stats => {
-        statsRef.current = stats;
-      });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const loadCard = useCallback(
     (stateOverride?: typeof state) => {
@@ -295,17 +293,28 @@ export default function SessionScreen() {
         card1002PairKey,
       );
 
-      // Record detailed stats for Card1006 results
-      if (cardType === 'CARD_1006' && vocabId && language && isFirstAttempt !== undefined) {
-        const updated = updateWordStats(
-          statsRef.current[vocabId],
-          vocabId,
-          language,
-          correct,
-          isFirstAttempt,
-        );
-        statsRef.current = { ...statsRef.current, [vocabId]: updated };
-        saveStatsForLanguage(language, statsRef.current);
+      // Record detailed stats for every resolved Card 1006 result
+      if (cardType === 'CARD_1006' && vocabId && language) {
+        statsSaveChainRef.current = statsSaveChainRef.current
+          .then(async () => {
+            const { wordStats, dailyCounts } = await ensureLanguageStatsLoaded(language);
+            statsRef.current = { ...wordStats, ...statsRef.current };
+            dailyCountsRef.current = { ...dailyCounts, ...dailyCountsRef.current };
+
+            const updated = updateWordStats(
+              statsRef.current[vocabId],
+              vocabId,
+              language,
+              correct,
+              isFirstAttempt ?? false,
+            );
+            statsRef.current = { ...statsRef.current, [vocabId]: updated };
+            dailyCountsRef.current = incrementDailyCardCountInMemory(dailyCountsRef.current);
+            await saveWordStats(language, statsRef.current, dailyCountsRef.current);
+          })
+          .catch(err => {
+            console.error('[SessionScreen] stats save failed', err);
+          });
       }
     },
     [recordCardResult, language],

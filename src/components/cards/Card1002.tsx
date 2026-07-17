@@ -97,12 +97,16 @@ export default function Card1002({
     (id: RelationshipType) => {
       if (answerState !== 'idle') return;
       setSelected(id);
-      const correct = id === card.correctRelationship;
-      setAnswerState(correct ? 'correct' : 'incorrect');
-      onSubmit(correct);
     },
-    [answerState, card.correctRelationship, onSubmit],
+    [answerState],
   );
+
+  const handleSubmit = useCallback(() => {
+    if (answerState !== 'idle' || selected === null) return;
+    const correct = selected === card.correctRelationship;
+    setAnswerState(correct ? 'correct' : 'incorrect');
+    onSubmit(correct);
+  }, [answerState, selected, card.correctRelationship, onSubmit]);
 
   const handleFlip = useCallback(() => {
     setSelected(card.correctRelationship);
@@ -110,7 +114,7 @@ export default function Card1002({
     onFlip();
   }, [card.correctRelationship, onFlip]);
 
-  const showReveal = answerState === 'incorrect' || answerState === 'flipped';
+  const showEnglishReveal = answerState !== 'idle';
   const englishA = getPrimaryEnglish(card.itemA);
   const englishB = getPrimaryEnglish(card.itemB);
   const choiceTypes = card.choiceTypes.filter(isRelationshipType);
@@ -171,18 +175,20 @@ export default function Card1002({
           })}
         </View>
 
-        {answerState === 'correct' ? (
-          <CorrectText color={palette.correct} style={styles.feedbackMargin} />
-        ) : showReveal ? (
+        {showEnglishReveal && (
           <View style={styles.feedbackBlock}>
-            <Text style={[styles.feedback, { color: palette.incorrect }]}>
-              {answerState === 'incorrect' ? 'Not quite' : 'Answer shown'}
-            </Text>
+            {answerState === 'correct' ? (
+              <CorrectText color={palette.correct} />
+            ) : (
+              <Text style={[styles.feedback, { color: palette.incorrect }]}>
+                {answerState === 'incorrect' ? 'Not quite' : 'Answer shown'}
+              </Text>
+            )}
             <Text style={[styles.englishReveal, { color: palette.subtext }]}>
               ({englishA} / {englishB})
             </Text>
           </View>
-        ) : null}
+        )}
       </ScrollView>
 
       <View style={styles.bottomBar}>
@@ -193,7 +199,15 @@ export default function Card1002({
           onPress={handleFlip}
           disabled={answerState !== 'idle'}
         />
-        {answerState !== 'idle' && (
+        {answerState === 'idle' ? (
+          <StudyButton
+            label="Submit"
+            variant={selected !== null ? 'primary' : 'inactive'}
+            size="medium"
+            onPress={handleSubmit}
+            disabled={selected === null}
+          />
+        ) : (
           <StudyButton label="Next" variant="primary" size="medium" onPress={onNext} />
         )}
       </View>
@@ -231,7 +245,6 @@ const styles = StyleSheet.create({
   separator: { width: 40, height: 1.5, marginVertical: 12 },
   choices: { gap: 10 },
   choiceBtn: { width: '100%' },
-  feedbackMargin: { marginTop: 16, marginBottom: 16 },
   feedbackBlock: { alignItems: 'center', marginTop: 16, marginBottom: 16, gap: 6 },
   feedback: { fontSize: 16, fontWeight: '600', textAlign: 'center' },
   englishReveal: { fontSize: 14, textAlign: 'center' },
