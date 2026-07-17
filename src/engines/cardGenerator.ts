@@ -141,24 +141,43 @@ export function generateCard1001(
 
 const DETERMINER_TYPES: DeterminerType[] = ['definite', 'indefinite', 'possessive'];
 
-/** Target mix for FR/ES Card 1006 native-to-target determiner prompts. */
-const NATIVE_TO_TARGET_DETERMINER_WEIGHTS: Record<DeterminerType, number> = {
+/** Target mix for FR Card 1006 native-to-target determiner prompts. */
+const NATIVE_TO_TARGET_DETERMINER_WEIGHTS_FR: Record<DeterminerType, number> = {
   definite: 0.4,
   indefinite: 0.35,
   possessive: 0.25,
 };
 
+/** Target mix for ES — heavier on possessives (mi/tu/su). */
+const NATIVE_TO_TARGET_DETERMINER_WEIGHTS_ES: Record<DeterminerType, number> = {
+  definite: 0.3,
+  indefinite: 0.3,
+  possessive: 0.4,
+};
+
+function getNativeToTargetDeterminerWeights(
+  language: Language,
+): Record<DeterminerType, number> {
+  return language === 'es'
+    ? NATIVE_TO_TARGET_DETERMINER_WEIGHTS_ES
+    : NATIVE_TO_TARGET_DETERMINER_WEIGHTS_FR;
+}
+
 /**
  * Pick a determiner type from `pool` using the native-to-target weight targets.
  * Weights are renormalized when the noun's articleTypes pool is a subset.
  */
-function pickNativeToTargetDeterminerType(pool: DeterminerType[]): DeterminerType {
+function pickNativeToTargetDeterminerType(
+  pool: DeterminerType[],
+  language: Language,
+): DeterminerType {
   if (pool.length === 0) return 'definite';
   if (pool.length === 1) return pool[0];
 
+  const weights = getNativeToTargetDeterminerWeights(language);
   let totalWeight = 0;
   const weighted = pool.map(type => {
-    const weight = NATIVE_TO_TARGET_DETERMINER_WEIGHTS[type];
+    const weight = weights[type];
     totalWeight += weight;
     return { type, weight };
   });
@@ -307,7 +326,7 @@ function card1006NativeToTarget(
     // Only select from determiner types permitted for this noun; fall back to
     // all three if articleTypes is absent or empty.
     const detPool = getArticleTypesPool(item.articleTypes);
-    const det = pickNativeToTargetDeterminerType(detPool);
+    const det = pickNativeToTargetDeterminerType(detPool, language);
     const possessivePerson = det === 'possessive' ? pickRandomPossessivePerson(language) : null;
 
     return {
