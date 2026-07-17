@@ -87,6 +87,9 @@ export async function loadDailyCardCounts(language: Language): Promise<DailyCard
   }
 }
 
+/** Alias for loadDailyCardCounts — daily Card 1006 counts keyed by YYYY-MM-DD. */
+export const loadDailyStats = loadDailyCardCounts;
+
 export async function saveDailyCardCounts(
   language: Language,
   counts: DailyCardCounts,

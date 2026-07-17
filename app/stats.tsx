@@ -60,6 +60,7 @@ export default function StatsScreen() {
     if (!language) return;
     setLoading(true);
     try {
+      // Reloads word stats + daily Card 1006 counts from AsyncStorage on each visit.
       const bundle = await loadLanguageStatsBundle(language);
       setLangStats(bundle.wordStats);
       setDailyCounts(bundle.dailyCounts);
@@ -339,7 +340,9 @@ function LifetimeStatsTab({
                   style={[
                     styles.barFill,
                     {
-                      height: `${Math.max(4, (datum.count / maxBar) * 100)}%`,
+                      height: datum.count > 0
+                        ? `${(datum.count / maxBar) * 100}%`
+                        : 0,
                       backgroundColor: palette.tint,
                     },
                   ]}
@@ -566,7 +569,6 @@ const styles = StyleSheet.create({
   barFill: {
     width: '100%',
     borderRadius: 4,
-    minHeight: 4,
   },
   barLabel: {
     fontSize: 10,
