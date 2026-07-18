@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Akuity",
-    "slug": "akuity",
+    "slug": "isolingo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -50,6 +50,7 @@
       "eas": {
         "projectId": "d3488ccb-0155-4088-af2f-03d14742bddd"
       }
-    }
+    },
+    "owner": "sjliebert"
   }
 }
