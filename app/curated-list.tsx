@@ -28,6 +28,7 @@ import type { VocabItem } from '@/src/types/vocab';
 import type { Pool } from '@/src/types/pool';
 import { generatePoolId, snapToDeckSize } from '@/src/types/pool';
 import StudyButton from '@/src/components/ui/StudyButton';
+import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
 // ── Category config ───────────────────────────────────────────────────────────
 
@@ -311,6 +312,17 @@ export default function CuratedListScreen() {
       },
     ]);
   }, [canProceed, selectedCount, createSeparatePools, startCombineFlow]);
+
+  useAndroidBackHandler(
+    useCallback(() => {
+      if (step === 'naming') {
+        setStep('select');
+      } else {
+        router.back();
+      }
+      return true;
+    }, [step, router]),
+  );
 
   // ── Guard ─────────────────────────────────────────────────────────────────
   if (!isReady || !language) return null;

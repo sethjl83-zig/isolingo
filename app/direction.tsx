@@ -4,7 +4,7 @@
  * Reads studyTypeSelected from global state (set by dashboard before navigating here).
  * Lets the user pick a study direction, then starts the session.
  */
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,7 @@ import { useAppContext } from '@/src/context/AppContext';
 import type { StudyType, DirectionMode } from '@/src/types/state';
 import type { Language } from '@/src/types/vocab';
 import StudyButton from '@/src/components/ui/StudyButton';
+import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
 const LANGUAGE_NAMES: Record<Language, string> = {
   de: 'German',
@@ -75,6 +76,13 @@ export default function DirectionScreen() {
       params: { poolIds: poolIds ?? '', deckSize: deckSize ?? '' },
     } as never);
   };
+
+  useAndroidBackHandler(
+    useCallback(() => {
+      router.back();
+      return true;
+    }, [router]),
+  );
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]}>

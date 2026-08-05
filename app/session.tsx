@@ -44,6 +44,7 @@ import {
 import { enrichVocabItemsFromMaster } from '@/src/data';
 import { parsePoolIdsParam } from '@/src/utils/studyLaunch';
 import { updateWordStats } from '@/src/types/stats';
+import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -324,6 +325,13 @@ export default function SessionScreen() {
     router.replace('/select-study-list');
   }, [router]);
 
+  useAndroidBackHandler(
+    useCallback(() => {
+      handleExit();
+      return true;
+    }, [handleExit]),
+  );
+
   const handleHome = useCallback(() => {
     router.replace('/dashboard');
   }, [router]);
@@ -388,7 +396,7 @@ export default function SessionScreen() {
   const cardKey = getCardKey(currentCard, state.sessionCardIndex);
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: palette.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: palette.background }]} edges={['top', 'left', 'right']}>
       <SessionWordMgmtProvider
         language={language}
         poolIds={poolIds}

@@ -19,7 +19,7 @@ import { splitDisplayForm } from '@/src/engines/articleHelper';
 import { getPrimaryEnglish } from '@/src/engines/genderedCounterpartHelper';
 import StudyButton from '../ui/StudyButton';
 import CorrectText from '../ui/CorrectText';
-import WordMgmtStrip from '../ui/WordMgmtStrip';
+import StudyCardLayout from './StudyCardLayout';
 
 interface Props {
   card: Card1002Data;
@@ -120,7 +120,35 @@ export default function Card1002({
   const choiceTypes = card.choiceTypes.filter(isRelationshipType);
 
   return (
-    <View style={[styles.container, { backgroundColor: palette.background }]}>
+    <StudyCardLayout
+      style={{ backgroundColor: palette.background }}
+      words={[
+        { id: card.itemA.id, lemma: card.itemA.lemma },
+        { id: card.itemB.id, lemma: card.itemB.lemma },
+      ]}
+      bottomBar={
+        <View style={styles.bottomBar}>
+          <StudyButton
+            label="Flip"
+            variant="secondary"
+            size="small"
+            onPress={handleFlip}
+            disabled={answerState !== 'idle'}
+          />
+          {answerState === 'idle' ? (
+            <StudyButton
+              label="Submit"
+              variant={selected !== null ? 'primary' : 'inactive'}
+              size="medium"
+              onPress={handleSubmit}
+              disabled={selected === null}
+            />
+          ) : (
+            <StudyButton label="Next" variant="primary" size="medium" onPress={onNext} />
+          )}
+        </View>
+      }
+    >
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.contentArea}
@@ -190,40 +218,11 @@ export default function Card1002({
           </View>
         )}
       </ScrollView>
-
-      <View style={styles.bottomBar}>
-        <StudyButton
-          label="Flip"
-          variant="secondary"
-          size="small"
-          onPress={handleFlip}
-          disabled={answerState !== 'idle'}
-        />
-        {answerState === 'idle' ? (
-          <StudyButton
-            label="Submit"
-            variant={selected !== null ? 'primary' : 'inactive'}
-            size="medium"
-            onPress={handleSubmit}
-            disabled={selected === null}
-          />
-        ) : (
-          <StudyButton label="Next" variant="primary" size="medium" onPress={onNext} />
-        )}
-      </View>
-
-      <WordMgmtStrip
-        words={[
-          { id: card.itemA.id, lemma: card.itemA.lemma },
-          { id: card.itemB.id, lemma: card.itemB.lemma },
-        ]}
-      />
-    </View>
+    </StudyCardLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
   scroll: { flex: 1 },
   contentArea: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 16 },
   topBar: {

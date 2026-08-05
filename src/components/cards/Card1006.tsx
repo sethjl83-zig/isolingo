@@ -9,12 +9,10 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  KeyboardAvoidingView,
   StyleSheet,
   useColorScheme,
   Platform,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, GenderColors } from '@/constants/theme';
 import type { Card1006Data } from '@/src/types/cards';
 import type { Gender, Language } from '@/src/types/vocab';
@@ -22,7 +20,7 @@ import { splitDisplayForm } from '@/src/engines/articleHelper';
 import GenderTile from '../ui/GenderTile';
 import StudyButton from '../ui/StudyButton';
 import CorrectText from '../ui/CorrectText';
-import WordMgmtStrip from '../ui/WordMgmtStrip';
+import StudyCardLayout from './StudyCardLayout';
 import {
   validateAnswer,
   validateGermanNoun,
@@ -62,7 +60,6 @@ export default function Card1006({
 }: Props) {
   const scheme  = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
-  const insets  = useSafeAreaInsets();
 
   const [inputText, setInputText] = useState('');
   const [selectedGender, setSelectedGender] = useState<Gender | null>(null);
@@ -266,30 +263,53 @@ export default function Card1006({
       : 'Type the full phrase';
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: palette.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={
-        Platform.OS === 'ios'
-          ? insets.bottom + 8   // safe-area bottom inset + 8 px breathing room
-          : 0
+    <StudyCardLayout
+      style={{ backgroundColor: palette.background }}
+      words={[{ id: card.item.id, lemma: card.item.lemma }]}
+      bottomBar={
+        <View style={styles.bottomBar}>
+          <StudyButton
+            label="Flip"
+            variant="secondary"
+            size="small"
+            onPress={handleFlip}
+            disabled={resolved}
+          />
+
+          {cardState === 'typing' && (
+            <StudyButton
+              label="Submit"
+              variant={canSubmit ? 'primary' : 'inactive'}
+              size="medium"
+              onPress={handleSubmit}
+              disabled={!canSubmit}
+            />
+          )}
+
+          {cardState === 'incorrect_1' && (
+            <StudyButton
+              label="Submit"
+              variant="primary"
+              size="medium"
+              onPress={handleSubmit}
+            />
+          )}
+
+          {(cardState === 'correct' ||
+            cardState === 'incorrect_final' ||
+            cardState === 'flipped') && (
+            <StudyButton label="Next" variant="primary" size="medium" onPress={onNext} />
+          )}
+        </View>
       }
     >
-      {/*
-        inner wraps scroll content + bottom bar as siblings.
-        KeyboardAvoidingView shrinks inner when the keyboard appears;
-        the bottom bar stays pinned at the bottom of inner, never hidden.
-      */}
-        <View style={styles.inner}>
-
-          {/* Scrollable content — everything except the action buttons */}
-          <ScrollView
-            style={styles.scroll}
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="none"
-            showsVerticalScrollIndicator={false}
-          >
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="none"
+        showsVerticalScrollIndicator={false}
+      >
             {/* Top bar */}
             <View style={styles.topBar}>
               <TouchableOpacity onPress={onExit}>
@@ -421,58 +441,12 @@ export default function Card1006({
               </View>
             ) : null}
 
-          </ScrollView>
-
-          {/* Action buttons — anchored below scroll, above management strip */}
-          <View style={styles.bottomBar}>
-            <StudyButton
-              label="Flip"
-              variant="secondary"
-              size="small"
-              onPress={handleFlip}
-              disabled={resolved}
-            />
-
-            {cardState === 'typing' && (
-              <StudyButton
-                label="Submit"
-                variant={canSubmit ? 'primary' : 'inactive'}
-                size="medium"
-                onPress={handleSubmit}
-                disabled={!canSubmit}
-              />
-            )}
-
-            {cardState === 'incorrect_1' && (
-              <StudyButton
-                label="Submit"
-                variant="primary"
-                size="medium"
-                onPress={handleSubmit}
-              />
-            )}
-
-            {(cardState === 'correct' ||
-              cardState === 'incorrect_final' ||
-              cardState === 'flipped') && (
-              <StudyButton label="Next" variant="primary" size="medium" onPress={onNext} />
-            )}
-          </View>
-
-          {/* Word management strip — always visible at the very bottom */}
-          <WordMgmtStrip
-            words={[{ id: card.item.id, lemma: card.item.lemma }]}
-          />
-
-        </View>
-    </KeyboardAvoidingView>
+      </ScrollView>
+    </StudyCardLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  // Fills the KeyboardAvoidingView; scroll and management strip are siblings inside.
-  inner: { flex: 1 },
   scroll: { flex: 1 },
   scrollContent: {
     flexGrow: 1,

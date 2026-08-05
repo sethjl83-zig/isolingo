@@ -4,7 +4,7 @@
  * Replaces the old Word Banks screen as the target of the
  * dashboard "My Vocabulary" button.
  */
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -20,6 +20,7 @@ import { Colors } from '@/constants/theme';
 import { useAppContext } from '@/src/context/AppContext';
 import type { Pool } from '@/src/types/pool';
 import type { StudyType } from '@/src/types/state';
+import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
 export default function MyListsScreen() {
   const router = useRouter();
@@ -41,6 +42,13 @@ export default function MyListsScreen() {
       router.replace('/');
     }
   }, [isReady, language, router]);
+
+  useAndroidBackHandler(
+    useCallback(() => {
+      router.back();
+      return true;
+    }, [router]),
+  );
 
   if (!isReady || !language) return null;
 

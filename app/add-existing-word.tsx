@@ -35,6 +35,7 @@ import SearchBar from '@/src/components/ui/SearchBar';
 import SearchModeToggle from '@/src/components/ui/SearchModeToggle';
 import KeyboardDoneAccessory from '@/src/components/ui/KeyboardDoneAccessory';
 import StudyButton from '@/src/components/ui/StudyButton';
+import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
 export default function AddExistingWordScreen() {
   const router = useRouter();
@@ -135,6 +136,13 @@ export default function AddExistingWordScreen() {
 
     router.back();
   }, [pool, canAdd, masterWords, selectedIds, updatePool, router]);
+
+  useAndroidBackHandler(
+    useCallback(() => {
+      router.back();
+      return true;
+    }, [router]),
+  );
 
   // ── Guard ─────────────────────────────────────────────────────────────────
   if (!isReady || !language) return null;

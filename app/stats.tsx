@@ -30,6 +30,7 @@ import {
   computeLanguageAccuracy,
   type DayBarDatum,
 } from '@/src/utils/statsHelpers';
+import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
 type Tab = 'current' | 'lifetime';
 
@@ -73,6 +74,13 @@ export default function StatsScreen() {
     useCallback(() => {
       loadData();
     }, [loadData]),
+  );
+
+  useAndroidBackHandler(
+    useCallback(() => {
+      router.back();
+      return true;
+    }, [router]),
   );
 
   if (!isReady || !language) return null;

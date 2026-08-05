@@ -16,6 +16,7 @@ import {
   ActivityIndicator,
   useColorScheme,
   Dimensions,
+  BackHandler,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -41,6 +42,7 @@ import {
 import { USER_NAME_KEY, CELEBRATION_PENDING_KEY, takePendingCelebration } from './welcome';
 import { setAddListLaunchSource } from './add-list';
 import { countStudyWords, getDeckSizeLaunchDecision } from '@/src/utils/studyLaunch';
+import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
 // Warm coral-orange accent — clearly distinct from gender colours
 // (#4da3ff masc · #d66aa6 fem · #A4922D neut)
@@ -417,6 +419,16 @@ export default function DashboardScreen() {
   }, [language, getLanguagePools]);
 
   useFocusEffect(useCallback(() => { refreshStats(); }, [refreshStats]));
+
+  useAndroidBackHandler(
+    useCallback(() => {
+      Alert.alert('Exit app?', undefined, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Exit', style: 'destructive', onPress: () => BackHandler.exitApp() },
+      ]);
+      return true;
+    }, []),
+  );
 
   if (!isReady) return null;
 

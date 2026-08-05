@@ -6,7 +6,7 @@
  * arrived here from a study-mode tap (no pools existed yet). Creation screens
  * read this to decide where to navigate after the pool is saved.
  */
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/theme';
 import type { StudyType } from '@/src/types/state';
+import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
 // ── Launch-source tracking ────────────────────────────────────────────────────
 
@@ -72,6 +73,13 @@ export default function AddListScreen() {
   const router = useRouter();
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
+
+  useAndroidBackHandler(
+    useCallback(() => {
+      router.back();
+      return true;
+    }, [router]),
+  );
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]}>

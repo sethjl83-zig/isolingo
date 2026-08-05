@@ -39,6 +39,7 @@ import { generatePoolId, snapToDeckSize } from '@/src/types/pool';
 import SearchBar from '@/src/components/ui/SearchBar';
 import SearchModeToggle from '@/src/components/ui/SearchModeToggle';
 import StudyButton from '@/src/components/ui/StudyButton';
+import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
 const MIN_WORDS = 10;
 
@@ -168,6 +169,17 @@ export default function BuildYourOwnScreen() {
       router.dismiss(2);
     }
   }, [language, masterWords, selectedIds, listName, getLanguagePools, createPool, router]);
+
+  useAndroidBackHandler(
+    useCallback(() => {
+      if (step === 'naming') {
+        setStep('select');
+      } else {
+        router.back();
+      }
+      return true;
+    }, [step, router]),
+  );
 
   // ── Guard ─────────────────────────────────────────────────────────────────
   if (!isReady || !language) return null;

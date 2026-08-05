@@ -23,6 +23,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/theme';
 import { useAppContext } from '@/src/context/AppContext';
+import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 import { getMasterDataset } from '@/src/data';
 import type { Pool } from '@/src/types/pool';
 import { generatePoolId, snapToDeckSize } from '@/src/types/pool';
@@ -158,6 +159,17 @@ export default function RandomListScreen() {
       router.dismiss(2);
     }
   }, [language, pickedWords, listName, getLanguagePools, createPool, router]);
+
+  useAndroidBackHandler(
+    useCallback(() => {
+      if (step === 'naming') {
+        setStep('count');
+      } else {
+        router.back();
+      }
+      return true;
+    }, [step, router]),
+  );
 
   // ── Guard ─────────────────────────────────────────────────────────────────
 

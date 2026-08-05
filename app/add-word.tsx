@@ -7,7 +7,7 @@
  * lives only in the pool(s) the user selects and will never appear in Curated
  * Lists, Build Your Own, or Random.
  */
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -25,6 +25,7 @@ import { useAppContext } from '@/src/context/AppContext';
 import type { VocabItem, PartOfSpeech, Gender, Language } from '@/src/types/vocab';
 import type { Pool } from '@/src/types/pool';
 import StudyButton from '@/src/components/ui/StudyButton';
+import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
 const POS_OPTIONS: PartOfSpeech[] = ['noun', 'verb', 'adjective', 'adverb'];
 const GENDER_OPTIONS: Gender[] = ['masculine', 'feminine', 'neuter'];
@@ -219,6 +220,13 @@ export default function AddWordScreen() {
 
     router.back();
   };
+
+  useAndroidBackHandler(
+    useCallback(() => {
+      router.back();
+      return true;
+    }, [router]),
+  );
 
   const inputStyle = [
     styles.input,

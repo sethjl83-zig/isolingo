@@ -25,7 +25,7 @@ interface FrequencySnapSliderProps {
   compact?: boolean;
 }
 
-export default function FrequencySnapSlider({
+function FrequencySnapSlider({
   value,
   onChange,
   compact = false,
@@ -128,3 +128,5 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
 });
+
+export default React.memo(FrequencySnapSlider);

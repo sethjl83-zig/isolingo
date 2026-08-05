@@ -93,3 +93,34 @@ export function enrichVocabItemsFromMaster(
     return item.user_added === 'y' ? { ...fresh, user_added: 'y' } : fresh;
   });
 }
+
+const ENRICH_CHUNK_SIZE = 80;
+
+/** Yield between chunks so enrichment does not block the UI thread. */
+export async function enrichVocabItemsFromMasterAsync(
+  items: VocabItem[],
+  language: string,
+  chunkSize = ENRICH_CHUNK_SIZE,
+): Promise<VocabItem[]> {
+  if (items.length === 0) return [];
+
+  const masterById = new Map(getMasterDataset(language).map(w => [w.id, w]));
+  const result: VocabItem[] = new Array(items.length);
+
+  for (let start = 0; start < items.length; start += chunkSize) {
+    await new Promise<void>(resolve => setTimeout(resolve, 0));
+
+    const end = Math.min(start + chunkSize, items.length);
+    for (let i = start; i < end; i++) {
+      const item = items[i];
+      const fresh = masterById.get(item.id);
+      result[i] = !fresh
+        ? item
+        : item.user_added === 'y'
+        ? { ...fresh, user_added: 'y' }
+        : fresh;
+    }
+  }
+
+  return result;
+}

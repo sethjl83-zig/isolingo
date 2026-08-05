@@ -17,7 +17,7 @@ import type { Gender, Language } from '@/src/types/vocab';
 import { splitDisplayForm } from '@/src/engines/articleHelper';
 import StudyButton from '../ui/StudyButton';
 import CorrectText from '../ui/CorrectText';
-import WordMgmtStrip from '../ui/WordMgmtStrip';
+import StudyCardLayout from './StudyCardLayout';
 
 type MatchResult = 'idle' | 'correct' | 'partial';
 
@@ -124,9 +124,33 @@ export default function Card1001({
       : '';
 
   return (
-    <View style={[styles.container, { backgroundColor: palette.background }]}>
-
-      {/* Card content — scrollable so feedback never pushes buttons off-screen */}
+    <StudyCardLayout
+      style={{ backgroundColor: palette.background }}
+      words={card.nouns.map(n => ({ id: n.item.id, lemma: n.item.lemma }))}
+      bottomBar={
+        <View style={styles.bottomBar}>
+          <StudyButton
+            label="Flip"
+            variant="secondary"
+            size="small"
+            onPress={handleFlip}
+            disabled={flipped || submitted}
+          />
+          {!showNext && (
+            <StudyButton
+              label="Submit"
+              variant={allPaired ? 'primary' : 'inactive'}
+              size="medium"
+              onPress={handleSubmit}
+              disabled={!allPaired || submitted || flipped}
+            />
+          )}
+          {showNext && (
+            <StudyButton label="Next" variant="primary" size="medium" onPress={onNext} />
+          )}
+        </View>
+      }
+    >
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.contentArea}
@@ -234,41 +258,11 @@ export default function Card1001({
 
 
       </ScrollView>
-
-      {/* Action buttons — anchored below scroll, above management strip */}
-      <View style={styles.bottomBar}>
-        <StudyButton
-          label="Flip"
-          variant="secondary"
-          size="small"
-          onPress={handleFlip}
-          disabled={flipped || submitted}
-        />
-        {!showNext && (
-          <StudyButton
-            label="Submit"
-            variant={allPaired ? 'primary' : 'inactive'}
-            size="medium"
-            onPress={handleSubmit}
-            disabled={!allPaired || submitted || flipped}
-          />
-        )}
-        {showNext && (
-          <StudyButton label="Next" variant="primary" size="medium" onPress={onNext} />
-        )}
-      </View>
-
-      {/* Word management strip — fixed at the very bottom */}
-      <WordMgmtStrip
-        words={card.nouns.map(n => ({ id: n.item.id, lemma: n.item.lemma }))}
-      />
-
-    </View>
+    </StudyCardLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
   scroll: { flex: 1 },
   contentArea: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 16 },
   topBar: {

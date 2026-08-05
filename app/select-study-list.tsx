@@ -24,6 +24,7 @@ import type { StudyType } from '@/src/types/state';
 import type { Pool } from '@/src/types/pool';
 import StudyButton from '@/src/components/ui/StudyButton';
 import { countStudyWords, getDeckSizeLaunchDecision } from '@/src/utils/studyLaunch';
+import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -125,11 +126,18 @@ export default function SelectStudyListScreen() {
     }
   }, [canContinue, isNavigating, language, studyType, selectedIds, pools, totalCount, router]);
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     // Navigate to dashboard, popping any intermediate creation screens from
     // the stack (router.navigate pops to an existing ancestor route).
     router.navigate('/dashboard' as never);
-  };
+  }, [router]);
+
+  useAndroidBackHandler(
+    useCallback(() => {
+      handleBack();
+      return true;
+    }, [handleBack]),
+  );
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]}>
