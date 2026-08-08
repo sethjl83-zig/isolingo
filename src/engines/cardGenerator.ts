@@ -4,6 +4,7 @@ import type {
   Card1001Data,
   Card1006Data,
   DeterminerType,
+  PossessivePerson,
 } from '../types/cards';
 import { getDisplayForm, getEnglishDeterminerPrompt, pickRandomPossessivePerson } from './articleHelper';
 import {
@@ -139,7 +140,15 @@ export function generateCard1001(
 
 // ── Card 1006 — Noun/Vocab Production ─────────────────────────────────────────
 
-const DETERMINER_TYPES: DeterminerType[] = ['definite', 'indefinite', 'possessive'];
+/** French Card 1006: definite, indefinite, and possessive determiners. */
+const CARD1006_DETERMINER_TYPES_FR: DeterminerType[] = ['definite', 'indefinite', 'possessive'];
+
+/** Spanish Card 1006: definite and indefinite only (possessives do not vary by gender). */
+const CARD1006_DETERMINER_TYPES_ES: DeterminerType[] = ['definite', 'indefinite'];
+
+function getCard1006DeterminerTypes(language: Language): DeterminerType[] {
+  return language === 'es' ? CARD1006_DETERMINER_TYPES_ES : CARD1006_DETERMINER_TYPES_FR;
+}
 
 /** Target mix for FR Card 1006 native-to-target determiner prompts. */
 const NATIVE_TO_TARGET_DETERMINER_WEIGHTS_FR: Record<DeterminerType, number> = {
@@ -148,11 +157,11 @@ const NATIVE_TO_TARGET_DETERMINER_WEIGHTS_FR: Record<DeterminerType, number> = {
   possessive: 0.25,
 };
 
-/** Target mix for ES — heavier on possessives (mi/tu/su). */
+/** Target mix for ES — definite and indefinite only. */
 const NATIVE_TO_TARGET_DETERMINER_WEIGHTS_ES: Record<DeterminerType, number> = {
-  definite: 0.3,
-  indefinite: 0.3,
-  possessive: 0.4,
+  definite: 0.5,
+  indefinite: 0.5,
+  possessive: 0,
 };
 
 function getNativeToTargetDeterminerWeights(
@@ -199,13 +208,17 @@ function pickNativeToTargetDeterminerType(
  * are used. This lets the vocab data opt out of, say, the possessive form for
  * words where "mon hôpital" would be unnatural.
  *
- * Falls back to all three types when `articleTypes` is absent, null, empty,
- * or contains no recognised DeterminerType values.
+ * Falls back to the language-allowed types when `articleTypes` is absent, null,
+ * empty, or contains no recognised DeterminerType values.
  */
-function getArticleTypesPool(articleTypes: string[] | null | undefined): DeterminerType[] {
-  if (!articleTypes || articleTypes.length === 0) return DETERMINER_TYPES;
-  const filtered = DETERMINER_TYPES.filter(d => articleTypes.includes(d));
-  return filtered.length > 0 ? filtered : DETERMINER_TYPES;
+function getArticleTypesPool(
+  articleTypes: string[] | null | undefined,
+  language: Language,
+): DeterminerType[] {
+  const allowed = getCard1006DeterminerTypes(language);
+  if (!articleTypes || articleTypes.length === 0) return allowed;
+  const filtered = allowed.filter(d => articleTypes.includes(d));
+  return filtered.length > 0 ? filtered : allowed;
 }
 
 export function generateCard1006(
@@ -233,8 +246,9 @@ function card1006TargetToNative(
     if (language === 'de') {
       prompt = item.lemma;
     } else {
-      // FR/ES: cycle through all three determiner types so users see all forms
-      const det = DETERMINER_TYPES[Math.floor(Math.random() * DETERMINER_TYPES.length)];
+      // FR/ES: pick from language-allowed determiner types (ES: no possessives).
+      const detPool = getArticleTypesPool(item.articleTypes, language);
+      const det = detPool[Math.floor(Math.random() * detPool.length)];
       usedDeterminer = det;
       if (det === 'possessive') {
         possessivePerson = pickRandomPossessivePerson(language);
@@ -323,9 +337,9 @@ function card1006NativeToTarget(
     }
 
     // FR / ES: determiner + noun.
-    // Only select from determiner types permitted for this noun; fall back to
-    // all three if articleTypes is absent or empty.
-    const detPool = getArticleTypesPool(item.articleTypes);
+    // Only select from determiner types permitted for this noun and language;
+    // fall back to language defaults if articleTypes is absent or empty.
+    const detPool = getArticleTypesPool(item.articleTypes, language);
     const det = pickNativeToTargetDeterminerType(detPool, language);
     const possessivePerson = det === 'possessive' ? pickRandomPossessivePerson(language) : null;
 
