@@ -6,7 +6,7 @@ export type CardType = 'CARD_1001' | 'CARD_1002' | 'CARD_1006';
 
 export interface MatchingNoun {
   item: VocabItem;
-  displayForm: string; // bare noun (DE) or "le chien" / "el perro" (FR/ES)
+  displayForm: string; // bare lemma in every language — never an article or determiner
 }
 
 export interface Card1001Data {

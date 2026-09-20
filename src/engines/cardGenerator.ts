@@ -6,7 +6,12 @@ import type {
   DeterminerType,
   PossessivePerson,
 } from '../types/cards';
-import { getDisplayForm, getEnglishDeterminerPrompt, pickRandomPossessivePerson } from './articleHelper';
+import {
+  getBareLemmaDisplayForm,
+  getDisplayForm,
+  getEnglishDeterminerPrompt,
+  pickRandomPossessivePerson,
+} from './articleHelper';
 import {
   buildDisambiguatedEnglishPrompt,
   collectTargetToNativeEnglishGlosses,
@@ -129,11 +134,11 @@ export function generateCard1001(
 
   return {
     type: 'CARD_1001',
-    // All languages show the bare lemma — no article or determiner.
+    // All languages show the bare lemma — no article, determiner, or possessive.
     // Gender is conveyed solely through color-coding, not through an article prefix.
     nouns: shuffled.map(item => ({
       item,
-      displayForm: item.lemma,
+      displayForm: getBareLemmaDisplayForm(language, item.lemma),
     })),
   };
 }

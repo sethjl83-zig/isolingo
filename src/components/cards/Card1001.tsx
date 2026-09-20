@@ -12,9 +12,8 @@ import {
   useColorScheme,
 } from 'react-native';
 import { Colors, GenderColors } from '@/constants/theme';
-import type { Card1001Data, MatchingNoun } from '@/src/types/cards';
+import type { Card1001Data } from '@/src/types/cards';
 import type { Gender, Language } from '@/src/types/vocab';
-import { splitDisplayForm } from '@/src/engines/articleHelper';
 import StudyButton from '../ui/StudyButton';
 import CorrectText from '../ui/CorrectText';
 import StudyCardLayout from './StudyCardLayout';
@@ -175,30 +174,25 @@ export default function Card1001({
         {/* Noun list — full-width vertical stack */}
         <View style={styles.nounList}>
           {card.nouns.map(noun => {
-            const paired = pairs[noun.item.id];
             const isLocked = lockedCorrect.has(noun.item.id);
             const isSelected = selectedNounId === noun.item.id;
-            const nounColor =
-              submitted || flipped
-                ? GenderColors[noun.item.gender as Gender]
-                : paired
-                ? GenderColors[paired]
-                : undefined;
-
-            // For FR/ES, split article and noun so only the noun gets the gender color.
-            // Card1001 always uses 'definite' articles in its display forms.
-            const isFrEs = language === 'fr' || language === 'es';
-            const parts =
-              isFrEs && noun.item.partOfSpeech === 'noun' && noun.item.gender
-                ? splitDisplayForm(language, noun.item.gender as Gender, noun.item.lemma, 'definite')
-                : null;
+            // Gender colour is confirmation-only — never during the matching phase.
+            const revealGender = submitted || flipped || isLocked;
+            const nounColor = revealGender
+              ? GenderColors[noun.item.gender as Gender]
+              : undefined;
 
             return (
               <TouchableOpacity
                 key={noun.item.id}
                 style={[
                   styles.nounChip,
-                  { borderColor: paired ? (GenderColors[paired] ?? palette.border) : palette.border, backgroundColor: palette.card },
+                  {
+                    borderColor: revealGender
+                      ? (GenderColors[noun.item.gender as Gender] ?? palette.border)
+                      : palette.border,
+                    backgroundColor: palette.card,
+                  },
                   isSelected && styles.nounSelected,
                   isLocked && styles.nounLocked,
                 ]}
@@ -206,20 +200,9 @@ export default function Card1001({
                 disabled={isLocked || submitted || flipped}
                 activeOpacity={0.75}
               >
-                {parts ? (
-                  <Text style={styles.nounText}>
-                    <Text style={{ color: palette.text }}>
-                      {parts.article}{parts.separator}
-                    </Text>
-                    <Text style={{ color: nounColor ?? palette.text }}>
-                      {parts.noun}
-                    </Text>
-                  </Text>
-                ) : (
-                  <Text style={[styles.nounText, { color: nounColor ?? palette.text }]}>
-                    {noun.displayForm}
-                  </Text>
-                )}
+                <Text style={[styles.nounText, { color: nounColor ?? palette.text }]}>
+                  {noun.displayForm}
+                </Text>
               </TouchableOpacity>
             );
           })}

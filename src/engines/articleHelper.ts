@@ -72,6 +72,19 @@ export function getArticle(
   return ''; // German: no article in display forms for study cards
 }
 
+/**
+ * Card 1001 display form: the bare lemma only — never an article, determiner,
+ * or possessive. German nouns are capitalized; FR/ES lemmas are left as stored.
+ */
+export function getBareLemmaDisplayForm(language: Language, lemma: string): string {
+  const trimmed = lemma.trim();
+  if (!trimmed) return trimmed;
+  if (language === 'de') {
+    return trimmed.charAt(0).toLocaleUpperCase('de-DE') + trimmed.slice(1);
+  }
+  return trimmed;
+}
+
 /** Returns the full display form: article + noun, handling French elision. */
 export function getDisplayForm(
   language: Language,
