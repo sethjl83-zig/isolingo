@@ -245,8 +245,8 @@ export default function MyListsScreen() {
               No lists yet
             </Text>
             <Text style={[styles.emptyDesc, { color: palette.subtext }]}>
-              Tap <Text style={{ fontWeight: '700' }}>+ Add List</Text> above to create
-              your first vocabulary list.
+              Tap <Text style={{ fontWeight: '700' }}>+</Text> above to create
+              your first vocabulary list
             </Text>
           </View>
         }

@@ -264,7 +264,7 @@ function DeckSizeContent() {
       <View style={styles.content}>
         <Text style={[styles.heading, { color: palette.text }]}>Select deck size</Text>
         <Text style={[styles.subheading, { color: palette.subtext }]}>
-          {totalCount} {totalCount === 1 ? 'word' : 'words'} available across your selected{' '}
+          {totalCount} {totalCount === 1 ? 'word' : 'words'} available in your selected{' '}
           {poolIds.length === 1 ? 'list' : 'lists'}
         </Text>
 

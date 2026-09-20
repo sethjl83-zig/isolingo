@@ -100,7 +100,7 @@ export default function AddListScreen() {
         <ChoiceCard
           icon="📖"
           title="Curated Lists"
-          description="Hand-picked lists organised by topic and difficulty"
+          description="Words organized by topic"
           onPress={() => router.push('/curated-list' as never)}
           palette={palette}
         />
@@ -108,7 +108,7 @@ export default function AddListScreen() {
         <ChoiceCard
           icon="✏️"
           title="Build Your Own"
-          description="Browse the full word list and choose exactly what you want to study"
+          description="Choose your own words"
           onPress={() => router.push('/build-your-own' as never)}
           palette={palette}
         />
@@ -116,7 +116,7 @@ export default function AddListScreen() {
         <ChoiceCard
           icon="🎲"
           title="Random"
-          description="Generate a random list in seconds — great for variety"
+          description="Randomly selected words"
           onPress={() => router.push('/random-list' as never)}
           palette={palette}
         />

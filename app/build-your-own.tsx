@@ -244,7 +244,7 @@ export default function BuildYourOwnScreen() {
               keyboardShouldPersistTaps="handled"
             >
               <Text style={[styles.stepHeading, { color: palette.text }]}>
-                Name your list
+                Name Your List
               </Text>
               <Text style={[styles.stepSub, { color: palette.subtext }]}>
                 {selectedCount} words selected

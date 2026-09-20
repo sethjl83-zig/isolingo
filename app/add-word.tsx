@@ -354,7 +354,7 @@ export default function AddWordScreen() {
         )}
 
         {/* Category chips */}
-        <Text style={labelStyle}>Categories (optional — select all that apply)</Text>
+        <Text style={labelStyle}>Categories (Optional — select all that apply)</Text>
         <View style={styles.chipRow}>
           {CATEGORIES.map(cat => {
             const active = categories.includes(cat);

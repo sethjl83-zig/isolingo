@@ -579,6 +579,9 @@ export default function DashboardScreen() {
             <Text style={[styles.modeCardLabel, { color: modeCardText }]}>
               General{'\n'}Vocab
             </Text>
+            <Text style={[styles.langHint, { color: modeCardText }]}>
+              Standard vocabulary practice
+            </Text>
             <Text style={[styles.modeCardIcon, { color: modeCardText }]}>📖</Text>
           </TouchableOpacity>
 
@@ -594,6 +597,9 @@ export default function DashboardScreen() {
               style={StyleSheet.absoluteFill}
             />
             <Text style={[styles.modeCardLabel, { color: modeCardText }]}>Gender</Text>
+            <Text style={[styles.langHint, { color: modeCardText }]}>
+              Focus on noun gender
+            </Text>
             <Text style={[styles.modeCardIcon, { color: modeCardText }]}>⚥</Text>
           </TouchableOpacity>
 

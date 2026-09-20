@@ -211,7 +211,7 @@ export default function RandomListScreen() {
                   How many words?
                 </Text>
                 <Text style={[styles.stepSub, { color: palette.subtext }]}>
-                  Minimum {MIN_WORDS} · {maxWords} available
+                  Minimum {MIN_WORDS} ({maxWords} available)
                 </Text>
 
                 {/* Stepper */}
@@ -283,7 +283,7 @@ export default function RandomListScreen() {
               /* ── Step 2: Naming ─────────────────────────────────────────── */
               <View style={styles.stepContainer}>
                 <Text style={[styles.stepHeading, { color: palette.text }]}>
-                  Name your list
+                  Name Your List
                 </Text>
                 <Text style={[styles.stepSub, { color: palette.subtext }]}>
                   {pickedWords.length} randomly selected words

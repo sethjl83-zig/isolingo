@@ -305,7 +305,7 @@ function LifetimeStatsTab({
         <Divider palette={palette} />
         <StatCell palette={palette} value={String(uniqueWords)} label="Words Studied" color={palette.text} />
         <Divider palette={palette} />
-        <StatCell palette={palette} value={accuracy} label="1st-Attempt" color={palette.tint} />
+        <StatCell palette={palette} value={accuracy} label="1st Attempt" color={palette.tint} />
       </View>
 
       {topWords.length > 0 && (

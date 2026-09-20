@@ -167,9 +167,15 @@ export default function CuratedListScreen() {
       words: basicWords,
     });
 
+    const seenKeys = new Set<string>();
     for (const cat of CURATED_CATEGORIES) {
-      const words = master.filter(w => w.category.includes(cat));
-      result.push({ key: cat, displayName: capitalise(cat), words });
+      const key = cat.toLowerCase();
+      if (seenKeys.has(key)) continue;
+      seenKeys.add(key);
+      const words = master.filter(w =>
+        w.category.some(c => c.toLowerCase() === key),
+      );
+      result.push({ key, displayName: capitalise(key), words });
     }
 
     return result;
@@ -351,7 +357,7 @@ export default function CuratedListScreen() {
               keyboardShouldPersistTaps="handled"
             >
               <Text style={[styles.stepHeading, { color: palette.text }]}>
-                Name your list
+                Name Your List
               </Text>
               <Text style={[styles.stepSub, { color: palette.subtext }]}>
                 {combinedWordCount} {combinedWordCount === 1 ? 'word' : 'words'} from{' '}
