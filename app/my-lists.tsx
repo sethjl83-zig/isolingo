@@ -4,13 +4,15 @@
  * Replaces the old Word Banks screen as the target of the
  * dashboard "My Vocabulary" button.
  */
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   FlatList,
   Alert,
+  Modal,
+  Pressable,
   StyleSheet,
   useColorScheme,
 } from 'react-native';
@@ -21,6 +23,15 @@ import { useAppContext } from '@/src/context/AppContext';
 import type { Pool } from '@/src/types/pool';
 import type { StudyType } from '@/src/types/state';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
+import StudyButton from '@/src/components/ui/StudyButton';
+
+type DefaultDialogOption = { text: string; onPress: () => void };
+
+interface DefaultDialogState {
+  title: string;
+  message: string;
+  options: DefaultDialogOption[];
+}
 
 export default function MyListsScreen() {
   const router = useRouter();
@@ -34,6 +45,7 @@ export default function MyListsScreen() {
   } = useAppContext();
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
+  const [defaultDialog, setDefaultDialog] = useState<DefaultDialogState | null>(null);
 
   const language = state.languageSelected;
 
@@ -89,8 +101,7 @@ export default function MyListsScreen() {
       ? `"${pool.name}" is already the default list for ${alreadyLabels.join(' & ')}. Set it as default for the remaining type(s) below:`
       : `Which study mode should "${pool.name}" be the default list for?`;
 
-    type AlertOption = { text: string; onPress?: () => void; style?: 'cancel' | 'destructive' | 'default' };
-    const options: AlertOption[] = [];
+    const options: DefaultDialogOption[] = [];
 
     // Show only the study types not yet assigned to this pool
     if (!isDefaultGeneral) {
@@ -115,14 +126,13 @@ export default function MyListsScreen() {
         },
       });
     }
-    options.push({ text: 'Cancel', style: 'cancel' });
 
     console.log('[SetDefault] pool.id:', pool.id);
     console.log('[SetDefault] defaultGeneralIds:', JSON.stringify(defaultGeneralIds));
     console.log('[SetDefault] defaultGenderIds:', JSON.stringify(defaultGenderIds));
     console.log('[SetDefault] isDefaultGeneral:', isDefaultGeneral, '| isDefaultGender:', isDefaultGender);
     console.log('[SetDefault] options offered:', options.map(o => o.text));
-    Alert.alert(title, message, options);
+    setDefaultDialog({ title, message, options });
   };
 
   const handleDelete = (pool: Pool) => {
@@ -251,6 +261,49 @@ export default function MyListsScreen() {
           </View>
         }
       />
+
+      <Modal
+        visible={defaultDialog !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setDefaultDialog(null)}
+      >
+        <Pressable style={styles.dialogOverlay} onPress={() => setDefaultDialog(null)}>
+          <Pressable
+            style={[styles.dialogSheet, { backgroundColor: palette.card, borderColor: palette.border }]}
+            onPress={() => {}}
+          >
+            <Text style={[styles.dialogTitle, { color: palette.text }]}>
+              {defaultDialog?.title}
+            </Text>
+            <Text style={[styles.dialogMessage, { color: palette.subtext }]}>
+              {defaultDialog?.message}
+            </Text>
+            <View style={styles.dialogActions}>
+              {defaultDialog?.options.map(option => (
+                <StudyButton
+                  key={option.text}
+                  label={option.text}
+                  variant="primary"
+                  size="medium"
+                  onPress={() => {
+                    option.onPress();
+                    setDefaultDialog(null);
+                  }}
+                  style={styles.dialogBtn}
+                />
+              ))}
+              <StudyButton
+                label="Cancel"
+                variant="secondary"
+                size="medium"
+                onPress={() => setDefaultDialog(null)}
+                style={styles.dialogBtn}
+              />
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -369,4 +422,26 @@ const styles = StyleSheet.create({
   emptyEmoji: { fontSize: 48, marginBottom: 4 },
   emptyTitle: { fontSize: 20, fontWeight: '700', textAlign: 'center' },
   emptyDesc: { fontSize: 15, textAlign: 'center', lineHeight: 22 },
+
+  dialogOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    paddingHorizontal: 28,
+  },
+  dialogSheet: {
+    width: '100%',
+    maxWidth: 360,
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 16,
+    gap: 12,
+  },
+  dialogTitle: { fontSize: 17, fontWeight: '700', textAlign: 'center' },
+  dialogMessage: { fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  dialogActions: { gap: 10, marginTop: 8, alignItems: 'stretch' },
+  dialogBtn: { alignSelf: 'stretch', minWidth: 0 },
 });

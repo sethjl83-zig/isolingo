@@ -35,7 +35,11 @@ export default function StudyButton({
     ...styles.base,
     ...sizeStyles[size],
     ...(variant === 'primary' && { backgroundColor: palette.buttonPrimary }),
-    ...(variant === 'secondary' && { backgroundColor: palette.buttonSecondary }),
+    ...(variant === 'secondary' && {
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      borderColor: palette.tint,
+    }),
     ...(variant === 'correct' && { backgroundColor: palette.correct }),
     ...(variant === 'incorrect' && { backgroundColor: palette.incorrect }),
     ...(variant === 'inactive' && { backgroundColor: palette.border, opacity: 0.6 }),
@@ -46,7 +50,7 @@ export default function StudyButton({
     ...styles.label,
     ...labelSizeStyles[size],
     ...(variant === 'primary' && { color: palette.buttonPrimaryText }),
-    ...(variant === 'secondary' && { color: palette.buttonSecondaryText }),
+    ...(variant === 'secondary' && { color: palette.tint }),
     ...((variant === 'correct' || variant === 'incorrect') && { color: '#fff' }),
     ...(variant === 'inactive' && { color: palette.subtext }),
   };

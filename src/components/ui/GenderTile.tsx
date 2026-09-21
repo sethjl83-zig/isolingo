@@ -1,12 +1,19 @@
 import React from 'react';
 import {
   TouchableOpacity,
+  Text,
   StyleSheet,
   type ViewStyle,
   useColorScheme,
 } from 'react-native';
 import { Colors, GenderColors } from '@/constants/theme';
 import type { Gender } from '@/src/types/vocab';
+
+const GENDER_ICONS: Record<Gender, string> = {
+  masculine: '♂',
+  feminine: '♀',
+  neuter: '⚲',
+};
 
 interface GenderTileProps {
   gender: Gender;
@@ -49,7 +56,9 @@ export default function GenderTile({
       onPress={onPress}
       disabled={disabled || !onPress}
       activeOpacity={0.75}
-    />
+    >
+      <Text style={styles.icon}>{GENDER_ICONS[gender]}</Text>
+    </TouchableOpacity>
   );
 }
 
@@ -58,6 +67,14 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  icon: {
+    color: '#fff',
+    fontSize: 26,
+    fontWeight: '700',
+    lineHeight: 30,
   },
   selected: {
     borderWidth: 3,

@@ -34,6 +34,19 @@ const CATEGORIES = [
   'nature', 'time', 'body', 'general',
 ];
 
+function pillSurface(
+  selected: boolean,
+  palette: (typeof Colors)['light'],
+) {
+  return selected
+    ? { backgroundColor: palette.tint, borderColor: palette.tint }
+    : { backgroundColor: palette.card, borderColor: palette.border };
+}
+
+function pillLabel(selected: boolean, palette: (typeof Colors)['light']) {
+  return { color: selected ? '#fff' : palette.text };
+}
+
 function buildId(language: Language, lemma: string): string {
   return `${language}_${lemma.toLowerCase().replace(/[^a-z0-9]/g, '_')}_custom_${Date.now()}`;
 }
@@ -282,23 +295,13 @@ export default function AddWordScreen() {
           {posOptions.map(option => (
             <TouchableOpacity
               key={option}
-              style={[
-                styles.chip,
-                { borderColor: palette.border, backgroundColor: palette.card },
-                pos === option && { backgroundColor: palette.tint, borderColor: palette.tint },
-              ]}
+              style={[styles.chip, pillSurface(pos === option, palette)]}
               onPress={() => {
                 setPos(option);
                 if (option !== 'noun') setGender(null);
               }}
             >
-              <Text
-                style={[
-                  styles.chipText,
-                  { color: palette.text },
-                  pos === option && { color: '#fff' },
-                ]}
-              >
+              <Text style={[styles.chipText, pillLabel(pos === option, palette)]}>
                 {option}
               </Text>
             </TouchableOpacity>
@@ -315,20 +318,10 @@ export default function AddWordScreen() {
               ).map(g => (
                 <TouchableOpacity
                   key={g}
-                  style={[
-                    styles.chip,
-                    { borderColor: palette.border, backgroundColor: palette.card },
-                    gender === g && { backgroundColor: palette.tint, borderColor: palette.tint },
-                  ]}
+                  style={[styles.chip, pillSurface(gender === g, palette)]}
                   onPress={() => setGender(g)}
                 >
-                  <Text
-                    style={[
-                      styles.chipText,
-                      { color: palette.text },
-                      gender === g && { color: '#fff' },
-                    ]}
-                  >
+                  <Text style={[styles.chipText, pillLabel(gender === g, palette)]}>
                     {g}
                   </Text>
                 </TouchableOpacity>
@@ -361,20 +354,10 @@ export default function AddWordScreen() {
             return (
               <TouchableOpacity
                 key={cat}
-                style={[
-                  styles.chip,
-                  { borderColor: palette.border, backgroundColor: palette.card },
-                  active && { backgroundColor: palette.tint, borderColor: palette.tint },
-                ]}
+                style={[styles.chip, pillSurface(active, palette)]}
                 onPress={() => toggleCategory(cat)}
               >
-                <Text
-                  style={[
-                    styles.chipText,
-                    { color: palette.text },
-                    active && { color: '#fff' },
-                  ]}
-                >
+                <Text style={[styles.chipText, pillLabel(active, palette)]}>
                   {cat}
                 </Text>
               </TouchableOpacity>

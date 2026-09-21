@@ -109,7 +109,7 @@ export function isAmbiguousEnglishPair(
 function genderModifier(gender: Gender): string {
   if (gender === 'masculine') return 'male';
   if (gender === 'feminine') return 'female';
-  return 'neutral';
+  return 'neuter';
 }
 
 /**
