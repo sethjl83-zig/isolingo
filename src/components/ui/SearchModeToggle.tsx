@@ -24,14 +24,19 @@ export default function SearchModeToggle({ mode, onModeChange, language }: Props
   ];
 
   return (
-    <View style={[styles.row, { backgroundColor: palette.card, borderColor: palette.border }]}>
+    <View
+      style={[
+        styles.track,
+        { backgroundColor: scheme === 'dark' ? palette.card : '#FFFFFF' },
+      ]}
+    >
       {options.map(opt => {
         const active = mode === opt.id;
         return (
           <TouchableOpacity
             key={opt.id}
             style={[
-              styles.option,
+              styles.segment,
               active && { backgroundColor: palette.tint },
             ]}
             onPress={() => onModeChange(opt.id)}
@@ -39,8 +44,8 @@ export default function SearchModeToggle({ mode, onModeChange, language }: Props
           >
             <Text
               style={[
-                styles.optionText,
-                { color: active ? '#fff' : palette.text },
+                styles.segmentText,
+                { color: active ? '#FFFFFF' : palette.text },
               ]}
             >
               {opt.label}
@@ -53,21 +58,19 @@ export default function SearchModeToggle({ mode, onModeChange, language }: Props
 }
 
 const styles = StyleSheet.create({
-  row: {
+  track: {
     flexDirection: 'row',
-    borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 22,
     padding: 3,
-    gap: 4,
   },
-  option: {
+  segment: {
     flex: 1,
     alignItems: 'center',
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 19,
   },
-  optionText: {
+  segmentText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });

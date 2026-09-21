@@ -117,24 +117,34 @@ export default function StatsScreen() {
         </Text>
       </View>
 
-      <View style={[styles.tabBar, { borderBottomColor: palette.border }]}>
-        {(['current', 'lifetime'] as Tab[]).map(t => (
-          <TouchableOpacity
-            key={t}
-            style={[styles.tab, tab === t && { borderBottomColor: palette.tint, borderBottomWidth: 2 }]}
-            onPress={() => setTab(t)}
-            activeOpacity={0.75}
-          >
-            <Text
+      <View style={styles.segmentWrap}>
+        <View
+          style={[
+            styles.segmentTrack,
+            { backgroundColor: scheme === 'dark' ? palette.card : '#FFFFFF' },
+          ]}
+        >
+          {(['current', 'lifetime'] as Tab[]).map(t => (
+            <TouchableOpacity
+              key={t}
               style={[
-                styles.tabLabel,
-                { color: tab === t ? palette.tint : palette.subtext },
+                styles.segment,
+                tab === t && { backgroundColor: palette.tint },
               ]}
+              onPress={() => setTab(t)}
+              activeOpacity={0.75}
             >
-              {t === 'current' ? 'Current Stats' : 'Lifetime Stats'}
-            </Text>
-          </TouchableOpacity>
-        ))}
+              <Text
+                style={[
+                  styles.segmentLabel,
+                  { color: tab === t ? '#FFFFFF' : palette.text },
+                ]}
+              >
+                {t === 'current' ? 'Current Stats' : 'Lifetime Stats'}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
 
       {loading ? (
@@ -440,18 +450,23 @@ const styles = StyleSheet.create({
   screenTitle: { fontSize: 17, fontWeight: '600' },
   langTag: { fontSize: 13, fontWeight: '500', minWidth: 60, textAlign: 'right' },
 
-  tabBar: {
+  segmentWrap: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 10,
+  },
+  segmentTrack: {
     flexDirection: 'row',
-    borderBottomWidth: 1,
+    borderRadius: 22,
+    padding: 3,
   },
-  tab: {
+  segment: {
     flex: 1,
-    paddingVertical: 12,
     alignItems: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
+    paddingVertical: 8,
+    borderRadius: 19,
   },
-  tabLabel: { fontSize: 14, fontWeight: '600' },
+  segmentLabel: { fontSize: 14, fontWeight: '700' },
 
   loadingBox: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 

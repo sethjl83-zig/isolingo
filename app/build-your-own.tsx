@@ -43,6 +43,19 @@ import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
 const MIN_WORDS = 10;
 
+function pillSurface(
+  selected: boolean,
+  palette: (typeof Colors)['light'],
+) {
+  return selected
+    ? { backgroundColor: palette.tint, borderColor: palette.tint }
+    : { backgroundColor: palette.card, borderColor: palette.border };
+}
+
+function pillLabel(selected: boolean, palette: (typeof Colors)['light']) {
+  return { color: selected ? '#fff' : palette.text };
+}
+
 // ── Helper: next "List N" name ────────────────────────────────────────────────
 
 function nextListName(existingPools: Pool[]): string {
@@ -191,21 +204,17 @@ export default function BuildYourOwnScreen() {
 
     return (
       <TouchableOpacity
-        style={[
-          styles.wordRow,
-          {
-            borderBottomColor: palette.border,
-            backgroundColor: isSelected ? palette.feedback : palette.background,
-          },
-        ]}
+        style={[styles.wordRow, { borderBottomColor: palette.border }]}
         onPress={() => toggleSelection(item.id)}
         activeOpacity={0.7}
       >
         <View
           style={[
             styles.checkbox,
-            { borderColor: palette.tint },
-            isSelected && { backgroundColor: palette.tint },
+            {
+              borderColor: palette.tint,
+              backgroundColor: isSelected ? palette.tint : 'transparent',
+            },
           ]}
         >
           {isSelected && <Text style={styles.checkmark}>✓</Text>}
@@ -340,19 +349,10 @@ export default function BuildYourOwnScreen() {
           >
         {/* "All" chip */}
         <TouchableOpacity
-          style={[
-            styles.chip,
-            { borderColor: palette.border, backgroundColor: palette.card },
-            selectedCategory === null && { backgroundColor: palette.tint, borderColor: palette.tint },
-          ]}
+          style={[styles.chip, pillSurface(selectedCategory === null, palette)]}
           onPress={() => setSelectedCategory(null)}
         >
-          <Text
-            style={[
-              styles.chipText,
-              { color: selectedCategory === null ? '#fff' : palette.text },
-            ]}
-          >
+          <Text style={[styles.chipText, pillLabel(selectedCategory === null, palette)]}>
             All
           </Text>
         </TouchableOpacity>
@@ -360,24 +360,12 @@ export default function BuildYourOwnScreen() {
         {allCategories.map(cat => (
           <TouchableOpacity
             key={cat}
-            style={[
-              styles.chip,
-              { borderColor: palette.border, backgroundColor: palette.card },
-              selectedCategory === cat && {
-                backgroundColor: palette.tint,
-                borderColor: palette.tint,
-              },
-            ]}
+            style={[styles.chip, pillSurface(selectedCategory === cat, palette)]}
             onPress={() =>
               setSelectedCategory(prev => (prev === cat ? null : cat))
             }
           >
-            <Text
-              style={[
-                styles.chipText,
-                { color: selectedCategory === cat ? '#fff' : palette.text },
-              ]}
-            >
+            <Text style={[styles.chipText, pillLabel(selectedCategory === cat, palette)]}>
               {cat}
             </Text>
           </TouchableOpacity>
@@ -408,21 +396,10 @@ export default function BuildYourOwnScreen() {
           { borderTopColor: palette.border, backgroundColor: palette.background },
         ]}
       >
-        <View style={styles.counterWrap}>
-          <Text style={[styles.counter, { color: palette.text }]}>
-            {selectedCount} {selectedCount === 1 ? 'word' : 'words'} selected
-          </Text>
-          {!canProceed && (
-            <Text style={[styles.counterHint, { color: palette.subtext }]}>
-              (minimum {MIN_WORDS})
-            </Text>
-          )}
-        </View>
-
         <StudyButton
-          label="Add to My Lists"
+          label={`Add to My Lists (${selectedCount} Selected)`}
           variant={canProceed ? 'primary' : 'inactive'}
-          size="medium"
+          size="large"
           onPress={handleProceed}
           disabled={!canProceed}
           style={styles.proceedBtn}
@@ -496,42 +473,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
 
-  // Word row — mirrors list-setup.tsx
   wordRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 11,
     paddingHorizontal: 20,
     gap: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
-  checkmark: { color: '#fff', fontSize: 14, fontWeight: '700' },
+  checkmark: { color: '#fff', fontSize: 12, fontWeight: '700', lineHeight: 15 },
   wordInfo: { flex: 1, gap: 2 },
-  lemma: { fontSize: 16, fontWeight: '700' },
+  lemma: { fontSize: 16, fontWeight: '600' },
   english: { fontSize: 13 },
 
   // Bottom action bar
   bottomBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 16,
     borderTopWidth: 1,
-    gap: 12,
   },
-  counterWrap: { flex: 1, gap: 2 },
-  counter: { fontSize: 14, fontWeight: '700' },
-  counterHint: { fontSize: 12 },
-  proceedBtn: { flexShrink: 0 },
+  proceedBtn: { width: '100%', borderRadius: 28, minWidth: 0 },
 
   // Naming step
   namingContent: {
