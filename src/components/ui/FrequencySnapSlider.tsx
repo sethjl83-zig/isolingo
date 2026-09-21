@@ -39,14 +39,16 @@ function FrequencySnapSlider({
     setTrackWidth(event.nativeEvent.layout.width);
   }, []);
 
+  const indicatorColor = FREQUENCY_INDICATOR_COLORS[value];
   const thumbLeft =
     trackWidth > 0
       ? (activeIndex / (POSITION_COUNT - 1)) * Math.max(0, trackWidth - THUMB_SIZE)
       : 0;
+  const fillWidth = trackWidth > 0 ? thumbLeft + THUMB_SIZE / 2 : 0;
 
   return (
     <View style={[styles.wrap, compact && styles.wrapCompact]}>
-      <Text style={[styles.label, { color: palette.text }]}>
+      <Text style={[styles.label, { color: indicatorColor }]}>
         {FREQUENCY_LABELS[value]}
       </Text>
 
@@ -55,6 +57,17 @@ function FrequencySnapSlider({
           style={[styles.track, { backgroundColor: palette.border }]}
           onLayout={onTrackLayout}
         >
+          {trackWidth > 0 && (
+            <View pointerEvents="none" style={styles.trackClip}>
+              <View
+                style={[
+                  styles.trackFill,
+                  { width: fillWidth, backgroundColor: indicatorColor },
+                ]}
+              />
+            </View>
+          )}
+
           {FREQUENCY_ORDER.map((setting, index) => (
             <Pressable
               key={setting}
@@ -72,7 +85,7 @@ function FrequencySnapSlider({
               style={[
                 styles.thumb,
                 {
-                  backgroundColor: FREQUENCY_INDICATOR_COLORS[value],
+                  backgroundColor: indicatorColor,
                   left: thumbLeft,
                 },
               ]}
@@ -106,6 +119,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'relative',
     overflow: 'visible',
+  },
+  trackClip: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: TRACK_HEIGHT / 2,
+    overflow: 'hidden',
+  },
+  trackFill: {
+    height: '100%',
+    borderRadius: TRACK_HEIGHT / 2,
   },
   zone: {
     flex: 1,

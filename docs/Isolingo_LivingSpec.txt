@@ -161,7 +161,7 @@ Text input auto-focuses on card load
 Horizontal sweep transition between cards
 Correct answer triggers scale-pop animation on "Correct!" text
 No session end — infinite loop until user exits
-Word management buttons at bottom of each card: Remove, Replace, Frequency, Pause (currently non-functional — to be built)
+Word management buttons at bottom of each card: Remove, Replace, Frequency, Pause — all fully functional
 
 Vocab Bank Manager
 

@@ -7,10 +7,12 @@ import {
   StyleSheet,
   useColorScheme,
 } from 'react-native';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Colors } from '@/constants/theme';
 import { useSessionWordMgmt } from '@/src/context/SessionWordMgmtContext';
 import type { WordFrequencySetting } from '@/src/types/state';
 import FrequencySnapSlider from './FrequencySnapSlider';
+import StudyButton from './StudyButton';
 
 export interface WordFrequencyTarget {
   id: string;
@@ -64,6 +66,10 @@ export default function WordFrequencyModal({ visible, words, onDismiss }: Props)
           style={[styles.sheet, { backgroundColor: palette.card, borderColor: palette.border }]}
           onPress={() => {}}
         >
+          <View style={[styles.iconBadge, { backgroundColor: `${palette.tint}22` }]}>
+            <MaterialIcons name="tune" size={22} color={palette.tint} />
+          </View>
+
           <Text style={[styles.title, { color: palette.text }]}>{title}</Text>
 
           <View style={styles.wordList}>
@@ -82,12 +88,13 @@ export default function WordFrequencyModal({ visible, words, onDismiss }: Props)
             ))}
           </View>
 
-          <Pressable
-            style={[styles.doneBtn, { backgroundColor: palette.tint }]}
+          <StudyButton
+            label="Done"
+            variant="primary"
+            size="large"
             onPress={handleDismiss}
-          >
-            <Text style={styles.doneText}>Done</Text>
-          </Pressable>
+            style={styles.doneBtn}
+          />
         </Pressable>
       </Pressable>
     </Modal>
@@ -104,13 +111,21 @@ const styles = StyleSheet.create({
   },
   sheet: {
     width: '100%',
-    maxWidth: 340,
+    maxWidth: 360,
     borderRadius: 16,
     borderWidth: 1,
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 16,
-    gap: 16,
+    gap: 12,
+  },
+  iconBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
   },
   title: {
     fontSize: 17,
@@ -125,15 +140,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   doneBtn: {
-    alignSelf: 'center',
-    borderRadius: 20,
-    paddingHorizontal: 28,
-    paddingVertical: 10,
-    marginTop: 4,
-  },
-  doneText: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '600',
+    alignSelf: 'stretch',
+    width: '100%',
+    borderRadius: 28,
+    minWidth: 0,
+    marginTop: 8,
   },
 });
