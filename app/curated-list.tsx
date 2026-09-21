@@ -390,7 +390,15 @@ export default function CuratedListScreen() {
                   { backgroundColor: palette.card, borderColor: palette.border },
                 ]}
               >
-                <View style={styles.summaryRow}>
+                <View
+                  style={[
+                    styles.summaryRow,
+                    {
+                      borderBottomWidth: StyleSheet.hairlineWidth,
+                      borderBottomColor: palette.border,
+                    },
+                  ]}
+                >
                   <Text style={[styles.summaryLabel, { color: palette.subtext }]}>Words</Text>
                   <Text style={[styles.summaryValue, { color: palette.text }]}>
                     {combinedWordCount}
@@ -569,7 +577,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderTopWidth: 1,
   },
-  confirmBtn: { width: '100%' },
 
   namingContent: {
     paddingHorizontal: 24,
@@ -581,23 +588,24 @@ const styles = StyleSheet.create({
   stepSub: { fontSize: 15, marginTop: -8 },
   nameInput: {
     borderWidth: 1.5,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: Platform.OS === 'ios' ? 14 : 10,
-    fontSize: 18,
-    fontWeight: '600',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    fontSize: 16,
   },
   summaryCard: {
     borderWidth: 1,
-    borderRadius: 12,
-    padding: 16,
-    gap: 10,
+    borderRadius: 16,
+    overflow: 'hidden',
   },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
-  summaryLabel: { fontSize: 14, fontWeight: '500' },
+  summaryLabel: { fontSize: 14 },
   summaryValue: { fontSize: 14, fontWeight: '700' },
+  confirmBtn: { width: '100%', borderRadius: 28, minWidth: 0 },
 });

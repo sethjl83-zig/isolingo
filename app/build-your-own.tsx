@@ -290,6 +290,7 @@ export default function BuildYourOwnScreen() {
                   label="Words"
                   value={String(selectedCount)}
                   palette={palette}
+                  showDivider
                 />
                 <SummaryRow label="Created via" value="Custom" palette={palette} />
               </View>
@@ -300,7 +301,7 @@ export default function BuildYourOwnScreen() {
                 size="large"
                 onPress={handleConfirm}
                 disabled={listName.trim().length === 0}
-                style={styles.actionBtn}
+                style={styles.confirmBtn}
               />
             </ScrollView>
           </SafeAreaView>
@@ -415,13 +416,23 @@ function SummaryRow({
   label,
   value,
   palette,
+  showDivider = false,
 }: {
   label: string;
   value: string;
   palette: (typeof Colors)['light'];
+  showDivider?: boolean;
 }) {
   return (
-    <View style={styles.summaryRow}>
+    <View
+      style={[
+        styles.summaryRow,
+        showDivider && {
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          borderBottomColor: palette.border,
+        },
+      ]}
+    >
       <Text style={[styles.summaryLabel, { color: palette.subtext }]}>{label}</Text>
       <Text style={[styles.summaryValue, { color: palette.text }]}>{value}</Text>
     </View>
@@ -517,16 +528,15 @@ const styles = StyleSheet.create({
   nameInput: {
     width: '100%',
     borderWidth: 1.5,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: Platform.OS === 'ios' ? 14 : 10,
-    fontSize: 18,
-    fontWeight: '600',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    fontSize: 16,
   },
   summaryCard: {
     width: '100%',
     borderWidth: 1,
-    borderRadius: 14,
+    borderRadius: 16,
     overflow: 'hidden',
   },
   summaryRow: {
@@ -534,9 +544,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
   },
   summaryLabel: { fontSize: 14 },
   summaryValue: { fontSize: 14, fontWeight: '700' },
-  actionBtn: { width: '100%', marginTop: 4 },
+  confirmBtn: { width: '100%', borderRadius: 28, minWidth: 0 },
 });
