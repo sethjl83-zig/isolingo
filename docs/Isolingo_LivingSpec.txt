@@ -222,7 +222,7 @@ Shows 3-5 nouns; user taps a row then a gender tile to match
 German: bare noun, no article; noun recolors to the assigned tile color
 French/Spanish: definite article + noun; only the noun is color-coded, article stays default
 Always shows all gender tiles (3 for German, 2 for French/Spanish) regardless of genders present
-Gender tiles: icon only; masculine #4da3ff, feminine #d66aa6, neuter #A4922D (German only)
+Gender tiles: solid color only (no text, no icons); masculine #4da3ff, feminine #d66aa6, neuter #A4922D (German only)
 Submit disabled until every noun is assigned; re-assign allowed before Submit
 Card 1001 never shows the same noun grouping on consecutive 1001 cards when the bank has any unused noun
 

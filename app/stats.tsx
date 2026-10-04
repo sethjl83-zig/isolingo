@@ -320,7 +320,7 @@ function LifetimeStatsTab({
 
       {topWords.length > 0 && (
         <>
-          <SectionTitle palette={palette} title="Top Personal Best Streaks" />
+          <SectionTitle palette={palette} title="Longest Streaks" />
           <View style={[styles.listCard, { backgroundColor: palette.card, borderColor: palette.border }]}>
             {topWords.map((entry, idx) => (
               <View
