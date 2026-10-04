@@ -6,7 +6,8 @@ export type CardType = 'CARD_1001' | 'CARD_1002' | 'CARD_1006';
 
 export interface MatchingNoun {
   item: VocabItem;
-  displayForm: string; // bare lemma in every language — never an article or determiner
+  /** German: bare lemma. French/Spanish: definite article + noun. */
+  displayForm: string;
 }
 
 export interface Card1001Data {

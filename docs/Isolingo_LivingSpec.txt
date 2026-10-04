@@ -218,11 +218,13 @@ CARD RULES
 Card 1001 — Matching (Gender Anchoring)
 
 Direction neutral — eligible in mixed mode, Gender mode only
-Shows 3-5 nouns; user matches each to a gender color tile
-German: bare noun, color-coded, no article
-French/Spanish: definite article + noun; only noun is color-coded
+Shows 3-5 nouns; user taps a row then a gender tile to match
+German: bare noun, no article; noun recolors to the assigned tile color
+French/Spanish: definite article + noun; only the noun is color-coded, article stays default
 Always shows all gender tiles (3 for German, 2 for French/Spanish) regardless of genders present
-Gender tiles: masculine #4da3ff, feminine #d66aa6, neuter #A4922D (German only)
+Gender tiles: icon only; masculine #4da3ff, feminine #d66aa6, neuter #A4922D (German only)
+Submit disabled until every noun is assigned; re-assign allowed before Submit
+Card 1001 never shows the same noun grouping on consecutive 1001 cards when the bank has any unused noun
 
 Card 1002 — Vocab Relationship Judgment
 
@@ -257,7 +259,7 @@ No word repeats until minimum unique other words have appeared:
 
 Frequency controls appearances per cycle: High = 3x, Medium = 2x, Low = 1x
 No card type repeats more than twice consecutively
-Card 1001 never shows same noun grouping consecutively
+Card 1001 never shows same noun grouping consecutively (when the bank has any unused noun)
 Identical/near-identical target-to-native words excluded (e.g. Hand → hand), except in Gender mode where identical nouns may still appear since gender is being tested
 
 
@@ -275,7 +277,7 @@ Masculine: #4da3ff
 Feminine: #d66aa6
 Neuter (German only): #A4922D
 Color applies to noun only, never to articles or determiners
-All target language nouns color-coded everywhere in the app except: Card 1001 (user identifying gender) and Card 1006 native-to-target German (user selecting gender tile)
+All target language nouns color-coded everywhere in the app except: Card 1001 (nouns stay default color until the user assigns a gender tile) and Card 1006 native-to-target German (user selecting gender tile)
 
 
 STATS TRACKING SYSTEM

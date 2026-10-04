@@ -1,6 +1,6 @@
 /**
  * CARD_1001 — Matching (Gender Anchoring)
- * User taps a noun on the left, then a gender-colour tile on the right to form a pair.
+ * User taps a noun row, then a gender tile to assign a match.
  */
 import React, { useState, useCallback } from 'react';
 import {
@@ -10,10 +10,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   useColorScheme,
+  Platform,
 } from 'react-native';
 import { Colors, GenderColors } from '@/constants/theme';
 import type { Card1001Data } from '@/src/types/cards';
 import type { Gender, Language } from '@/src/types/vocab';
+import { splitDisplayForm } from '@/src/engines/articleHelper';
+import GenderTile from '../ui/GenderTile';
 import StudyButton from '../ui/StudyButton';
 import CorrectText from '../ui/CorrectText';
 import StudyCardLayout from './StudyCardLayout';
@@ -30,6 +33,37 @@ interface Props {
   onSubmit: (allCorrect: boolean) => void;
 }
 
+function NounLabel({
+  language,
+  lemma,
+  displayForm,
+  gender,
+  nounColor,
+  defaultColor,
+}: {
+  language: Language;
+  lemma: string;
+  displayForm: string;
+  gender: Gender | null;
+  nounColor: string;
+  defaultColor: string;
+}) {
+  const isFrEs = language === 'fr' || language === 'es';
+  if (isFrEs && gender) {
+    const parts = splitDisplayForm(language, gender, lemma, 'definite');
+    return (
+      <Text style={styles.nounText}>
+        <Text style={{ color: defaultColor }}>
+          {parts.article}
+          {parts.separator}
+        </Text>
+        <Text style={{ color: nounColor }}>{parts.noun}</Text>
+      </Text>
+    );
+  }
+
+  return <Text style={[styles.nounText, { color: nounColor }]}>{displayForm}</Text>;
+}
 
 export default function Card1001({
   card,
@@ -50,7 +84,7 @@ export default function Card1001({
       : ['masculine', 'feminine'];
 
   const [selectedNounId, setSelectedNounId] = useState<string | null>(null);
-  const [pairs, setPairs] = useState<Record<string, Gender>>({}); // nounId → gender
+  const [pairs, setPairs] = useState<Record<string, Gender>>({}); // nounId → assigned gender
   const [lockedCorrect, setLockedCorrect] = useState<Set<string>>(new Set());
   const [result, setResult] = useState<MatchResult>('idle');
   const [submitted, setSubmitted] = useState(false);
@@ -84,7 +118,6 @@ export default function Card1001({
       setShowNext(true);
       onSubmit(true);
     } else {
-      // Lock correct pairs, reset incorrect ones
       const newLocked = new Set(lockedCorrect);
       const newPairs = { ...pairs };
       for (const noun of card.nouns) {
@@ -102,7 +135,6 @@ export default function Card1001({
   }, [card.nouns, pairs, lockedCorrect, onSubmit]);
 
   const handleFlip = useCallback(() => {
-    // Reveal all correct answers
     const correctPairs: Record<string, Gender> = {};
     for (const noun of card.nouns) {
       correctPairs[noun.item.id] = noun.item.gender as Gender;
@@ -111,7 +143,8 @@ export default function Card1001({
     setFlipped(true);
     setShowNext(true);
     setSubmitted(true);
-  }, [card.nouns]);
+    onFlip();
+  }, [card.nouns, onFlip]);
 
   const feedbackText =
     flipped
@@ -156,8 +189,6 @@ export default function Card1001({
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-
-        {/* Top bar */}
         <View style={styles.topBar}>
           <TouchableOpacity onPress={onExit}>
             <Text style={[styles.topBarBtn, { color: palette.tint }]}>Exit Study</Text>
@@ -171,61 +202,55 @@ export default function Card1001({
           tap a word, then tap its gender below
         </Text>
 
-        {/* Noun list — full-width vertical stack */}
         <View style={styles.nounList}>
           {card.nouns.map(noun => {
+            const assigned = pairs[noun.item.id];
             const isLocked = lockedCorrect.has(noun.item.id);
             const isSelected = selectedNounId === noun.item.id;
-            // Gender colour is confirmation-only — never during the matching phase.
-            const revealGender = submitted || flipped || isLocked;
-            const nounColor = revealGender
-              ? GenderColors[noun.item.gender as Gender]
-              : undefined;
+            const nounColor = assigned ? GenderColors[assigned] : palette.text;
 
             return (
               <TouchableOpacity
                 key={noun.item.id}
                 style={[
-                  styles.nounChip,
+                  styles.nounRow,
                   {
-                    borderColor: revealGender
-                      ? (GenderColors[noun.item.gender as Gender] ?? palette.border)
-                      : palette.border,
-                    backgroundColor: palette.card,
+                    borderColor: isSelected ? palette.tint : palette.border,
+                    backgroundColor: isSelected ? palette.feedback : palette.card,
                   },
                   isSelected && styles.nounSelected,
-                  isLocked && styles.nounLocked,
                 ]}
                 onPress={() => handleNounTap(noun.item.id)}
                 disabled={isLocked || submitted || flipped}
                 activeOpacity={0.75}
               >
-                <Text style={[styles.nounText, { color: nounColor ?? palette.text }]}>
-                  {noun.displayForm}
-                </Text>
+                <NounLabel
+                  language={language}
+                  lemma={noun.item.lemma}
+                  displayForm={noun.displayForm}
+                  gender={noun.item.gender}
+                  nounColor={nounColor}
+                  defaultColor={palette.text}
+                />
               </TouchableOpacity>
             );
           })}
         </View>
 
-        {/* Gender tiles — horizontal row below all nouns */}
-        <View style={styles.tileRow}>
+        <View style={styles.tilesRow}>
           {tileGenders.map(gender => (
-            <TouchableOpacity
+            <GenderTile
               key={gender}
-              style={[
-                styles.genderTile,
-                { backgroundColor: GenderColors[gender] },
-                (submitted || flipped) && styles.tileDisabled,
-              ]}
+              gender={gender}
+              selected={
+                selectedNounId !== null && pairs[selectedNounId] === gender
+              }
               onPress={() => handleTileTap(gender)}
               disabled={submitted || flipped}
-              activeOpacity={0.75}
             />
           ))}
         </View>
 
-        {/* Feedback */}
         {result === 'correct' ? (
           <CorrectText color={palette.correct} style={styles.feedbackMargin} />
         ) : feedbackText !== '' ? (
@@ -238,8 +263,6 @@ export default function Card1001({
             {feedbackText}
           </Text>
         ) : null}
-
-
       </ScrollView>
     </StudyCardLayout>
   );
@@ -256,23 +279,20 @@ const styles = StyleSheet.create({
   topBarBtn: { fontSize: 15, fontWeight: '500' },
   instruction: { textAlign: 'center', fontSize: 14, marginBottom: 24 },
   nounList: { gap: 12, marginBottom: 32 },
-  tileRow: {
+  nounRow: {
+    borderWidth: 1.5,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: Platform.OS === 'ios' ? 14 : 10,
+  },
+  nounSelected: { borderWidth: 2.5 },
+  nounText: { fontSize: 18, fontWeight: '600' },
+  tilesRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 20,
-    marginBottom: 24,
+    gap: 16,
+    marginBottom: 20,
   },
-  nounChip: {
-    borderWidth: 1.5,
-    borderRadius: 10,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-  },
-  nounSelected: { borderColor: '#2C6BED', borderWidth: 2.5 },
-  nounLocked: { opacity: 0.6 },
-  nounText: { fontSize: 18, fontWeight: '600' },
-  genderTile: { width: 80, height: 56, borderRadius: 10 },
-  tileDisabled: { opacity: 0.5 },
   feedbackMargin: { marginBottom: 16 },
   feedback: { textAlign: 'center', fontSize: 16, fontWeight: '600', marginBottom: 16 },
   bottomBar: {

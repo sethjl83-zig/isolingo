@@ -419,7 +419,15 @@ export default function SessionScreen() {
               card={currentCard}
               language={language}
               onNext={handleNext}
-              onFlip={() => {}}
+              onFlip={() => {
+                sessionRef.current = advanceSession(
+                  sessionRef.current,
+                  'CARD_1001',
+                  'neutral',
+                  currentCard.nouns.map(n => n.item.id),
+                  true,
+                );
+              }}
               onExit={handleExit}
               onHome={handleHome}
               onSubmit={correct =>

@@ -3,8 +3,8 @@
  * Browse and multi-select words from the master vocabulary dataset and append
  * them to an existing pool. Words already present in the pool are excluded.
  *
- * UI pattern mirrors build-your-own.tsx: search bar + category chips + word
- * list with checkboxes + bottom action bar. No minimum word count required.
+ * Visual style matches build-your-own.tsx, with no language toggle, no
+ * minimum word count, and no naming step.
  */
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
@@ -15,6 +15,7 @@ import {
   ScrollView,
   StyleSheet,
   useColorScheme,
+  TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -27,15 +28,28 @@ import {
   getLanguageDisplayName,
   getUniqueCategories,
   getWordLemmaColor,
+  sortVocabByLemma,
   type VocabSearchMode,
 } from '@/src/utils/vocabBank';
 import type { VocabItem } from '@/src/types/vocab';
 import type { PoolWord } from '@/src/types/pool';
 import SearchBar from '@/src/components/ui/SearchBar';
 import SearchModeToggle from '@/src/components/ui/SearchModeToggle';
-import KeyboardDoneAccessory from '@/src/components/ui/KeyboardDoneAccessory';
 import StudyButton from '@/src/components/ui/StudyButton';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
+
+function pillSurface(
+  selected: boolean,
+  palette: (typeof Colors)['light'],
+) {
+  return selected
+    ? { backgroundColor: palette.tint, borderColor: palette.tint }
+    : { backgroundColor: palette.card, borderColor: palette.border };
+}
+
+function pillLabel(selected: boolean, palette: (typeof Colors)['light']) {
+  return { color: selected ? '#fff' : palette.text };
+}
 
 export default function AddExistingWordScreen() {
   const router = useRouter();
@@ -50,19 +64,16 @@ export default function AddExistingWordScreen() {
     if (isReady && !language) router.replace('/');
   }, [isReady, language, router]);
 
-  // Resolve the target pool
   const pool = useMemo(() => {
     if (!language || !poolId) return null;
     return getLanguagePools(language).find(p => p.id === poolId) ?? null;
   }, [language, poolId, getLanguagePools]);
 
-  // IDs already in the pool — used to exclude them from the selectable list
   const existingIds = useMemo<Set<string>>(
     () => new Set((pool?.words ?? []).map((pw: PoolWord) => pw.item.id)),
     [pool],
   );
 
-  // Master dataset minus words already in the pool
   const masterWords = useMemo(
     () =>
       (language ? getMasterDataset(language) : []).filter(
@@ -76,21 +87,10 @@ export default function AddExistingWordScreen() {
     [masterWords],
   );
 
-  // ── Filter state ──────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState('');
   const [searchMode, setSearchMode] = useState<VocabSearchMode>('target');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
-
-  useEffect(() => {
-    const showSub = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
-    const hideSub = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, []);
 
   const categoryFiltered = useMemo(
     () =>
@@ -101,8 +101,12 @@ export default function AddExistingWordScreen() {
   );
 
   const filteredWords = useMemo(
-    () => filterVocabBySearch(categoryFiltered, searchQuery, searchMode),
-    [categoryFiltered, searchQuery, searchMode],
+    () =>
+      sortVocabByLemma(
+        filterVocabBySearch(categoryFiltered, searchQuery, searchMode),
+        language ?? undefined,
+      ),
+    [categoryFiltered, searchQuery, searchMode, language],
   );
 
   const searchPlaceholder =
@@ -113,16 +117,18 @@ export default function AddExistingWordScreen() {
   const selectedCount = selectedIds.size;
   const canAdd = selectedCount > 0;
 
-  // ── Selection ─────────────────────────────────────────────────────────────
   const toggleSelection = useCallback((id: string) => {
     setSelectedIds(prev => {
       const next = new Set(prev);
-      if (next.has(id)) { next.delete(id); } else { next.add(id); }
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   }, []);
 
-  // ── Commit ────────────────────────────────────────────────────────────────
   const handleAdd = useCallback(() => {
     if (!pool || !canAdd) return;
 
@@ -144,37 +150,25 @@ export default function AddExistingWordScreen() {
     }, [router]),
   );
 
-  // ── Guard ─────────────────────────────────────────────────────────────────
   if (!isReady || !language) return null;
 
-  // ── Row renderer ──────────────────────────────────────────────────────────
   const renderWord = ({ item }: { item: VocabItem }) => {
     const isSelected = selectedIds.has(item.id);
     const lemmaColor = getWordLemmaColor(item, palette.text, GenderColors);
 
     return (
       <TouchableOpacity
-        style={[
-          styles.wordRow,
-          {
-            borderBottomColor: palette.border,
-            backgroundColor: isSelected ? palette.feedback : palette.background,
-          },
-        ]}
-        onPress={() => {
-          if (keyboardVisible) {
-            Keyboard.dismiss();
-            return;
-          }
-          toggleSelection(item.id);
-        }}
+        style={[styles.wordRow, { borderBottomColor: palette.border }]}
+        onPress={() => toggleSelection(item.id)}
         activeOpacity={0.7}
       >
         <View
           style={[
             styles.checkbox,
-            { borderColor: palette.tint },
-            isSelected && { backgroundColor: palette.tint },
+            {
+              borderColor: palette.tint,
+              backgroundColor: isSelected ? palette.tint : 'transparent',
+            },
           ]}
         >
           {isSelected && <Text style={styles.checkmark}>✓</Text>}
@@ -188,93 +182,69 @@ export default function AddExistingWordScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]}>
-      <KeyboardDoneAccessory />
+    <SafeAreaView style={[styles.flex, { backgroundColor: palette.background }]}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <View>
+          <View style={[styles.topBar, { borderBottomColor: palette.border }]}>
+            <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
+              <Text style={[styles.backBtn, { color: palette.tint }]}>← Back</Text>
+            </TouchableOpacity>
+            <Text style={[styles.screenTitle, { color: palette.text }]}>Add Word</Text>
+            <View style={styles.topBarSpacer} />
+          </View>
 
-      {/* Top bar */}
-      <View style={[styles.topBar, { borderBottomColor: palette.border }]}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Text style={[styles.backBtn, { color: palette.tint }]}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={[styles.screenTitle, { color: palette.text }]}>Add Word</Text>
-        <View style={styles.topBarSpacer} />
-      </View>
+          <View style={styles.searchWrap}>
+            <SearchModeToggle
+              mode={searchMode}
+              onModeChange={setSearchMode}
+              language={language}
+            />
+            <SearchBar
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder={searchPlaceholder}
+            />
+          </View>
 
-      {/* Search mode + bar */}
-      <View style={styles.searchWrap}>
-        <SearchModeToggle
-          mode={searchMode}
-          onModeChange={setSearchMode}
-          language={language}
-        />
-        <SearchBar
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholder={searchPlaceholder}
-          showKeyboardDone
-        />
-      </View>
-
-      {/* Category chips */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.chipScroll}
-        contentContainerStyle={styles.chipRow}
-        keyboardShouldPersistTaps="handled"
-      >
-        <TouchableOpacity
-          style={[
-            styles.chip,
-            { borderColor: palette.border, backgroundColor: palette.card },
-            selectedCategory === null && {
-              backgroundColor: palette.tint,
-              borderColor: palette.tint,
-            },
-          ]}
-          onPress={() => setSelectedCategory(null)}
-        >
-          <Text
-            style={[
-              styles.chipText,
-              { color: selectedCategory === null ? '#fff' : palette.text },
-            ]}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.chipScroll}
+            contentContainerStyle={styles.chipRow}
+            keyboardShouldPersistTaps="always"
           >
-            All
-          </Text>
-        </TouchableOpacity>
-
-        {allCategories.map(cat => (
-          <TouchableOpacity
-            key={cat}
-            style={[
-              styles.chip,
-              { borderColor: palette.border, backgroundColor: palette.card },
-              selectedCategory === cat && {
-                backgroundColor: palette.tint,
-                borderColor: palette.tint,
-              },
-            ]}
-            onPress={() => setSelectedCategory(prev => (prev === cat ? null : cat))}
-          >
-            <Text
-              style={[
-                styles.chipText,
-                { color: selectedCategory === cat ? '#fff' : palette.text },
-              ]}
+            <TouchableOpacity
+              style={[styles.chip, pillSurface(selectedCategory === null, palette)]}
+              onPress={() => setSelectedCategory(null)}
             >
-              {cat}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+              <Text style={[styles.chipText, pillLabel(selectedCategory === null, palette)]}>
+                All
+              </Text>
+            </TouchableOpacity>
+
+            {allCategories.map(cat => (
+              <TouchableOpacity
+                key={cat}
+                style={[styles.chip, pillSurface(selectedCategory === cat, palette)]}
+                onPress={() =>
+                  setSelectedCategory(prev => (prev === cat ? null : cat))
+                }
+              >
+                <Text style={[styles.chipText, pillLabel(selectedCategory === cat, palette)]}>
+                  {cat}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </TouchableWithoutFeedback>
 
       <FlatList
         data={filteredWords}
         keyExtractor={item => item.id}
         renderItem={renderWord}
         style={styles.list}
-        keyboardShouldPersistTaps="handled"
+        keyboardShouldPersistTaps="never"
         keyboardDismissMode="on-drag"
         ListEmptyComponent={
           <Text style={[styles.emptyText, { color: palette.subtext }]}>
@@ -285,23 +255,19 @@ export default function AddExistingWordScreen() {
         }
       />
 
-      {/* Bottom action bar */}
       <View
         style={[
           styles.bottomBar,
           { borderTopColor: palette.border, backgroundColor: palette.background },
         ]}
       >
-        <View style={styles.counterWrap}>
-          <Text style={[styles.counter, { color: palette.text }]}>
-            {selectedCount} {selectedCount === 1 ? 'word' : 'words'} selected
-          </Text>
-        </View>
-
+        <Text style={[styles.counter, { color: palette.text }]}>
+          {selectedCount} {selectedCount === 1 ? 'word' : 'words'} selected
+        </Text>
         <StudyButton
           label="Add to List"
           variant={canAdd ? 'primary' : 'inactive'}
-          size="medium"
+          size="large"
           onPress={handleAdd}
           disabled={!canAdd}
           style={styles.addBtn}
@@ -311,10 +277,8 @@ export default function AddExistingWordScreen() {
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
-  safe: { flex: 1 },
+  flex: { flex: 1 },
 
   topBar: {
     flexDirection: 'row',
@@ -356,34 +320,35 @@ const styles = StyleSheet.create({
   wordRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 11,
     paddingHorizontal: 20,
     gap: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
-  checkmark: { color: '#fff', fontSize: 14, fontWeight: '700' },
+  checkmark: { color: '#fff', fontSize: 12, fontWeight: '700', lineHeight: 15 },
   wordInfo: { flex: 1, gap: 2 },
-  lemma: { fontSize: 16, fontWeight: '700' },
+  lemma: { fontSize: 16, fontWeight: '600' },
   english: { fontSize: 13 },
 
   bottomBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 16,
     borderTopWidth: 1,
-    gap: 12,
+    gap: 10,
   },
-  counterWrap: { flex: 1 },
-  counter: { fontSize: 14, fontWeight: '700' },
-  addBtn: { flexShrink: 0 },
+  counter: {
+    fontSize: 14,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  addBtn: { width: '100%', borderRadius: 28, minWidth: 0 },
 });

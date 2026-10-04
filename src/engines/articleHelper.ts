@@ -73,8 +73,8 @@ export function getArticle(
 }
 
 /**
- * Card 1001 display form: the bare lemma only — never an article, determiner,
- * or possessive. German nouns are capitalized; FR/ES lemmas are left as stored.
+ * German Card 1001 display form: the bare lemma only, capitalized.
+ * French/Spanish Card 1001 uses getDisplayForm / splitDisplayForm instead.
  */
 export function getBareLemmaDisplayForm(language: Language, lemma: string): string {
   const trimmed = lemma.trim();

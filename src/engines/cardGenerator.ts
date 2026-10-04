@@ -132,13 +132,29 @@ export function generateCard1001(
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
 
+  // Exact same grouping as the previous Card 1001 is forbidden when the bank
+  // has any unused noun that can break the set.
+  if (
+    excludeNounIds &&
+    excludeNounIds.size > 0 &&
+    shuffled.length === excludeNounIds.size &&
+    shuffled.every(item => excludeNounIds.has(item.id))
+  ) {
+    const replacements = allNouns.filter(n => !excludeNounIds.has(n.id));
+    if (replacements.length > 0) {
+      shuffled[shuffled.length - 1] =
+        replacements[Math.floor(Math.random() * replacements.length)];
+    }
+  }
+
   return {
     type: 'CARD_1001',
-    // All languages show the bare lemma — no article, determiner, or possessive.
-    // Gender is conveyed solely through color-coding, not through an article prefix.
     nouns: shuffled.map(item => ({
       item,
-      displayForm: getBareLemmaDisplayForm(language, item.lemma),
+      displayForm:
+        language === 'de' || !item.gender
+          ? getBareLemmaDisplayForm(language, item.lemma)
+          : getDisplayForm(language, item.gender, item.lemma, 'definite'),
     })),
   };
 }
