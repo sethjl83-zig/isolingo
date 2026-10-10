@@ -51,4 +51,5 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-10-10: Removed the development-only Reset App Data button from the dashboard (handler, styles, and Living Spec notes).
 - 2026-10-05: Created CLAUDE.md and STATUS.md from summaries of the main, redesign, and vocab chats.

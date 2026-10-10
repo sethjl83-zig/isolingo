@@ -67,7 +67,6 @@ Tapping My Vocabulary → My Lists screen
 Tapping a study mode with pools → Select Study List screen
 Tapping a study mode with no pools → Add List screen (with study_mode source flag)
 If no language selected and user taps My Vocabulary or a study mode → prompt to select a language first
-Contains temporary Reset App Data button for development testing — remove before publishing
 
 My Lists Screen
 
@@ -302,7 +301,6 @@ User always consciously chooses when to start a session
 
 DEVELOPMENT NOTES
 
-Reset App Data button on dashboard — remove before publishing
 Diagnostic console.log statements in my-lists.tsx — remove before publishing
 Legacy modeBanks bridge still present in session.tsx — to be removed in Phase 6
 Git commits made regularly — commit after every confirmed working change

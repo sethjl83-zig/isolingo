@@ -343,7 +343,7 @@ const celebStyles = StyleSheet.create({
 export default function DashboardScreen() {
   const router = useRouter();
   const {
-    state, isReady, selectLanguage, selectStudyType, resetApp,
+    state, isReady, selectLanguage, selectStudyType,
     getLanguagePools, getDefaultPools,
   } = useAppContext();
   const scheme = useColorScheme() ?? 'light';
@@ -493,29 +493,6 @@ export default function DashboardScreen() {
     router.push('/select-study-list' as never);
   };
 
-  // ── DEV ONLY — remove before publishing ─────────────────────────────────────
-  const handleResetAppData = () => {
-    Alert.alert(
-      'Reset App Data',
-      'This will wipe all saved data and restart as a fresh install. Continue?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reset', style: 'destructive',
-          onPress: async () => {
-            await AsyncStorage.clear();
-            // AppProvider survives navigation, so the in-memory state must be
-            // reset too — otherwise the old language and banks linger and get
-            // re-persisted on the next state change.
-            resetApp();
-            router.replace('/');
-          },
-        },
-      ],
-    );
-  };
-  // ────────────────────────────────────────────────────────────────────────────
-
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]}>
 
@@ -629,11 +606,6 @@ export default function DashboardScreen() {
             <Text style={[styles.vocabBankLabel, { color: palette.tint }]}>My Vocabulary</Text>
           </TouchableOpacity>
         </View>
-
-        {/* DEV ONLY — remove before publishing */}
-        <TouchableOpacity style={styles.devResetBtn} onPress={handleResetAppData}>
-          <Text style={styles.devResetText}>🛠 Reset App Data</Text>
-        </TouchableOpacity>
 
       </View>
 
@@ -858,10 +830,6 @@ const styles = StyleSheet.create({
   },
   vocabBankIcon: { fontSize: 21 },
   vocabBankLabel: { fontSize: 18, fontWeight: '600' },
-
-  // Dev reset
-  devResetBtn: { alignSelf: 'center', paddingVertical: 4, paddingHorizontal: 12 },
-  devResetText: { fontSize: 12, color: '#BBBBBB', fontWeight: '500' },
 
   // Language hint (shown when a study mode is tapped with no language chosen)
   langHint: {
