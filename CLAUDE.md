@@ -36,5 +36,18 @@ A flashcard app that teaches noun gender and vocabulary for German, French, and 
 - Ask before changing the vocab schema or the spaced repetition engine.
 - Keep work scoped to the task you were given; note other ideas in STATUS.md instead of building them.
 
+## Vocab data rules
+These apply to any work on the vocab files.
+- **Format:** one compact JSON entry per line. Bare lemmas with no articles. ASCII-only IDs.
+- **Validate before finishing:** zero duplicate IDs, missing fields, non-ASCII IDs, invalid categories, or nouns without gender.
+- **Build English-first:** draft the English concept list, then derive German, French, and Spanish together so all three stay in parity.
+- **Tag every applicable category** on a word, not just the one that prompted adding it.
+- **Same-word collisions:** create a new entry with a `senseLabel`. Never create duplicates.
+- **Pair files:** always two same-language IDs, never a raw English string.
+- **No new categories** without checking with James first.
+- **No piecemeal changes:** finish a whole set before applying it.
+- **James edits the German file by hand.** Always read its current version fresh before changing it; never work from an older copy.
+- **When reporting changes,** say whether each file was fully replaced or added to.
+
 ## Working with parallel sessions
 More than one session may work on Akuity. Check STATUS.md for what the other session is doing, and don't edit files it's working on.

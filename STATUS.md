@@ -6,6 +6,7 @@ Every session: read this first, update it before you finish.
 - Live on TestFlight (iOS) and EAS (Android)
 - UI/UX redesign in progress, based on the designer's 22 mockups
 - Design audit done: three consistency issues fixed (selection-chip styling, Cancel button color, stray blue)
+- Vocab: ~1,000 words per language
 
 ## Open question
 - Two batches of Cursor prompts were written. It's unconfirmed which one has already been run:
@@ -13,11 +14,12 @@ Every session: read this first, update it before you finish.
   - **Batch B:** Card 1001 (Matching) and Add Existing Word
   - Check the code to see which is done before starting either.
 
-## In progress
+## Sessions
 | Session | Focus |
 |---|---|
 | Main | Building Card 1001 and Add Existing Word screens (Batch B) |
 | Redesign | Design review, Cursor prompts, palette, App Store screenshots |
+| Vocab | Vocab data files for all three languages (follow the vocab rules in CLAUDE.md). Currently idle. |
 
 ## Next code changes (queued)
 - Remove gender symbols from Card 1006 tiles entirely (not just the text labels)
@@ -49,4 +51,4 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
-- 2026-10-04: Created CLAUDE.md and STATUS.md from summaries of the main and redesign chats.
+- 2026-10-05: Created CLAUDE.md and STATUS.md from summaries of the main, redesign, and vocab chats.
