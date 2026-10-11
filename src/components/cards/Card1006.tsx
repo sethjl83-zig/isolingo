@@ -2,7 +2,7 @@
  * CARD_1006 — Noun / Vocab Production
  * Direction-sensitive translation card. German uses gender tiles; FR/ES uses determiner+noun input.
  */
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -67,16 +67,6 @@ export default function Card1006({
   const [alsoCorrect, setAlsoCorrect] = useState<string[]>([]);
   const [showTypoHint, setShowTypoHint] = useState(false);
   const attemptRef = useRef(0);
-
-  // TEMP: verify senseLabel reaches the card from vocab data / pool bank
-  useEffect(() => {
-    console.log('[Card1006] card loaded:', {
-      id: card.item.id,
-      lemma: card.item.lemma,
-      senseLabel: card.item.senseLabel,
-      direction: card.direction,
-    });
-  }, [card.item.id, card.item.lemma, card.item.senseLabel, card.direction]);
 
   const isGerman = language === 'de';
   const isNativeToTarget = card.direction === 'native_to_target';

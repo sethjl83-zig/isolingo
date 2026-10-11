@@ -235,22 +235,6 @@ function collectCandidates(ctx: Card1002Context): CandidatePair[] {
   return candidates;
 }
 
-/** TEMP: diagnostic counts per relationship type when generating Card 1002. */
-export function countCandidatesByType(candidates: CandidatePair[]): Record<RelationshipType, number> {
-  const counts: Record<RelationshipType, number> = {
-    opposites: 0,
-    go_hand_in_hand: 0,
-    same_meaning: 0,
-    same_kind: 0,
-    hyponym: 0,
-    no_clear_relationship: 0,
-  };
-  for (const c of candidates) {
-    counts[c.type]++;
-  }
-  return counts;
-}
-
 export function countCard1002ValidPairs(ctx: Card1002Context): number {
   return collectCandidates(ctx).length;
 }
@@ -268,20 +252,6 @@ function pickCandidate(candidates: CandidatePair[]): CandidatePair | null {
 
 export function generateCard1002(ctx: Card1002Context): Card1002Data | null {
   const candidates = collectCandidates(ctx);
-
-  const data = getRelationshipData(ctx.language);
-  const jsonPairCounts = {
-    antonyms: data.antonyms.length,
-    related: data.related.length,
-    hyponyms: data.hyponyms.length,
-    sameKind: data.sameKind.length,
-  };
-  const byType = countCandidatesByType(candidates);
-  console.log('[Card1002] relationship JSON loaded:', jsonPairCounts);
-  console.log('[Card1002] pool candidates by type:', byType, {
-    activeWords: ctx.activeBank.length,
-    extendedWords: ctx.extendedBankById.size,
-  });
 
   const recentPairKeys = ctx.recentPairKeys ?? [];
   let eligible = candidates.filter(

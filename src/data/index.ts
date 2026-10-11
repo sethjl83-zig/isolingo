@@ -31,19 +31,8 @@ export const MASTER_DATASET: Record<string, VocabItem[]> = {
   es: normalizeList(esRaw as unknown[]),
 };
 
-// ── TEMP: confirm new vocab schema fields are loaded ─────────────────────────
 (['de', 'fr', 'es'] as const).forEach(lang => {
-  const first = MASTER_DATASET[lang]?.[0];
-  if (first) {
-    console.log(`[VocabData] ${lang} first entry:`, {
-      id: first.id,
-      lemma: first.lemma,
-      articleTypes: first.articleTypes,
-      genderedCounterpart: first.genderedCounterpart,
-      secondaryGlosses: first.secondaryGlosses,
-      alternateTargetAnswers: first.alternateTargetAnswers,
-    });
-  } else {
+  if (!MASTER_DATASET[lang]?.length) {
     console.warn(`[VocabData] ${lang} dataset is empty or failed to load`);
   }
 });

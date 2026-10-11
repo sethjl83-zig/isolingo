@@ -66,12 +66,6 @@ export default function MyListsScreen() {
 
   const pools = getLanguagePools(language);
 
-  // Temporary diagnostic — remove before release
-  console.log('[MyLists] language:', language);
-  console.log('[MyLists] languagePools:', JSON.stringify(state.languagePools));
-  console.log('[MyLists] defaultPoolIds:', JSON.stringify(state.defaultPoolIds));
-  console.log('[MyLists] pools returned:', pools.length);
-
   // Pool IDs that are currently set as default for each study type
   const defaultGeneralIds = getDefaultPools('general_vocab', language).map(p => p.id);
   const defaultGenderIds  = getDefaultPools('gender', language).map(p => p.id);
@@ -127,11 +121,6 @@ export default function MyListsScreen() {
       });
     }
 
-    console.log('[SetDefault] pool.id:', pool.id);
-    console.log('[SetDefault] defaultGeneralIds:', JSON.stringify(defaultGeneralIds));
-    console.log('[SetDefault] defaultGenderIds:', JSON.stringify(defaultGenderIds));
-    console.log('[SetDefault] isDefaultGeneral:', isDefaultGeneral, '| isDefaultGender:', isDefaultGender);
-    console.log('[SetDefault] options offered:', options.map(o => o.text));
     setDefaultDialog({ title, message, options });
   };
 

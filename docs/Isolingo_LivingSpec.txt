@@ -301,7 +301,6 @@ User always consciously chooses when to start a session
 
 DEVELOPMENT NOTES
 
-Diagnostic console.log statements in my-lists.tsx — remove before publishing
 Legacy modeBanks bridge still present in session.tsx — to be removed in Phase 6
 Git commits made regularly — commit after every confirmed working change
 

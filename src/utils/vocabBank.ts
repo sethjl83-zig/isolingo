@@ -157,19 +157,6 @@ export function sortVocabByLemma(
     });
   });
 
-  // TEMP: confirm sort is applied
-  if (words.length > 1) {
-    const orderChanged = words.some((word, index) => word.id !== sorted[index]?.id);
-    console.log('[sortVocabByLemma]', {
-      language,
-      locale,
-      count: words.length,
-      orderChanged,
-      before: words.map(w => w.lemma),
-      after: sorted.map(w => w.lemma),
-    });
-  }
-
   return sorted;
 }
 
