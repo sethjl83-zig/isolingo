@@ -8,22 +8,33 @@ export const GenderColors = {
 } as const;
 
 // ── App palette ───────────────────────────────────────────────────────────────
+// Light values are the designer's Home palette. Gender colours stay in
+// GenderColors and are not reused here.
+// Dark brand colours are the same purple/teal, lightened only where the old
+// dark theme used a lighter tint for text on a dark background.
 export const Colors = {
   light: {
-    text: '#11181C',
-    subtext: '#687076',
-    background: '#F5F5F7',
-    card: '#FFFFFF',
+    text: '#25262B',
+    subtext: '#636265',
+    background: '#F7F5FD',
+    card: '#FEFEFE',
     border: '#E0E0E0',
-    tint: '#2C6BED',
-    buttonPrimary: '#2C6BED',
+    tint: '#5E51A4',
+    buttonPrimary: '#5E51A4',
     buttonPrimaryText: '#FFFFFF',
     buttonSecondary: '#EFEFEF',
     buttonSecondaryText: '#333333',
-    correct: '#2ECC71',
+    correct: '#38A19A',
     incorrect: '#E74C3C',
     feedback: '#F9F9F9',
-    icon: '#687076',
+    icon: '#636265',
+    primary: '#5E51A4',
+    teal: '#38A19A',
+    amberFill: '#FDE6B9',
+    amberText: '#603808',
+    progressCard: '#F8F9FF',
+    badgeFill: '#E0DCF0',
+    iconCircle: '#F0EDFC',
   },
   dark: {
     text: '#ECEDEE',
@@ -31,15 +42,22 @@ export const Colors = {
     background: '#151718',
     card: '#1E2122',
     border: '#2A2F31',
-    tint: '#5B8EF0',
-    buttonPrimary: '#5B8EF0',
+    tint: '#A89BE0',
+    buttonPrimary: '#5E51A4',
     buttonPrimaryText: '#FFFFFF',
     buttonSecondary: '#2A2F31',
     buttonSecondaryText: '#ECEDEE',
-    correct: '#27AE60',
+    correct: '#38A19A',
     incorrect: '#C0392B',
     feedback: '#1A1F20',
     icon: '#9BA1A6',
+    primary: '#5E51A4',
+    teal: '#38A19A',
+    amberFill: '#FDE6B9',
+    amberText: '#603808',
+    progressCard: '#22242C',
+    badgeFill: '#3A3654',
+    iconCircle: '#2C2A40',
   },
 };
 

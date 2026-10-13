@@ -224,7 +224,7 @@ export default function Card1006({
       : 'Not quite — try again';
     feedbackColor = palette.incorrect;
   } else if (cardState === 'incorrect_final' && !showGenderTiles) {
-    feedbackText = `Correct answer: ${card.canonicalAnswer}`;
+    feedbackText = `Correct Answer: ${card.canonicalAnswer}`;
     feedbackColor = palette.incorrect;
   } else if (cardState === 'flipped' && !showGenderTiles) {
     feedbackText = 'Answer shown';
@@ -405,7 +405,7 @@ export default function Card1006({
                 <CorrectText color={palette.correct} />
                 {alsoCorrect.length > 0 && (
                   <Text style={[styles.alsoCorrect, { color: palette.subtext }]}>
-                    Also accepted: {alsoCorrect.join(', ')}
+                    Also Accepted: {alsoCorrect.join(', ')}
                   </Text>
                 )}
               </View>
@@ -414,7 +414,7 @@ export default function Card1006({
               correctDisplayGender ? (
               <View style={styles.feedbackArea}>
                 <Text style={[styles.feedback, { color: palette.incorrect }]}>
-                  {'Correct answer: '}
+                  {'Correct Answer: '}
                   <Text style={{ color: GenderColors[correctDisplayGender] }}>
                     {correctDisplayNoun}
                   </Text>

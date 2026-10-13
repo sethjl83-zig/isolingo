@@ -344,7 +344,7 @@ export default function SessionScreen() {
           <Text style={[styles.messageBody, { color: palette.subtext }]}>
             No language is selected.
           </Text>
-          <StudyButton label="Back to study menu" variant="primary" size="medium" onPress={handleExit} />
+          <StudyButton label="Back to Study Menu" variant="primary" size="medium" onPress={handleExit} />
         </View>
       </SafeAreaView>
     );
@@ -359,7 +359,7 @@ export default function SessionScreen() {
           <Text style={[styles.messageBody, { color: palette.subtext }]}>
             No vocabulary bank is set up for this study mode.
           </Text>
-          <StudyButton label="Back to study menu" variant="primary" size="medium" onPress={handleExit} />
+          <StudyButton label="Back to Study Menu" variant="primary" size="medium" onPress={handleExit} />
         </View>
       </SafeAreaView>
     );
@@ -386,8 +386,8 @@ export default function SessionScreen() {
           <Text style={[styles.messageBody, { color: palette.text }]}>
             {loadError ?? 'The next study card could not be loaded.'}
           </Text>
-          <StudyButton label="Try again" variant="primary" size="medium" onPress={() => loadCard()} />
-          <StudyButton label="Exit study" variant="secondary" size="medium" onPress={handleExit} />
+          <StudyButton label="Try Again" variant="primary" size="medium" onPress={() => loadCard()} />
+          <StudyButton label="Exit Study" variant="secondary" size="medium" onPress={handleExit} />
         </View>
       </SafeAreaView>
     );
@@ -411,7 +411,7 @@ export default function SessionScreen() {
           title="Card error"
           onReset={loadNextCard}
           onExit={handleExit}
-          exitLabel="Exit study"
+          exitLabel="Exit Study"
         >
           {currentCard.type === 'CARD_1001' && (
             <Card1001

@@ -208,7 +208,7 @@ export default function RandomListScreen() {
               /* ── Step 1: Word count ────────────────────────────────────── */
               <View style={styles.stepContainer}>
                 <Text style={[styles.stepHeading, { color: palette.text }]}>
-                  How many words?
+                  How Many Words?
                 </Text>
                 <Text style={[styles.stepSub, { color: palette.subtext }]}>
                   Minimum {MIN_WORDS} ({maxWords} available)

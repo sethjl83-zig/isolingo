@@ -56,13 +56,13 @@ Only shown once — never shown again after onboarding is complete
 Dashboard
 
 First screen for returning users
-Language selector dropdown at top left (shows flag and language name, down arrow indicator)
-Welcome banner: "Welcome, [Name]!" left-aligned below dropdown
-"What do you want to study?" label below welcome banner
-Two large prominent study mode buttons: General Vocab, Gender
-One "My Vocabulary" button below the study mode buttons
-Stats widget at bottom showing three metrics: Mastered (with checkmark), Accuracy (circular ring), Today (cards completed today)
-Tapping stats widget → Stats screen
+Welcome banner: "Welcome, [Name]!" at the top
+"What do you want to study?" label below the welcome banner
+Language selector card below the prompt (globe icon, "Select Language" caption, flag, language name, down arrow)
+Two study mode cards: General Vocabulary, Gender
+Stats card below the study mode cards: heading "Your Progress" (shown in uppercase), Mastered, Accuracy (circular ring), Today, and "View Details →"
+Tapping the stats card → Stats screen
+One "My Vocabulary" button below the stats card
 Tapping My Vocabulary → My Lists screen
 Tapping a study mode with pools → Select Study List screen
 Tapping a study mode with no pools → Add List screen (with study_mode source flag)

@@ -55,11 +55,11 @@ function ErrorFallback({
         ) : null}
         <View style={styles.actions}>
           {onRetry ? (
-            <StudyButton label="Try again" variant="primary" size="medium" onPress={onRetry} />
+            <StudyButton label="Try Again" variant="primary" size="medium" onPress={onRetry} />
           ) : null}
           {onExit ? (
             <StudyButton
-              label={exitLabel ?? 'Go back'}
+              label={exitLabel ?? 'Go Back'}
               variant="secondary"
               size="medium"
               onPress={onExit}

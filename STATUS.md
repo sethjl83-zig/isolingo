@@ -51,6 +51,9 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-10-12: Capitalization sweep across UI strings, plus Home copy: "Welcome, {name}!", "General Vocabulary", "Your Progress", "View Details →". Error and confirmation sentences were left as written.
+- 2026-10-12: Home follow-up. Globe on the language card, chart badge on the progress card, book icon on My Vocabulary, existing "Select language" caption, uppercase metric labels, measured card and button sizes. Still no new copy.
+- 2026-10-12: Home visual pass. Updated `constants/theme.ts` to the designer palette (light). Restyled the dashboard only: spacing, type, language card, purple mode cards, progress card, amber My Vocabulary button. No copy changes. Other screens pick up the shared tokens but were not edited.
 - 2026-10-10: Removed development `console.log` diagnostics from My Lists, vocab loading, Card 1002, Card 1006, and vocab-bank sorting. Left `console.error` and `console.warn` for real failures.
 - 2026-10-10: Removed the development-only Reset App Data button from the dashboard (handler, styles, and Living Spec notes).
 - 2026-10-05: Created CLAUDE.md and STATUS.md from summaries of the main, redesign, and vocab chats.

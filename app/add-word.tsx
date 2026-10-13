@@ -263,7 +263,7 @@ export default function AddWordScreen() {
 
         {/* Target language word */}
         <Text style={labelStyle}>
-          {language === 'de' ? 'German' : language === 'fr' ? 'French' : 'Spanish'} word (bare form)
+          {language === 'de' ? 'German' : language === 'fr' ? 'French' : 'Spanish'} Word (Bare Form)
         </Text>
         <TextInput
           style={inputStyle}
@@ -278,7 +278,7 @@ export default function AddWordScreen() {
         />
 
         {/* English translation */}
-        <Text style={labelStyle}>English translation</Text>
+        <Text style={labelStyle}>English Translation</Text>
         <TextInput
           style={inputStyle}
           value={english}
@@ -290,7 +290,7 @@ export default function AddWordScreen() {
         />
 
         {/* Part of speech */}
-        <Text style={labelStyle}>Part of speech</Text>
+        <Text style={labelStyle}>Part of Speech</Text>
         <View style={styles.chipRow}>
           {posOptions.map(option => (
             <TouchableOpacity
@@ -333,7 +333,7 @@ export default function AddWordScreen() {
         {/* Plural (nouns only) */}
         {showPlural && (
           <>
-            <Text style={labelStyle}>Plural form (optional)</Text>
+            <Text style={labelStyle}>Plural Form (Optional)</Text>
             <TextInput
               style={inputStyle}
               value={plural}

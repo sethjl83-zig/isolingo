@@ -4,7 +4,6 @@
  * vocab banks shortcut, and a stats summary widget.
  */
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { LinearGradient } from 'expo-linear-gradient';
 import {
   View,
   Text,
@@ -17,7 +16,10 @@ import {
   useColorScheme,
   Dimensions,
   BackHandler,
+  ScrollView,
 } from 'react-native';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -44,18 +46,6 @@ import { setAddListLaunchSource } from './add-list';
 import { countStudyWords, getDeckSizeLaunchDecision } from '@/src/utils/studyLaunch';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
-// Warm coral-orange accent — clearly distinct from gender colours
-// (#4da3ff masc · #d66aa6 fem · #A4922D neut)
-const ACCENT_LIGHT = '#E07651';
-const ACCENT_DARK  = '#F09070';
-
-// Mode card palette: soft, slightly desaturated blue-gray with gradient
-// Gradient: lighter at top-center → slightly darker at bottom edges (soft light-from-above)
-const MODE_CARD_GRAD_LIGHT: [string, string] = ['#C9DCED', '#A6BCDA'];
-const MODE_CARD_GRAD_DARK:  [string, string] = ['#274562', '#152F4A'];
-const MODE_CARD_TEXT_LIGHT = '#143360';   // deep navy for contrast on light bg
-const MODE_CARD_TEXT_DARK  = '#C2D8EF';   // pale blue for contrast on dark bg
-
 const LANGUAGES: { id: Language; label: string; flag: string }[] = [
   { id: 'es', label: 'Spanish', flag: '🇪🇸' },
   { id: 'fr', label: 'French', flag: '🇫🇷' },
@@ -76,14 +66,22 @@ function AccuracyRing({
   fillColor,
   trackColor,
   textColor,
+  caption,
+  captionColor,
+  size = 92,
+  border = 8,
 }: {
   pct: number;       // 0–100, or -1 when no data
   fillColor: string;
   trackColor: string;
   textColor: string;
+  caption?: string;
+  captionColor?: string;
+  size?: number;
+  border?: number;
 }) {
-  const SIZE   = 64;
-  const BORDER = 5;
+  const SIZE   = size;
+  const BORDER = border;
   const hasData    = pct >= 0;
   const clamped    = hasData ? Math.max(0, Math.min(100, pct)) : 0;
 
@@ -126,9 +124,14 @@ function AccuracyRing({
 
       {/* Centre label */}
       <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}>
-        <Text style={{ fontSize: 14, fontWeight: '800', color: textColor }}>
+        <Text style={{ fontSize: 20, fontWeight: '700', color: textColor }}>
           {hasData ? `${clamped}%` : '—'}
         </Text>
+        {caption ? (
+          <Text style={{ fontSize: 10, fontWeight: '600', letterSpacing: 0.8, textTransform: 'uppercase', color: captionColor ?? textColor, marginTop: 1 }}>
+            {caption}
+          </Text>
+        ) : null}
       </View>
     </View>
   );
@@ -232,7 +235,7 @@ function CelebrationOverlay({ name, textColor, bgColor, welcomeLayout, onComplet
     (welcomeLayout.pageY + welcomeLayout.height / 2) - SH / 2,
   );
   // Scale to approximate the dashboard heading font size
-  const finalS = useSharedValue(38 / CELEB_FONT_SIZE);
+  const finalS = useSharedValue(30 / CELEB_FONT_SIZE);
 
   // Single linear progress shared value drives all animations
   const progress = useSharedValue(0);
@@ -348,10 +351,6 @@ export default function DashboardScreen() {
   } = useAppContext();
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
-  const accent = scheme === 'dark' ? ACCENT_DARK : ACCENT_LIGHT;
-  const modeCardGrad = scheme === 'dark' ? MODE_CARD_GRAD_DARK  : MODE_CARD_GRAD_LIGHT;
-  const modeCardBg   = modeCardGrad[0];   // flat version for widget backgrounds
-  const modeCardText = scheme === 'dark' ? MODE_CARD_TEXT_DARK  : MODE_CARD_TEXT_LIGHT;
 
   const language = state.languageSelected;
 
@@ -495,21 +494,11 @@ export default function DashboardScreen() {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]}>
-
-      {/* ── Top bar ─────────────────────────────────────────────────────────── */}
-      <View style={styles.topBar}>
-        <TouchableOpacity
-          style={[styles.langPill, { backgroundColor: palette.card, borderColor: palette.border }]}
-          onPress={() => setLangModalVisible(true)}
-          activeOpacity={0.75}
-        >
-          <Text style={styles.langFlag}>{currentLang?.flag ?? '🌐'}</Text>
-          <Text style={[styles.langName, { color: currentLang ? palette.text : palette.subtext }]}>
-            {currentLang?.label ?? 'Select language'}
-          </Text>
-          <Text style={[styles.chevron, { color: palette.subtext }]}>▼</Text>
-        </TouchableOpacity>
-      </View>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
 
       {/* ── Welcome header ──────────────────────────────────────────────────── */}
       <View style={styles.welcomeSection}>
@@ -528,7 +517,7 @@ export default function DashboardScreen() {
               },
             ]}
           >
-            {userName ? `Welcome, ${userName}!` : 'Welcome!'}
+            {`Welcome, ${userName ?? ''}!`}
           </Text>
         </View>
         <Text style={[styles.studyPrompt, { color: palette.subtext }]}>
@@ -536,131 +525,145 @@ export default function DashboardScreen() {
         </Text>
       </View>
 
-      {/* ── Central action area ─────────────────────────────────────────────── */}
-      <View style={styles.actionArea}>
-
-        {/* Study mode cards */}
-        <View style={styles.modeRow}>
-
-          <TouchableOpacity
-            style={styles.modeCard}
-            onPress={() => handleStudyModePress('general_vocab')}
-            activeOpacity={0.82}
-          >
-            <LinearGradient
-              colors={modeCardGrad}
-              start={{ x: 0.5, y: 0 }}
-              end={{ x: 0.5, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
-            <Text style={[styles.modeCardLabel, { color: modeCardText }]}>
-              General{'\n'}Vocab
-            </Text>
-            <Text style={[styles.langHint, { color: modeCardText }]}>
-              Standard vocabulary practice
-            </Text>
-            <Text style={[styles.modeCardIcon, { color: modeCardText }]}>📖</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.modeCard}
-            onPress={() => handleStudyModePress('gender')}
-            activeOpacity={0.82}
-          >
-            <LinearGradient
-              colors={modeCardGrad}
-              start={{ x: 0.5, y: 0 }}
-              end={{ x: 0.5, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
-            <Text style={[styles.modeCardLabel, { color: modeCardText }]}>Gender</Text>
-            <Text style={[styles.langHint, { color: modeCardText }]}>
-              Focus on noun gender
-            </Text>
-            <Text style={[styles.modeCardIcon, { color: modeCardText }]}>⚥</Text>
-          </TouchableOpacity>
-
+      {/* ── Language selector ───────────────────────────────────────────────── */}
+      <TouchableOpacity
+        style={[styles.langCard, { backgroundColor: palette.card }]}
+        onPress={() => setLangModalVisible(true)}
+        activeOpacity={0.75}
+      >
+        <View style={[styles.langIconCircle, { backgroundColor: palette.iconCircle }]}>
+          <MaterialIcons name="public" size={22} color={palette.primary} />
         </View>
-
-        {/* Inline prompt shown when user taps a study mode with no language selected */}
-        {showLangHint && (
-          <Text style={[styles.langHint, { color: accent }]}>
-            Select a language from the dropdown above first ↑
-          </Text>
-        )}
-
-        {/* My Vocab Banks — narrower, centred, softer */}
-        <View style={styles.vocabBankRow}>
-          <TouchableOpacity
-            style={[styles.vocabBankBtn, { backgroundColor: palette.card, borderColor: palette.border }]}
-            onPress={() => {
-              if (!state.languageSelected) {
-                Alert.alert('No language selected', 'Please select a language from the dropdown first.');
-                return;
-              }
-              router.push('/my-lists' as never);
-            }}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.vocabBankIcon}>🗂</Text>
-            <Text style={[styles.vocabBankLabel, { color: palette.tint }]}>My Vocabulary</Text>
-          </TouchableOpacity>
-        </View>
-
-      </View>
-
-      {/* ── Stats widget ─────────────────────────────────────────────────────── */}
-      <View style={styles.statsSection}>
-        <TouchableOpacity
-          style={[
-            styles.statsCard,
-            { backgroundColor: modeCardBg, borderColor: '#2251CC' },
-          ]}
-          onPress={() => router.push('/stats')}
-          activeOpacity={0.85}
-        >
-          {/* Header row */}
-          <View style={styles.statsCardHeader}>
-            <Text style={[styles.statsCardTitle, { color: modeCardText }]}>STATS</Text>
-            <Text style={[styles.statsCardArrow, { color: modeCardText }]}>View details →</Text>
-          </View>
-
-          {statsLoading ? (
-            <ActivityIndicator size="small" color={modeCardText} style={styles.statsSpinner} />
+        <View style={styles.langTextBlock}>
+          {currentLang ? (
+            <>
+              <Text style={[styles.langCaption, { color: palette.subtext }]}>Select Language</Text>
+              <View style={styles.langCardText}>
+                <Text style={[styles.langName, { color: palette.text }]}>{currentLang.label}</Text>
+                <Text style={[styles.chevron, { color: palette.subtext }]}>▼</Text>
+              </View>
+            </>
           ) : (
-            <View style={styles.metricsRow}>
-
-              {/* Mastered — no icon */}
-              <View style={styles.metric}>
-                <Text style={[styles.metricValue, { color: modeCardText }]}>{statsSnap.mastered}</Text>
-                <Text style={[styles.metricLabel, { color: modeCardText + '99' }]}>Mastered</Text>
-              </View>
-
-              <View style={[styles.metricDivider, { backgroundColor: modeCardText + '40' }]} />
-
-              {/* Accuracy — true percentage arc */}
-              <View style={styles.metric}>
-                <AccuracyRing
-                  pct={statsSnap.accuracy}
-                  fillColor={modeCardText}
-                  trackColor={modeCardText + '30'}
-                  textColor={modeCardText}
-                />
-                <Text style={[styles.metricLabel, { color: modeCardText + '99' }]}>Accuracy</Text>
-              </View>
-
-              <View style={[styles.metricDivider, { backgroundColor: modeCardText + '40' }]} />
-
-              {/* Today */}
-              <View style={styles.metric}>
-                <Text style={[styles.metricValue, { color: modeCardText }]}>{statsSnap.today}</Text>
-                <Text style={[styles.metricLabel, { color: modeCardText + '99' }]}>Today</Text>
-              </View>
-
+            <View style={styles.langCardText}>
+              <Text style={[styles.langCaption, { color: palette.subtext }]}>Select Language</Text>
+              <Text style={[styles.chevron, { color: palette.subtext }]}>▼</Text>
             </View>
           )}
+        </View>
+        <Text style={styles.langFlag}>{currentLang?.flag ?? '🌐'}</Text>
+      </TouchableOpacity>
+
+      {/* ── Study mode cards ────────────────────────────────────────────────── */}
+      <View style={styles.modeRow}>
+
+        <TouchableOpacity
+          style={[styles.modeCard, { backgroundColor: palette.primary }]}
+          onPress={() => handleStudyModePress('general_vocab')}
+          activeOpacity={0.82}
+        >
+          <View style={styles.modeIconCircle}>
+            <MaterialIcons name="menu-book" size={22} color="#FFFFFF" />
+          </View>
+          <Text style={styles.modeCardLabel}>
+            General Vocabulary
+          </Text>
+          <Text style={styles.modeCardDesc}>
+            Standard vocabulary practice
+          </Text>
+          <View style={styles.modeChevronRow}>
+            <MaterialIcons name="chevron-right" size={22} color="rgba(255,255,255,0.92)" />
+          </View>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.modeCard, { backgroundColor: palette.primary }]}
+          onPress={() => handleStudyModePress('gender')}
+          activeOpacity={0.82}
+        >
+          <View style={styles.modeIconCircle}>
+            <MaterialIcons name="transgender" size={22} color="#FFFFFF" />
+          </View>
+          <Text style={styles.modeCardLabel}>Gender</Text>
+          <Text style={styles.modeCardDesc}>
+            Focus on noun gender
+          </Text>
+          <View style={styles.modeChevronRow}>
+            <MaterialIcons name="chevron-right" size={22} color="rgba(255,255,255,0.92)" />
+          </View>
+        </TouchableOpacity>
+
       </View>
+
+      {/* Inline prompt shown when user taps a study mode with no language selected */}
+      {showLangHint && (
+        <Text style={[styles.langHint, { color: palette.primary }]}>
+          Select a language from the dropdown above first ↑
+        </Text>
+      )}
+
+      {/* ── Stats widget ─────────────────────────────────────────────────────── */}
+      <TouchableOpacity
+        style={[styles.statsCard, { backgroundColor: palette.progressCard }]}
+        onPress={() => router.push('/stats')}
+        activeOpacity={0.85}
+      >
+        <View style={styles.statsHeader}>
+          <Text style={[styles.statsCardTitle, { color: palette.text }]}>Your Progress</Text>
+          <View style={[styles.chartBadge, { backgroundColor: `${palette.teal}26` }]}>
+            <MaterialIcons name="bar-chart" size={18} color={palette.teal} />
+          </View>
+        </View>
+
+        {statsLoading ? (
+          <View style={styles.statsSpinner}>
+            <ActivityIndicator size="small" color={palette.primary} />
+          </View>
+        ) : (
+          <View style={styles.statsBody}>
+            <AccuracyRing
+              pct={statsSnap.accuracy}
+              fillColor={palette.primary}
+              trackColor={palette.badgeFill}
+              textColor={palette.text}
+              caption="Accuracy"
+              captionColor={palette.subtext}
+            />
+            <View style={styles.statsCol}>
+              <View style={styles.statRow}>
+                <Text style={[styles.statLabel, { color: palette.subtext }]}>Mastered</Text>
+                <Text style={[styles.statValue, { color: palette.text }]}>{statsSnap.mastered}</Text>
+              </View>
+              <View style={[styles.statDivider, { backgroundColor: palette.border }]} />
+              <View style={styles.statRow}>
+                <Text style={[styles.statLabel, { color: palette.subtext }]}>Today</Text>
+                <Text style={[styles.statValue, { color: palette.teal }]}>{statsSnap.today}</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
+        <View style={[styles.detailsBtn, { backgroundColor: palette.teal }]}>
+          <Text style={styles.detailsBtnText}>View Details →</Text>
+        </View>
+      </TouchableOpacity>
+
+      {/* ── My Vocabulary ────────────────────────────────────────────────────── */}
+      <TouchableOpacity
+        style={[styles.vocabBankBtn, { backgroundColor: palette.amberFill }]}
+        onPress={() => {
+          if (!state.languageSelected) {
+            Alert.alert('No language selected', 'Please select a language from the dropdown first.');
+            return;
+          }
+          router.push('/my-lists' as never);
+        }}
+        activeOpacity={0.8}
+      >
+        <MaterialCommunityIcons name="book-open-outline" size={20} color={palette.amberText} />
+        <Text style={[styles.vocabBankLabel, { color: palette.amberText }]}>My Vocabulary</Text>
+      </TouchableOpacity>
+
+      </ScrollView>
 
       {/* ── Language selection modal ─────────────────────────────────────────── */}
       <Modal
@@ -721,115 +724,119 @@ export default function DashboardScreen() {
   );
 }
 
+const cardShadow = {
+  shadowColor: '#2A2640',
+  shadowOpacity: 0.08,
+  shadowRadius: 12,
+  shadowOffset: { width: 0, height: 4 },
+  elevation: 3,
+} as const;
+
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-
-  // ── Top bar ──────────────────────────────────────────────────────────────────
-  topBar: {
-    paddingHorizontal: 22,
+  content: {
+    paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 6,
-    alignItems: 'flex-start',
-  },
-  langPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 9,
-    paddingHorizontal: 15,
-    paddingVertical: 9,
-    borderRadius: 22,
-    borderWidth: 1,
-  },
-  langFlag: { fontSize: 24 },
-  langName: { fontSize: 18, fontWeight: '600' },
-  chevron: { fontSize: 13, marginTop: 1 },
-
-  // ── Welcome header (plain text, no card) ────────────────────────────────────
-  welcomeSection: {
-    paddingHorizontal: 22,
-    paddingTop: 10,
-    gap: 6,
-  },
-  welcomeHeading: {
-    fontSize: 38,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-  },
-  studyPrompt: {
-    fontSize: 28,
-    fontWeight: '500',
-    letterSpacing: -0.2,
-  },
-
-  // ── Action area ──────────────────────────────────────────────────────────────
-  actionArea: {
-    flex: 1,
-    paddingHorizontal: 22,
-    paddingTop: 28,        // intentional breathing room below the prompt
-    justifyContent: 'flex-start',
+    paddingBottom: 20,
     gap: 16,
   },
 
-  // Study mode cards
-  modeRow: { flexDirection: 'row', gap: 14 },
-  modeCard: {
-    flex: 1,
-    minHeight: 190,
-    borderRadius: 22,
-    overflow: 'hidden',         // clips the highlight overlay
-    paddingVertical: 32,
-    paddingHorizontal: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 14,
-    // Top border acts as a "light reflection" highlight line
-    borderTopWidth: 1.5,
-    borderTopColor: 'rgba(255,255,255,0.55)',
-    borderBottomWidth: 1.5,
-    borderBottomColor: 'rgba(0,0,0,0.07)',
-    borderLeftWidth: 1,
-    borderLeftColor: 'rgba(255,255,255,0.3)',
-    borderRightWidth: 1,
-    borderRightColor: 'rgba(0,0,0,0.04)',
-    shadowColor: '#2C6BED',
-    shadowOpacity: 0.20,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 7,
+  // ── Welcome header ───────────────────────────────────────────────────────────
+  welcomeSection: {
+    gap: 4,
+    marginBottom: 4,
   },
-  modeCardLabel: {
-    fontSize: 35,
-    fontWeight: '800',
-    textAlign: 'center',
-    lineHeight: 42,
-    letterSpacing: 0.15,
+  welcomeHeading: {
+    fontSize: 30,
+    fontWeight: '700',
+    letterSpacing: -0.4,
   },
-  modeCardIcon: {
-    fontSize: 104,
-    lineHeight: 118,
-    textAlign: 'center',
+  studyPrompt: {
+    fontSize: 16,
+    fontWeight: '400',
   },
 
-  // Vocab Banks button
-  vocabBankRow: { alignItems: 'center' },
+  // ── Language card ────────────────────────────────────────────────────────────
+  langCard: {
+    height: 71,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    ...cardShadow,
+  },
+  langIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  langTextBlock: { flex: 1, justifyContent: 'center' },
+  langCaption: { fontSize: 12, fontWeight: '500' },
+  langCardText: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 1,
+  },
+  langFlag: { fontSize: 28 },
+  langName: { fontSize: 16, fontWeight: '600' },
+  chevron: { fontSize: 11, marginTop: 1 },
+
+  // Study mode cards
+  modeRow: { flexDirection: 'row', gap: 12 },
+  modeCard: {
+    flex: 1,
+    minHeight: 168,
+    borderRadius: 11,
+    paddingTop: 14,
+    paddingHorizontal: 14,
+    paddingBottom: 12,
+    alignItems: 'flex-start',
+    ...cardShadow,
+  },
+  modeIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modeCardLabel: {
+    marginTop: 10,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    lineHeight: 20,
+  },
+  modeCardDesc: {
+    marginTop: 4,
+    fontSize: 13,
+    fontWeight: '400',
+    lineHeight: 18,
+    color: 'rgba(255,255,255,0.78)',
+  },
+  modeChevronRow: {
+    marginTop: 'auto',
+    alignSelf: 'flex-end',
+    paddingTop: 8,
+  },
+
+  // Vocab button
   vocabBankBtn: {
-    width: '65%',
+    marginTop: 12,
+    height: 48,
+    borderRadius: 13,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    paddingVertical: 18,
-    paddingHorizontal: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
+    ...cardShadow,
   },
-  vocabBankIcon: { fontSize: 21 },
-  vocabBankLabel: { fontSize: 18, fontWeight: '600' },
+  vocabBankLabel: { fontSize: 16, fontWeight: '600' },
 
   // Language hint (shown when a study mode is tapped with no language chosen)
   langHint: {
@@ -840,44 +847,64 @@ const styles = StyleSheet.create({
   },
 
   // ── Stats widget ─────────────────────────────────────────────────────────────
-  statsSection: {
-    paddingHorizontal: 22,
-    paddingBottom: 24,
-  },
   statsCard: {
-    borderRadius: 22,
-    borderWidth: 1.5,
-    paddingHorizontal: 20,
-    paddingVertical: 18,
-    gap: 16,
+    height: 274,
+    borderRadius: 16,
+    paddingHorizontal: 18,
+    paddingTop: 16,
+    paddingBottom: 16,
+    ...cardShadow,
   },
-  statsCardHeader: {
+  statsHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   statsCardTitle: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 1.2,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
   },
-  statsCardArrow: { fontSize: 12, fontWeight: '600' },
-  statsSpinner: { marginVertical: 10 },
-
-  // Metrics row
-  metricsRow: {
+  chartBadge: {
+    width: 33,
+    height: 33,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statsSpinner: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  statsBody: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  statsCol: { flex: 1 },
+  statRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  metric: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 5,
+  statLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
   },
-  metricDivider: { width: 1, height: 64 },   // matches AccuracyRing SIZE
-  metricValue: { fontSize: 42, fontWeight: '800', lineHeight: 48 },
-  metricLabel: { fontSize: 11, fontWeight: '600', letterSpacing: 0.4 },
+  statValue: { fontSize: 28, fontWeight: '700' },
+  statDivider: { height: 1, marginVertical: 12 },
+  detailsBtn: {
+    height: 48,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  detailsBtnText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 
   // ── Language modal ───────────────────────────────────────────────────────────
   sheetTitle: { fontSize: 20, fontWeight: '700', marginBottom: 4 },

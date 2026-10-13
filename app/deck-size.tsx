@@ -66,7 +66,7 @@ function DeckSizeMessageScreen({
         <TouchableOpacity onPress={onBack} hitSlop={8}>
           <Text style={[styles.backBtn, { color: palette.tint }]}>← Back</Text>
         </TouchableOpacity>
-        <Text style={[styles.screenTitle, { color: palette.text }]}>Deck size</Text>
+        <Text style={[styles.screenTitle, { color: palette.text }]}>Deck Size</Text>
         <View style={styles.topBarSpacer} />
       </View>
 
@@ -81,7 +81,7 @@ function DeckSizeMessageScreen({
           { borderTopColor: palette.border, backgroundColor: palette.background },
         ]}
       >
-        <StudyButton label="Go back" variant="primary" size="large" onPress={onBack} />
+        <StudyButton label="Go Back" variant="primary" size="large" onPress={onBack} />
       </View>
     </SafeAreaView>
   );
@@ -224,7 +224,7 @@ function DeckSizeContent() {
           <TouchableOpacity onPress={handleBack} hitSlop={8}>
             <Text style={[styles.backBtn, { color: palette.tint }]}>← Back</Text>
           </TouchableOpacity>
-          <Text style={[styles.screenTitle, { color: palette.text }]}>Deck size</Text>
+          <Text style={[styles.screenTitle, { color: palette.text }]}>Deck Size</Text>
           <View style={styles.topBarSpacer} />
         </View>
         <View style={styles.loadingBox}>
@@ -257,12 +257,12 @@ function DeckSizeContent() {
         <TouchableOpacity onPress={handleBack} hitSlop={8}>
           <Text style={[styles.backBtn, { color: palette.tint }]}>← Back</Text>
         </TouchableOpacity>
-        <Text style={[styles.screenTitle, { color: palette.text }]}>Deck size</Text>
+        <Text style={[styles.screenTitle, { color: palette.text }]}>Deck Size</Text>
         <View style={styles.topBarSpacer} />
       </View>
 
       <View style={styles.content}>
-        <Text style={[styles.heading, { color: palette.text }]}>Select deck size</Text>
+        <Text style={[styles.heading, { color: palette.text }]}>Select Deck Size</Text>
         <Text style={[styles.subheading, { color: palette.subtext }]}>
           {totalCount} {totalCount === 1 ? 'word' : 'words'} available in your selected{' '}
           {poolIds.length === 1 ? 'list' : 'lists'}
@@ -343,7 +343,7 @@ export default function DeckSizeScreen() {
     <ErrorBoundary
       title="Deck size unavailable"
       onExit={() => router.back()}
-      exitLabel="Go back"
+      exitLabel="Go Back"
     >
       <DeckSizeContent />
     </ErrorBoundary>

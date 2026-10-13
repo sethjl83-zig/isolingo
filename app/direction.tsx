@@ -41,7 +41,7 @@ function getDirectionOptions(langName: string): { id: DirectionMode; label: stri
     },
     {
       id: 'mixed',
-      label: 'Mixed (random)',
+      label: 'Mixed (Random)',
       desc: 'Both directions at random',
     },
   ];
@@ -99,7 +99,7 @@ export default function DirectionScreen() {
 
       {/* Content */}
       <View style={styles.content}>
-        <Text style={[styles.heading, { color: palette.text }]}>Study direction</Text>
+        <Text style={[styles.heading, { color: palette.text }]}>Study Direction</Text>
         <Text style={[styles.subheading, { color: palette.subtext }]}>
           Choose how you want to see the cards
         </Text>

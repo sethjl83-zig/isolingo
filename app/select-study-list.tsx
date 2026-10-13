@@ -147,7 +147,7 @@ export default function SelectStudyListScreen() {
           <Text style={[styles.backBtn, { color: palette.tint }]}>← Back</Text>
         </TouchableOpacity>
         <Text style={[styles.screenTitle, { color: palette.text }]}>
-          Choose what to study
+          Choose What to Study
         </Text>
         <View style={styles.topBarSpacer} />
       </View>

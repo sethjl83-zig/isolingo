@@ -88,7 +88,7 @@ export default function MyListsScreen() {
     if (isDefaultGender)  alreadyLabels.push('Gender');
 
     const title = alreadyLabels.length
-      ? `Already default for: ${alreadyLabels.join(' & ')}`
+      ? `Already Default for: ${alreadyLabels.join(' & ')}`
       : 'Set as Default';
 
     const message = alreadyLabels.length
@@ -168,10 +168,10 @@ export default function MyListsScreen() {
             {(isDefaultGeneral || isDefaultGender) && (
               <View style={styles.badgeRow}>
                 {isDefaultGeneral && (
-                  <DefaultBadge label="General Vocab default" tint={palette.tint} />
+                  <DefaultBadge label="General Vocab Default" tint={palette.tint} />
                 )}
                 {isDefaultGender && (
-                  <DefaultBadge label="Gender default" tint={palette.tint} />
+                  <DefaultBadge label="Gender Default" tint={palette.tint} />
                 )}
               </View>
             )}
@@ -241,7 +241,7 @@ export default function MyListsScreen() {
           <View style={styles.emptyState}>
             <Text style={styles.emptyEmoji}>📋</Text>
             <Text style={[styles.emptyTitle, { color: palette.text }]}>
-              No lists yet
+              No Lists Yet
             </Text>
             <Text style={[styles.emptyDesc, { color: palette.subtext }]}>
               Tap <Text style={{ fontWeight: '700' }}>+</Text> above to create

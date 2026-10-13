@@ -181,7 +181,7 @@ export default function VocabBankScreen() {
         rows.push({
           kind: 'section-header',
           key: 'paused-header',
-          title: 'Paused words',
+          title: 'Paused Words',
         });
         for (const item of sortedPaused) {
           rows.push({ kind: 'paused', key: item.id, item });
