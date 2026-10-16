@@ -1,13 +1,7 @@
 import React from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  Pressable,
-  TouchableOpacity,
-  StyleSheet,
-  useColorScheme,
-} from 'react-native';
+import { Modal, View, Text, Pressable, TouchableOpacity, StyleSheet } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
 import { Colors } from '@/constants/theme';
 import type { WordFrequencyTarget } from './WordFrequencyModal';
 

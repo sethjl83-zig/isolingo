@@ -1,14 +1,7 @@
 import React from 'react';
-import {
-  InputAccessoryView,
-  View,
-  Text,
-  TouchableOpacity,
-  Platform,
-  Keyboard,
-  StyleSheet,
-  useColorScheme,
-} from 'react-native';
+import { InputAccessoryView, View, Text, TouchableOpacity, Platform, Keyboard, StyleSheet } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
 import { Colors } from '@/constants/theme';
 
 export const KEYBOARD_DONE_ACCESSORY_ID = 'isolingo-keyboard-done';

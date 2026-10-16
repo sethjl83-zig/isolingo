@@ -51,6 +51,14 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-10-15: Add List Part B follow-up. Dialog Cancel is a purple outline. The Already Default badge uses the book or the gender icon for the mode already set. Study Direction title is "General Vocabulary".
+- 2026-10-15: Add List Part B visual pass. Matched Deck Size, Study Direction ("General Vocab 4"), Set Default, and Already Default to those four frames. Strings unchanged. Copy differences are listed in the session report.
+- 2026-10-15: Add List correction pass. Re-read Figma "Add List", "Curated Lists Words 2", and "Add New Word 2" (not rate-limited). Replaced stand-in icons and colors with the frame assets. Approved strings only: curated button includes the selected count, Add New Word placeholders, Title Case chip labels, and "Save Word".
+- 2026-10-14: Add List visual pass against Figma "Add List", "Curated Lists 2", "Curated Lists Words 2", "Random List 1", and "Add New Word 2". Strings unchanged. Curated Lists Words 3 was not used.
+- 2026-10-14: My Lists follow-up. Subtitle under the header, empty state pinned to frame y=345, and list icons by curated category name (People, Home, Animals, Basic Words) with the book icon otherwise.
+- 2026-10-14: V0 is locked to light mode. `app.json` `userInterfaceStyle` is `light`. Screens resolve `Colors.light` only. Dark palette values stay in `constants/theme.ts` and are unused. A new native build is required before TestFlight/EAS installs pick up the system appearance lock.
+- 2026-10-14: Home matched to Figma Home 5C (visual only). Inter and Plus Jakarta Sans load in the root layout before the first screen, with a 3-second fallback to the system font. Gender card uses the two-gender icon for Spanish, French, and no language, and the existing three-gender icon for German. Language flags are circular images. View Details uses a separate arrow icon. App wording was not copied from Figma.
+- 2026-10-14: My Lists visual pass against Figma "My Vocabulary 2B" and "No List Yet". Behavior, navigation, and existing strings unchanged. New copy from Figma was not added.
 - 2026-10-12: Capitalization sweep across UI strings, plus Home copy: "Welcome, {name}!", "General Vocabulary", "Your Progress", "View Details →". Error and confirmation sentences were left as written.
 - 2026-10-12: Home follow-up. Globe on the language card, chart badge on the progress card, book icon on My Vocabulary, existing "Select language" caption, uppercase metric labels, measured card and button sizes. Still no new copy.
 - 2026-10-12: Home visual pass. Updated `constants/theme.ts` to the designer palette (light). Restyled the dashboard only: spacing, type, language card, purple mode cards, progress card, amber My Vocabulary button. No copy changes. Other screens pick up the shared tokens but were not edited.

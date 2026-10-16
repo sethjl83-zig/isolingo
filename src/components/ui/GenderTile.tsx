@@ -1,10 +1,7 @@
 import React from 'react';
-import {
-  TouchableOpacity,
-  StyleSheet,
-  type ViewStyle,
-  useColorScheme,
-} from 'react-native';
+import { TouchableOpacity, StyleSheet, type ViewStyle } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
 import { Colors, GenderColors } from '@/constants/theme';
 import type { Gender } from '@/src/types/vocab';
 

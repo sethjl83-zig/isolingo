@@ -3,14 +3,9 @@
  * Infinite study loop: generates cards, delivers them, updates repetition state.
  */
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  useColorScheme,
-  ActivityIndicator,
-  Dimensions,
-} from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Dimensions } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
 import Animated, {
   useSharedValue,
   useAnimatedStyle,

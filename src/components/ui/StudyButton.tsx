@@ -1,12 +1,7 @@
 import React from 'react';
-import {
-  TouchableOpacity,
-  Text,
-  StyleSheet,
-  type ViewStyle,
-  type TextStyle,
-  useColorScheme,
-} from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, type ViewStyle, type TextStyle } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
 import { Colors } from '@/constants/theme';
 
 interface StudyButtonProps {

@@ -2,14 +2,9 @@
  * WordMgmtStrip — word-management row shown at the bottom of every study card.
  */
 import React, { useCallback, useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  useColorScheme,
-  Alert,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/theme';
 import { useSessionWordMgmt } from '@/src/context/SessionWordMgmtContext';

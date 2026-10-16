@@ -3,15 +3,9 @@
  * User taps a noun row, then a gender tile to assign a match.
  */
 import React, { useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  useColorScheme,
-  Platform,
-} from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
 import { Colors, GenderColors } from '@/constants/theme';
 import type { Card1001Data } from '@/src/types/cards';
 import type { Gender, Language } from '@/src/types/vocab';

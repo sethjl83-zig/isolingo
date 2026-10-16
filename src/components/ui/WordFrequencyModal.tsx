@@ -1,12 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  Pressable,
-  StyleSheet,
-  useColorScheme,
-} from 'react-native';
+import { Modal, View, Text, Pressable, StyleSheet } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Colors } from '@/constants/theme';
 import { useSessionWordMgmt } from '@/src/context/SessionWordMgmtContext';

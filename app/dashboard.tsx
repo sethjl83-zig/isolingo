@@ -4,22 +4,11 @@
  * vocab banks shortcut, and a stats summary widget.
  */
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Modal,
-  Pressable,
-  Alert,
-  ActivityIndicator,
-  useColorScheme,
-  Dimensions,
-  BackHandler,
-  ScrollView,
-} from 'react-native';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Modal, Pressable, Alert, ActivityIndicator, Dimensions, BackHandler, ScrollView } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
+import { LinearGradient } from 'expo-linear-gradient';
+import { StatusBar } from 'expo-status-bar';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -32,7 +21,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '@/constants/theme';
+import { HomeFonts } from '@/constants/homeFonts';
 import { useAppContext } from '@/src/context/AppContext';
+import GenderModeIcon from '@/src/components/ui/GenderModeIcon';
 import type { Language } from '@/src/types/vocab';
 import type { StudyType } from '@/src/types/state';
 import { ensureLanguageStatsLoaded } from '@/src/storage/statsStorage';
@@ -46,10 +37,16 @@ import { setAddListLaunchSource } from './add-list';
 import { countStudyWords, getDeckSizeLaunchDecision } from '@/src/utils/studyLaunch';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
-const LANGUAGES: { id: Language; label: string; flag: string }[] = [
-  { id: 'es', label: 'Spanish', flag: '🇪🇸' },
-  { id: 'fr', label: 'French', flag: '🇫🇷' },
-  { id: 'de', label: 'German', flag: '🇩🇪' },
+const FLAG_IMAGES: Record<Language, number> = {
+  es: require('@/assets/images/home/flag-es.png'),
+  fr: require('@/assets/images/home/flag-fr.png'),
+  de: require('@/assets/images/home/flag-de.png'),
+};
+
+const LANGUAGES: { id: Language; label: string }[] = [
+  { id: 'es', label: 'Spanish' },
+  { id: 'fr', label: 'French' },
+  { id: 'de', label: 'German' },
 ];
 
 interface StatsSnapshot {
@@ -61,22 +58,55 @@ interface StatsSnapshot {
 // ── Accuracy progress ring ────────────────────────────────────────────────────
 // Uses the two-half-circle clip technique to draw an arc proportional to `pct`.
 // No external library required.
+function RingArc({
+  size,
+  border,
+  color,
+  rightRot,
+  leftRot,
+  showLeft,
+}: {
+  size: number;
+  border: number;
+  color: string;
+  rightRot: string;
+  leftRot: string;
+  showLeft: boolean;
+}) {
+  return (
+    <>
+      <View style={{ position: 'absolute', right: 0, width: size / 2, height: size, overflow: 'hidden' }}>
+        <View style={{
+          position: 'absolute', left: -(size / 2),
+          width: size, height: size,
+          borderRadius: size / 2,
+          borderWidth: border, borderColor: color,
+          transform: [{ rotate: rightRot }],
+        }} />
+      </View>
+      {showLeft && (
+        <View style={{ position: 'absolute', left: 0, width: size / 2, height: size, overflow: 'hidden' }}>
+          <View style={{
+            position: 'absolute', right: -(size / 2),
+            width: size, height: size,
+            borderRadius: size / 2,
+            borderWidth: border, borderColor: color,
+            transform: [{ rotate: leftRot }],
+          }} />
+        </View>
+      )}
+    </>
+  );
+}
+
 function AccuracyRing({
   pct,
-  fillColor,
-  trackColor,
-  textColor,
   caption,
-  captionColor,
-  size = 92,
-  border = 8,
+  size = 102,
+  border = 7,
 }: {
   pct: number;       // 0–100, or -1 when no data
-  fillColor: string;
-  trackColor: string;
-  textColor: string;
   caption?: string;
-  captionColor?: string;
   size?: number;
   border?: number;
 }) {
@@ -89,48 +119,26 @@ function AccuracyRing({
   const rightRot = `${(clamped / 50) * 180 - 180}deg`;
   // Left half covers 50–100 %; only rendered when > 50 %
   const leftRot  = clamped > 50 ? `${((clamped - 50) / 50) * 180 - 180}deg` : '-180deg';
+  const showLeft = clamped > 50;
+  // Home 5C stacks a teal arc under a purple arc of the same sweep.
+  // The purple layer covers the teal one, which is how the frame renders.
+  const arcProps = { size: SIZE, border: BORDER, rightRot, leftRot, showLeft };
 
   return (
     <View style={{ width: SIZE, height: SIZE }}>
-      {/* Empty track */}
       <View style={[
         StyleSheet.absoluteFill,
-        { borderRadius: SIZE / 2, borderWidth: BORDER, borderColor: trackColor },
+        { borderRadius: SIZE / 2, borderWidth: BORDER, borderColor: '#F2F0FB' },
       ]} />
+      <RingArc {...arcProps} color="#70C8BE" />
+      <RingArc {...arcProps} color="#6D5CC7" />
 
-      {/* Right-half fill (0–50 %) */}
-      <View style={{ position: 'absolute', right: 0, width: SIZE / 2, height: SIZE, overflow: 'hidden' }}>
-        <View style={{
-          position: 'absolute', left: -(SIZE / 2),
-          width: SIZE, height: SIZE,
-          borderRadius: SIZE / 2,
-          borderWidth: BORDER, borderColor: fillColor,
-          transform: [{ rotate: rightRot }],
-        }} />
-      </View>
-
-      {/* Left-half fill (50–100 %) */}
-      {clamped > 50 && (
-        <View style={{ position: 'absolute', left: 0, width: SIZE / 2, height: SIZE, overflow: 'hidden' }}>
-          <View style={{
-            position: 'absolute', right: -(SIZE / 2),
-            width: SIZE, height: SIZE,
-            borderRadius: SIZE / 2,
-            borderWidth: BORDER, borderColor: fillColor,
-            transform: [{ rotate: leftRot }],
-          }} />
-        </View>
-      )}
-
-      {/* Centre label */}
       <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}>
-        <Text style={{ fontSize: 20, fontWeight: '700', color: textColor }}>
+        <Text style={styles.ringValue}>
           {hasData ? `${clamped}%` : '—'}
         </Text>
         {caption ? (
-          <Text style={{ fontSize: 10, fontWeight: '600', letterSpacing: 0.8, textTransform: 'uppercase', color: captionColor ?? textColor, marginTop: 1 }}>
-            {caption}
-          </Text>
+          <Text style={styles.ringCaption}>{caption}</Text>
         ) : null}
       </View>
     </View>
@@ -234,8 +242,8 @@ function CelebrationOverlay({ name, textColor, bgColor, welcomeLayout, onComplet
   const finalTY = useSharedValue(
     (welcomeLayout.pageY + welcomeLayout.height / 2) - SH / 2,
   );
-  // Scale to approximate the dashboard heading font size
-  const finalS = useSharedValue(30 / CELEB_FONT_SIZE);
+  // Scale to the Home heading size (28) as the greeting lands
+  const finalS = useSharedValue(28 / CELEB_FONT_SIZE);
 
   // Single linear progress shared value drives all animations
   const progress = useSharedValue(0);
@@ -333,8 +341,8 @@ const celebStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   text: {
+    fontFamily: HomeFonts.interSemiBold,
     fontSize: CELEB_FONT_SIZE,
-    fontWeight: '800',
     textAlign: 'center',
     paddingHorizontal: 20,
     maxWidth: SW - 40,
@@ -493,7 +501,8 @@ export default function DashboardScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]}>
+    <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.safe}>
+      <StatusBar style="dark" />
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -513,82 +522,98 @@ export default function DashboardScreen() {
               styles.welcomeHeading,
               {
                 // Hidden while the overlay text is in flight; revealed when overlay unmounts
-                color: celebrationActive ? 'transparent' : palette.text,
+                color: celebrationActive ? 'transparent' : '#25262B',
               },
             ]}
           >
             {`Welcome, ${userName ?? ''}!`}
           </Text>
         </View>
-        <Text style={[styles.studyPrompt, { color: palette.subtext }]}>
+        <Text style={styles.studyPrompt}>
           What do you want to study?
         </Text>
       </View>
 
       {/* ── Language selector ───────────────────────────────────────────────── */}
       <TouchableOpacity
-        style={[styles.langCard, { backgroundColor: palette.card }]}
+        style={styles.langCard}
         onPress={() => setLangModalVisible(true)}
         activeOpacity={0.75}
       >
-        <View style={[styles.langIconCircle, { backgroundColor: palette.iconCircle }]}>
-          <MaterialIcons name="public" size={22} color={palette.primary} />
+        <View style={styles.langIconCircle}>
+          <Image
+            source={require('@/assets/images/home/globe.png')}
+            style={styles.globeIcon}
+            accessibilityIgnoresInvertColors
+          />
         </View>
         <View style={styles.langTextBlock}>
           {currentLang ? (
             <>
-              <Text style={[styles.langCaption, { color: palette.subtext }]}>Select Language</Text>
+              <Text style={styles.langCaption}>Select Language</Text>
               <View style={styles.langCardText}>
-                <Text style={[styles.langName, { color: palette.text }]}>{currentLang.label}</Text>
-                <Text style={[styles.chevron, { color: palette.subtext }]}>▼</Text>
+                <Text style={styles.langName}>{currentLang.label}</Text>
+                <Image source={require('@/assets/images/home/lang-chevron.png')} style={styles.langChevron} />
               </View>
             </>
           ) : (
             <View style={styles.langCardText}>
-              <Text style={[styles.langCaption, { color: palette.subtext }]}>Select Language</Text>
-              <Text style={[styles.chevron, { color: palette.subtext }]}>▼</Text>
+              <Text style={styles.langCaption}>Select Language</Text>
+              <Image source={require('@/assets/images/home/lang-chevron.png')} style={styles.langChevron} />
             </View>
           )}
         </View>
-        <Text style={styles.langFlag}>{currentLang?.flag ?? '🌐'}</Text>
+        <View style={styles.langFlagWell}>
+          {currentLang ? (
+            <Image source={FLAG_IMAGES[currentLang.id]} style={styles.langFlag} />
+          ) : null}
+        </View>
       </TouchableOpacity>
 
       {/* ── Study mode cards ────────────────────────────────────────────────── */}
       <View style={styles.modeRow}>
 
         <TouchableOpacity
-          style={[styles.modeCard, { backgroundColor: palette.primary }]}
+          style={styles.modeCard}
           onPress={() => handleStudyModePress('general_vocab')}
           activeOpacity={0.82}
         >
-          <View style={styles.modeIconCircle}>
-            <MaterialIcons name="menu-book" size={22} color="#FFFFFF" />
-          </View>
-          <Text style={styles.modeCardLabel}>
-            General Vocabulary
-          </Text>
-          <Text style={styles.modeCardDesc}>
-            Standard vocabulary practice
-          </Text>
-          <View style={styles.modeChevronRow}>
-            <MaterialIcons name="chevron-right" size={22} color="rgba(255,255,255,0.92)" />
+          <View style={styles.modeCardBody}>
+            <View style={styles.modeCardMain}>
+              <View style={styles.modeIconCircle}>
+                <Image source={require('@/assets/images/home/vocab-book.png')} style={styles.modeBookIcon} />
+              </View>
+              <View>
+                <Text style={styles.modeCardLabel}>
+                  General Vocabulary
+                </Text>
+                <Text style={styles.modeCardDesc}>
+                  Standard vocabulary practice
+                </Text>
+              </View>
+            </View>
+            <Image source={require('@/assets/images/home/card-arrow.png')} style={styles.cardArrow} />
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.modeCard, { backgroundColor: palette.primary }]}
+          style={styles.modeCard}
           onPress={() => handleStudyModePress('gender')}
           activeOpacity={0.82}
         >
-          <View style={styles.modeIconCircle}>
-            <MaterialIcons name="transgender" size={22} color="#FFFFFF" />
-          </View>
-          <Text style={styles.modeCardLabel}>Gender</Text>
-          <Text style={styles.modeCardDesc}>
-            Focus on noun gender
-          </Text>
-          <View style={styles.modeChevronRow}>
-            <MaterialIcons name="chevron-right" size={22} color="rgba(255,255,255,0.92)" />
+          <View style={styles.modeCardBody}>
+            <View style={styles.modeCardMain}>
+              <View style={styles.modeIconCircle}>
+                <GenderModeIcon language={language} size={30} />
+              </View>
+              <View>
+                <Text style={styles.modeCardLabel}>Gender</Text>
+                <Text style={styles.modeCardDesc}>
+                  Focus on noun gender
+                </Text>
+              </View>
+            </View>
+            <Image source={require('@/assets/images/home/card-arrow.png')} style={styles.cardArrow} />
           </View>
         </TouchableOpacity>
 
@@ -602,54 +627,62 @@ export default function DashboardScreen() {
       )}
 
       {/* ── Stats widget ─────────────────────────────────────────────────────── */}
-      <TouchableOpacity
-        style={[styles.statsCard, { backgroundColor: palette.progressCard }]}
-        onPress={() => router.push('/stats')}
-        activeOpacity={0.85}
-      >
-        <View style={styles.statsHeader}>
-          <Text style={[styles.statsCardTitle, { color: palette.text }]}>Your Progress</Text>
-          <View style={[styles.chartBadge, { backgroundColor: `${palette.teal}26` }]}>
-            <MaterialIcons name="bar-chart" size={18} color={palette.teal} />
-          </View>
-        </View>
-
-        {statsLoading ? (
-          <View style={styles.statsSpinner}>
-            <ActivityIndicator size="small" color={palette.primary} />
-          </View>
-        ) : (
-          <View style={styles.statsBody}>
-            <AccuracyRing
-              pct={statsSnap.accuracy}
-              fillColor={palette.primary}
-              trackColor={palette.badgeFill}
-              textColor={palette.text}
-              caption="Accuracy"
-              captionColor={palette.subtext}
-            />
-            <View style={styles.statsCol}>
-              <View style={styles.statRow}>
-                <Text style={[styles.statLabel, { color: palette.subtext }]}>Mastered</Text>
-                <Text style={[styles.statValue, { color: palette.text }]}>{statsSnap.mastered}</Text>
-              </View>
-              <View style={[styles.statDivider, { backgroundColor: palette.border }]} />
-              <View style={styles.statRow}>
-                <Text style={[styles.statLabel, { color: palette.subtext }]}>Today</Text>
-                <Text style={[styles.statValue, { color: palette.teal }]}>{statsSnap.today}</Text>
-              </View>
+      <View style={styles.statsShadow}>
+        <TouchableOpacity
+          style={styles.statsCard}
+          onPress={() => router.push('/stats')}
+          activeOpacity={0.85}
+        >
+          <LinearGradient
+            colors={['#FFFFFF', '#F8F9FF']}
+            style={StyleSheet.absoluteFill}
+          />
+          <View style={styles.statsHeader}>
+            <Text style={styles.statsCardTitle}>Your Progress</Text>
+            <View style={styles.chartBadge}>
+              <View style={[styles.chartBar, { left: 9, top: 15.8, height: 10.31 }]} />
+              <View style={[styles.chartBar, { left: 14.63, top: 11.11, height: 15 }]} />
+              <View style={[styles.chartBar, { left: 20.25, top: 19.55, height: 6.56 }]} />
             </View>
           </View>
-        )}
 
-        <View style={[styles.detailsBtn, { backgroundColor: palette.teal }]}>
-          <Text style={styles.detailsBtnText}>View Details →</Text>
-        </View>
-      </TouchableOpacity>
+          {statsLoading ? (
+            <View style={styles.statsSpinner}>
+              <ActivityIndicator size="small" color="#5E51A4" />
+            </View>
+          ) : (
+            <View style={styles.statsBody}>
+              <AccuracyRing
+                pct={statsSnap.accuracy}
+                caption="Accuracy"
+              />
+              <View style={styles.statsCol}>
+                <View style={styles.statRowMastered}>
+                  <Text style={styles.statLabel}>Mastered</Text>
+                  <Text style={styles.statValueMastered}>{statsSnap.mastered.toLocaleString()}</Text>
+                </View>
+                <View style={styles.statRow}>
+                  <Text style={styles.statLabel}>Today</Text>
+                  <Text style={styles.statValueToday}>{statsSnap.today}</Text>
+                </View>
+              </View>
+            </View>
+          )}
+
+          <View style={styles.detailsBtn}>
+            <Text style={styles.detailsBtnText}>View Details</Text>
+            <Image
+              source={require('@/assets/images/home/details-arrow.png')}
+              style={styles.detailsArrow}
+              accessibilityIgnoresInvertColors
+            />
+          </View>
+        </TouchableOpacity>
+      </View>
 
       {/* ── My Vocabulary ────────────────────────────────────────────────────── */}
       <TouchableOpacity
-        style={[styles.vocabBankBtn, { backgroundColor: palette.amberFill }]}
+        style={styles.vocabBankBtn}
         onPress={() => {
           if (!state.languageSelected) {
             Alert.alert('No language selected', 'Please select a language from the dropdown first.');
@@ -659,8 +692,8 @@ export default function DashboardScreen() {
         }}
         activeOpacity={0.8}
       >
-        <MaterialCommunityIcons name="book-open-outline" size={20} color={palette.amberText} />
-        <Text style={[styles.vocabBankLabel, { color: palette.amberText }]}>My Vocabulary</Text>
+        <Image source={require('@/assets/images/home/my-vocab-book.png')} style={styles.myVocabIcon} />
+        <Text style={styles.vocabBankLabel}>My Vocabulary</Text>
       </TouchableOpacity>
 
       </ScrollView>
@@ -689,7 +722,7 @@ export default function DashboardScreen() {
                 onPress={() => handleLanguageSelect(lang.id)}
                 activeOpacity={0.75}
               >
-                <Text style={styles.langOptionFlag}>{lang.flag}</Text>
+                <Image source={FLAG_IMAGES[lang.id]} style={styles.langOptionFlag} />
                 <Text style={[styles.langOptionLabel, { color: palette.text }]}>{lang.label}</Text>
                 {lang.id === language && (
                   <Text style={[styles.checkmark, { color: palette.tint }]}>✓</Text>
@@ -724,187 +757,289 @@ export default function DashboardScreen() {
   );
 }
 
-const cardShadow = {
-  shadowColor: '#2A2640',
-  shadowOpacity: 0.08,
+const shadow12 = {
+  shadowColor: '#000',
+  shadowOpacity: 0.05,
   shadowRadius: 12,
   shadowOffset: { width: 0, height: 4 },
-  elevation: 3,
+  elevation: 2,
+} as const;
+
+const shadow6 = {
+  shadowColor: '#000',
+  shadowOpacity: 0.05,
+  shadowRadius: 6,
+  shadowOffset: { width: 0, height: 4 },
+  elevation: 2,
 } as const;
 
 const styles = StyleSheet.create({
-  safe: { flex: 1 },
+  safe: { flex: 1, backgroundColor: '#F7F5FD' },
   content: {
     paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 20,
-    gap: 16,
+    paddingTop: 68,
+    paddingBottom: 0,
+    gap: 20,
   },
 
   // ── Welcome header ───────────────────────────────────────────────────────────
   welcomeSection: {
-    gap: 4,
-    marginBottom: 4,
+    gap: 3,
   },
   welcomeHeading: {
-    fontSize: 30,
-    fontWeight: '700',
-    letterSpacing: -0.4,
+    fontFamily: HomeFonts.interSemiBold,
+    fontSize: 28,
+    lineHeight: 34,
+    color: '#25262B',
   },
   studyPrompt: {
-    fontSize: 16,
-    fontWeight: '400',
+    fontFamily: HomeFonts.jakartaRegular,
+    fontSize: 14.5,
+    lineHeight: 18,
+    color: 'rgba(0,0,0,0.6)',
   },
 
   // ── Language card ────────────────────────────────────────────────────────────
   langCard: {
     height: 71,
-    borderRadius: 16,
-    paddingHorizontal: 14,
+    borderRadius: 15,
+    padding: 15,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    ...cardShadow,
+    backgroundColor: '#FEFEFE',
+    ...shadow12,
   },
   langIconCircle: {
     width: 40,
     height: 40,
     borderRadius: 20,
+    backgroundColor: '#F0EDFC',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  langTextBlock: { flex: 1, justifyContent: 'center' },
-  langCaption: { fontSize: 12, fontWeight: '500' },
+  globeIcon: { width: 22, height: 22 },
+  langTextBlock: { flex: 1, justifyContent: 'center', marginLeft: 15, gap: 3 },
+  langCaption: {
+    fontFamily: HomeFonts.jakartaMedium,
+    fontSize: 11.5,
+    lineHeight: 14,
+    color: 'rgba(0,0,0,0.8)',
+  },
   langCardText: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginTop: 1,
+    gap: 10,
   },
-  langFlag: { fontSize: 28 },
-  langName: { fontSize: 16, fontWeight: '600' },
-  chevron: { fontSize: 11, marginTop: 1 },
-
-  // Study mode cards
-  modeRow: { flexDirection: 'row', gap: 12 },
-  modeCard: {
-    flex: 1,
-    minHeight: 168,
-    borderRadius: 11,
-    paddingTop: 14,
-    paddingHorizontal: 14,
-    paddingBottom: 12,
-    alignItems: 'flex-start',
-    ...cardShadow,
-  },
-  modeIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.18)',
+  langFlagWell: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F0EDFC',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  modeCardLabel: {
-    marginTop: 10,
+  langFlag: { width: 32, height: 32, borderRadius: 16 },
+  langName: {
+    fontFamily: HomeFonts.jakartaMedium,
     fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    lineHeight: 20,
+    lineHeight: 24,
+    color: '#2D2A26',
+  },
+  langChevron: { width: 12, height: 12 },
+
+  // Study mode cards
+  modeRow: { flexDirection: 'row', gap: 11 },
+  modeCard: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 175,
+    maxWidth: 175,
+    height: 170,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#766BB2',
+    backgroundColor: '#5E51A4',
+    paddingHorizontal: 12,
+    paddingVertical: 18,
+    ...shadow6,
+  },
+  modeCardBody: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 15,
+  },
+  modeCardMain: {
+    flex: 1,
+    alignSelf: 'stretch',
+    gap: 10,
+  },
+  modeIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 999,
+    backgroundColor: 'rgba(254,252,250,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modeBookIcon: { width: 25, height: 25 },
+  cardArrow: { width: 12, height: 12 },
+  modeCardLabel: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontSize: 12.8,
+    lineHeight: 28,
+    color: '#FEFCFA',
   },
   modeCardDesc: {
-    marginTop: 4,
-    fontSize: 13,
-    fontWeight: '400',
-    lineHeight: 18,
-    color: 'rgba(255,255,255,0.78)',
+    fontFamily: HomeFonts.jakartaMedium,
+    fontSize: 11,
+    lineHeight: 17,
+    color: 'rgba(254,252,250,0.6)',
   },
-  modeChevronRow: {
-    marginTop: 'auto',
-    alignSelf: 'flex-end',
-    paddingTop: 8,
+
+  ringValue: {
+    fontFamily: HomeFonts.jakartaRegular,
+    fontSize: 22,
+    lineHeight: 24,
+    color: '#25262B',
+  },
+  ringCaption: {
+    marginTop: 2,
+    fontFamily: HomeFonts.jakartaMedium,
+    fontSize: 10,
+    lineHeight: 15,
+    textTransform: 'uppercase',
+    color: 'rgba(0,0,0,0.6)',
   },
 
   // Vocab button
   vocabBankBtn: {
-    marginTop: 12,
     height: 48,
-    borderRadius: 13,
+    borderRadius: 12,
+    backgroundColor: '#FDE6B9',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    ...cardShadow,
+    gap: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    ...shadow6,
   },
-  vocabBankLabel: { fontSize: 16, fontWeight: '600' },
+  myVocabIcon: { width: 22, height: 16 },
+  vocabBankLabel: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontSize: 16,
+    lineHeight: 28,
+    color: '#6B3B06',
+  },
 
   // Language hint (shown when a study mode is tapped with no language chosen)
   langHint: {
     textAlign: 'center',
+    fontFamily: HomeFonts.jakartaMedium,
     fontSize: 14,
-    fontWeight: '600',
     paddingHorizontal: 8,
   },
 
   // ── Stats widget ─────────────────────────────────────────────────────────────
+  statsShadow: {
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    ...shadow12,
+  },
   statsCard: {
-    height: 274,
-    borderRadius: 16,
-    paddingHorizontal: 18,
-    paddingTop: 16,
-    paddingBottom: 16,
-    ...cardShadow,
+    height: 275,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(210,232,215,0.8)',
+    paddingHorizontal: 16,
+    paddingVertical: 21,
+    gap: 20,
+    overflow: 'hidden',
   },
   statsHeader: {
+    height: 35,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   statsCardTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1.4,
+    fontFamily: HomeFonts.interSemiBold,
+    fontSize: 16,
+    lineHeight: 24,
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
+    color: 'rgba(0,0,0,0.6)',
   },
   chartBadge: {
     width: 33,
-    height: 33,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+    height: 35,
+    borderRadius: 8,
+    backgroundColor: '#EAF0F1',
+  },
+  chartBar: {
+    position: 'absolute',
+    width: 3.75,
+    backgroundColor: '#38A19A',
   },
   statsSpinner: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   statsBody: {
-    flex: 1,
+    height: 110,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: 32,
+    paddingBottom: 8,
   },
-  statsCol: { flex: 1 },
+  statsCol: { flex: 1, gap: 20 },
+  statRowMastered: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    paddingBottom: 9,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(102,102,102,0.2)',
+  },
   statRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     justifyContent: 'space-between',
   },
   statLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 0.8,
+    fontFamily: HomeFonts.jakartaSemiBold,
+    fontSize: 11,
+    lineHeight: 16.5,
+    letterSpacing: 1.1,
     textTransform: 'uppercase',
+    color: 'rgba(0,0,0,0.6)',
   },
-  statValue: { fontSize: 28, fontWeight: '700' },
-  statDivider: { height: 1, marginVertical: 12 },
+  statValueMastered: {
+    fontFamily: HomeFonts.jakartaSemiBold,
+    fontSize: 24,
+    lineHeight: 30,
+    color: '#5E51A4',
+  },
+  statValueToday: {
+    fontFamily: HomeFonts.jakartaSemiBold,
+    fontSize: 24,
+    lineHeight: 24,
+    color: '#38A19A',
+  },
   detailsBtn: {
     height: 48,
-    borderRadius: 13,
+    borderRadius: 12,
+    backgroundColor: '#38A19A',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
   },
   detailsBtnText: {
+    fontFamily: HomeFonts.interSemiBold,
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '600',
+    lineHeight: 24,
   },
+  detailsArrow: { width: 12, height: 12 },
 
   // ── Language modal ───────────────────────────────────────────────────────────
   sheetTitle: { fontSize: 20, fontWeight: '700', marginBottom: 4 },
@@ -928,7 +1063,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     gap: 14,
   },
-  langOptionFlag: { fontSize: 28 },
+  langOptionFlag: { width: 32, height: 32, borderRadius: 16 },
   langOptionLabel: { flex: 1, fontSize: 17, fontWeight: '600' },
   checkmark: { fontSize: 18, fontWeight: '700' },
 });

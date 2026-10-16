@@ -35,7 +35,14 @@ export const Colors = {
     progressCard: '#F8F9FF',
     badgeFill: '#E0DCF0',
     iconCircle: '#F0EDFC',
+    listCardBorder: '#DAECDF',
+    destructive: '#F74856',
+    listIconOrange: '#FEA835',
+    listIconBlue: '#5DB0FA',
+    listIconFood: '#D04598',
+    listIconNature: '#709E1E',
   },
+  // Kept for a later dark-mode pass. V0 does not read this object.
   dark: {
     text: '#ECEDEE',
     subtext: '#9BA1A6',
@@ -58,6 +65,12 @@ export const Colors = {
     progressCard: '#22242C',
     badgeFill: '#3A3654',
     iconCircle: '#2C2A40',
+    listCardBorder: '#DAECDF',
+    destructive: '#F74856',
+    listIconOrange: '#FEA835',
+    listIconBlue: '#5DB0FA',
+    listIconFood: '#D04598',
+    listIconNature: '#709E1E',
   },
 };
 

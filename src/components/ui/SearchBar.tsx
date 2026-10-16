@@ -1,11 +1,7 @@
 import React from 'react';
-import {
-  View,
-  TextInput,
-  Keyboard,
-  StyleSheet,
-  useColorScheme,
-} from 'react-native';
+import { View, TextInput, Image, Keyboard, StyleSheet, type ViewStyle, type ImageSourcePropType } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
 import { Colors } from '@/constants/theme';
 import { KEYBOARD_DONE_ACCESSORY_ID } from './KeyboardDoneAccessory';
 
@@ -15,6 +11,8 @@ interface SearchBarProps {
   placeholder?: string;
   /** Show a Done button above the iOS keyboard. */
   showKeyboardDone?: boolean;
+  containerStyle?: ViewStyle;
+  icon?: ImageSourcePropType;
 }
 
 export default function SearchBar({
@@ -22,14 +20,19 @@ export default function SearchBar({
   onChangeText,
   placeholder = 'Search words…',
   showKeyboardDone = false,
+  containerStyle,
+  icon,
 }: SearchBarProps) {
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
 
   return (
-    <View style={[styles.wrap, { backgroundColor: palette.card, borderColor: palette.border }]}>
+    <View style={[styles.wrap, { backgroundColor: palette.card, borderColor: palette.border }, icon ? styles.wrapWithIcon : null, containerStyle]}>
+      {icon ? (
+        <Image source={icon} style={styles.icon} accessibilityIgnoresInvertColors />
+      ) : null}
       <TextInput
-        style={[styles.input, { color: palette.text }]}
+        style={[styles.input, icon ? styles.inputFlex : null, { color: palette.text }]}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
@@ -53,5 +56,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
+  wrapWithIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  icon: { width: 16, height: 16 },
   input: { fontSize: 16 },
+  inputFlex: { flex: 1, padding: 0 },
 });

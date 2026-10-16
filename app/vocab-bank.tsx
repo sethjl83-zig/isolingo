@@ -6,21 +6,13 @@
  * Paused words appear in a separate section below a divider.
  */
 import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  useColorScheme,
-  Alert,
-  ActivityIndicator,
-  InteractionManager,
-  Platform,
-} from 'react-native';
+import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, InteractionManager, Platform } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Colors } from '@/constants/theme';
+import { HomeFonts } from '@/constants/homeFonts';
 import { useAppContext } from '@/src/context/AppContext';
 import { enrichVocabItemsFromMasterAsync } from '@/src/data';
 import type { VocabItem } from '@/src/types/vocab';
@@ -35,6 +27,9 @@ import {
   PausedWordRow,
   PausedSectionHeader,
 } from '@/src/components/vocab-bank/WordListRows';
+
+const backChevron = require('@/assets/images/lists/back-chevron.png');
+const searchIcon = require('@/assets/images/lists/icon-search.png');
 
 type WordListRow =
   | { kind: 'section-header'; key: string; title: string }
@@ -290,27 +285,37 @@ export default function VocabBankScreen() {
   const keyExtractor = useCallback((row: WordListRow) => row.key, []);
 
   const screenLabel = pool?.name ?? 'Vocab Bank';
-  const isEmpty = !loadingWords && listRows.length === 0;
 
   if (!pool) return null;
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]}>
-      <View style={[styles.topBar, { borderBottomColor: palette.border }]}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={[styles.topBarBtn, { color: palette.tint }]}>Back</Text>
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      <View style={styles.topBar}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          hitSlop={8}
+          accessibilityLabel="Back"
+          style={[styles.backBtn, { backgroundColor: 'rgba(94,81,164,0.15)' }]}
+        >
+          <Image source={backChevron} style={styles.backIcon} accessibilityIgnoresInvertColors />
         </TouchableOpacity>
-        <Text style={[styles.topBarTitle, { color: palette.text }]} numberOfLines={1}>
+        <Text style={styles.topBarTitle} numberOfLines={1} pointerEvents="none">
           {screenLabel}
         </Text>
-        <View style={styles.topBarSpacer} />
       </View>
 
       <View style={styles.header}>
-        <Text style={[styles.counter, { color: palette.tint }]}>
-          {wordCount} {wordCount === 1 ? 'word' : 'words'}
-        </Text>
-        <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
+        <SearchBar
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          icon={searchIcon}
+          containerStyle={styles.search}
+        />
+        <View style={styles.countPill}>
+          <Text style={styles.counter}>
+            {wordCount} {wordCount === 1 ? 'word' : 'words'}
+          </Text>
+        </View>
       </View>
 
       {loadingWords ? (
@@ -321,50 +326,33 @@ export default function VocabBankScreen() {
           </Text>
         </View>
       ) : (
-        <>
-          {!isEmpty && (
-            <View
-              style={[
-                styles.columnHeader,
-                { borderBottomColor: palette.border, backgroundColor: palette.background },
-              ]}
-            >
-              <Text style={[styles.columnTitle, { color: palette.subtext }]}>Word</Text>
-              <Text
-                style={[styles.columnTitle, styles.columnRight, { color: palette.subtext }]}
-              >
-                Frequency
-              </Text>
-            </View>
-          )}
-
-          <FlatList
-            data={listRows}
-            keyExtractor={keyExtractor}
-            renderItem={renderItem}
-            extraData={frequencyById}
-            style={styles.list}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="on-drag"
-            initialNumToRender={12}
-            maxToRenderPerBatch={8}
-            windowSize={7}
-            removeClippedSubviews={Platform.OS === 'android'}
-            ListEmptyComponent={
-              <Text style={[styles.emptyText, { color: palette.subtext }]}>
-                {searchQuery
-                  ? 'No words match your search.'
-                  : 'No words in this list yet.'}
-              </Text>
-            }
-          />
-        </>
+        <FlatList
+          data={listRows}
+          keyExtractor={keyExtractor}
+          renderItem={renderItem}
+          extraData={frequencyById}
+          style={styles.list}
+          contentContainerStyle={styles.listContent}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          initialNumToRender={12}
+          maxToRenderPerBatch={8}
+          windowSize={7}
+          removeClippedSubviews={Platform.OS === 'android'}
+          ListEmptyComponent={
+            <Text style={[styles.emptyText, { color: palette.subtext }]}>
+              {searchQuery
+                ? 'No words match your search.'
+                : 'No words in this list yet.'}
+            </Text>
+          }
+        />
       )}
 
-      <View style={[styles.bottomBar, { borderTopColor: palette.border }]}>
+      <View style={styles.bottomBar}>
         <StudyButton
           label="Add Word"
-          variant="secondary"
+          variant="primary"
           size="medium"
           onPress={() =>
             router.push({
@@ -373,14 +361,16 @@ export default function VocabBankScreen() {
             } as never)
           }
           style={styles.actionBtn}
+          textStyle={styles.actionLabel}
           disabled={loadingWords}
         />
         <StudyButton
           label="Create New Word"
-          variant="secondary"
+          variant="primary"
           size="medium"
           onPress={() => router.push('/add-word')}
           style={styles.actionBtn}
+          textStyle={styles.actionLabel}
           disabled={loadingWords}
         />
       </View>
@@ -389,22 +379,80 @@ export default function VocabBankScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1 },
+  safe: { flex: 1, backgroundColor: '#F7F5FD' },
 
   topBar: {
+    height: 36,
+    marginHorizontal: 16,
+    marginTop: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
   },
-  topBarBtn: { fontSize: 15, fontWeight: '500', minWidth: 60 },
-  topBarTitle: { fontSize: 17, fontWeight: '600', flex: 1, textAlign: 'center', marginHorizontal: 8 },
-  topBarSpacer: { minWidth: 60 },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backIcon: {
+    width: 17,
+    height: 17,
+    transform: [{ rotate: '-90deg' }],
+  },
+  topBarTitle: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    fontFamily: HomeFonts.interSemiBold,
+    fontSize: 22,
+    lineHeight: 27,
+    color: '#25262B',
+  },
 
-  header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12, gap: 10 },
-  counter: { fontSize: 16, fontWeight: '600' },
+  header: {
+    marginTop: 15,
+    marginHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 15,
+  },
+  search: {
+    flex: 1,
+    height: 45,
+    borderRadius: 12,
+    borderColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 11,
+    paddingVertical: 0,
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  countPill: {
+    height: 46,
+    minWidth: 92,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    backgroundColor: '#FAEDDB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  counter: {
+    fontFamily: HomeFonts.interRegular,
+    fontSize: 14,
+    lineHeight: 18,
+    color: '#6B3B06',
+  },
 
   loadingBox: {
     flex: 1,
@@ -415,26 +463,43 @@ const styles = StyleSheet.create({
   },
   loadingText: { fontSize: 15, textAlign: 'center' },
 
-  columnHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-  },
-  columnTitle: { flex: 1, fontSize: 13, fontWeight: '700', textTransform: 'uppercase' },
-  columnRight: { textAlign: 'right', flex: 0, width: 120 },
-
   list: { flex: 1 },
+  listContent: {
+    paddingHorizontal: 16,
+    paddingTop: 15,
+    paddingBottom: 16,
+    gap: 10,
+  },
   emptyText: { textAlign: 'center', fontSize: 15, marginTop: 32, paddingHorizontal: 20 },
 
   bottomBar: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    gap: 12,
+    gap: 10,
+    paddingTop: 15,
+    paddingBottom: 29,
+    paddingHorizontal: 29,
+    backgroundColor: '#F7F5FD',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: -2 },
+    elevation: 8,
   },
-  actionBtn: { flex: 1 },
+  actionBtn: {
+    flex: 1,
+    height: 48,
+    minWidth: 0,
+    paddingVertical: 0,
+    borderRadius: 12,
+  },
+  actionLabel: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 15,
+    lineHeight: 24,
+  },
 });

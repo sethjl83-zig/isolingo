@@ -59,7 +59,7 @@ First screen for returning users
 Welcome banner: "Welcome, [Name]!" at the top
 "What do you want to study?" label below the welcome banner
 Language selector card below the prompt (globe icon, "Select Language" caption, flag, language name, down arrow)
-Two study mode cards: General Vocabulary, Gender
+Two study mode cards: General Vocabulary, Gender. The Gender card uses the three-gender symbol when German is selected, and the two-gender symbol for Spanish, French, and when no language is selected.
 Stats card below the study mode cards: heading "Your Progress" (shown in uppercase), Mastered, Accuracy (circular ring), Today, and "View Details →"
 Tapping the stats card → Stats screen
 One "My Vocabulary" button below the stats card

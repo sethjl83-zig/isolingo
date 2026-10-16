@@ -3,15 +3,9 @@
  * Two tabs: Current Stats (pool words) and Lifetime Stats (all words ever studied).
  */
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  useColorScheme,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
@@ -121,7 +115,7 @@ export default function StatsScreen() {
         <View
           style={[
             styles.segmentTrack,
-            { backgroundColor: scheme === 'dark' ? palette.card : '#FFFFFF' },
+            { backgroundColor: '#FFFFFF' },
           ]}
         >
           {(['current', 'lifetime'] as Tab[]).map(t => (

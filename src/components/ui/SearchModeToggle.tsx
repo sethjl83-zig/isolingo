@@ -1,5 +1,7 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, useColorScheme } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
 import { Colors } from '@/constants/theme';
 import type { Language } from '@/src/types/vocab';
 import {
@@ -27,7 +29,7 @@ export default function SearchModeToggle({ mode, onModeChange, language }: Props
     <View
       style={[
         styles.track,
-        { backgroundColor: scheme === 'dark' ? palette.card : '#FFFFFF' },
+        { backgroundColor: '#FFFFFF' },
       ]}
     >
       {options.map(opt => {

@@ -8,14 +8,9 @@
  * Back always returns to the Dashboard (not to intermediate creation screens).
  */
 import React, { useMemo, useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  useColorScheme,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/theme';

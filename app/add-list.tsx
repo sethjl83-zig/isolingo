@@ -7,18 +7,21 @@
  * read this to decide where to navigate after the pool is saved.
  */
 import React, { useCallback } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  useColorScheme,
-} from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, type ImageSourcePropType, type ImageStyle } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/theme';
+import { HomeFonts } from '@/constants/homeFonts';
 import type { StudyType } from '@/src/types/state';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
+
+const backChevron = require('@/assets/images/lists/back-chevron.png');
+const rowChevron = require('@/assets/images/lists/row-chevron.png');
+const checklistIcon = require('@/assets/images/lists/icon-checklist.png');
+const pencilIcon = require('@/assets/images/lists/icon-pencil.png');
+const shuffleIcon = require('@/assets/images/lists/icon-shuffle.png');
 
 // ── Launch-source tracking ────────────────────────────────────────────────────
 
@@ -45,26 +48,34 @@ export function getAddListLaunchSource(): {
 }
 
 interface ChoiceCardProps {
-  icon: string;
+  icon: ImageSourcePropType;
+  iconStyle?: ImageStyle;
+  well: string;
   title: string;
   description: string;
   onPress: () => void;
   palette: (typeof Colors)['light'];
 }
 
-function ChoiceCard({ icon, title, description, onPress, palette }: ChoiceCardProps) {
+function ChoiceCard({ icon, iconStyle, well, title, description, onPress, palette }: ChoiceCardProps) {
   return (
     <TouchableOpacity
-      style={[styles.card, { backgroundColor: palette.card, borderColor: palette.border }]}
+      style={[styles.cardShadow]}
       onPress={onPress}
       activeOpacity={0.75}
     >
-      <Text style={styles.cardIcon}>{icon}</Text>
-      <View style={styles.cardText}>
-        <Text style={[styles.cardTitle, { color: palette.text }]}>{title}</Text>
-        <Text style={[styles.cardDesc, { color: palette.subtext }]}>{description}</Text>
+      <View style={[styles.card, { borderColor: palette.listCardBorder }]}>
+        <View style={[styles.iconWell, { backgroundColor: well }]}>
+          <Image source={icon} style={[styles.choiceIcon, iconStyle]} accessibilityIgnoresInvertColors />
+        </View>
+        <View style={styles.cardText}>
+          <Text style={styles.cardTitle}>{title}</Text>
+          <Text style={styles.cardDesc}>{description}</Text>
+        </View>
+        <View style={[styles.chevronBtn, { backgroundColor: 'rgba(94,81,164,0.12)', borderColor: 'rgba(94,81,164,0.6)' }]}>
+          <Image source={rowChevron} style={styles.chevron} accessibilityIgnoresInvertColors />
+        </View>
       </View>
-      <Text style={[styles.chevron, { color: palette.subtext }]}>›</Text>
     </TouchableOpacity>
   );
 }
@@ -82,23 +93,28 @@ export default function AddListScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]}>
-      {/* Top bar */}
-      <View style={[styles.topBar, { borderBottomColor: palette.border }]}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-          <Text style={[styles.backBtn, { color: palette.tint }]}>← Back</Text>
+    <SafeAreaView style={styles.safe}>
+      <View style={styles.topBar}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          hitSlop={8}
+          accessibilityLabel="Back"
+          style={[styles.backBtn, { backgroundColor: 'rgba(94,81,164,0.15)' }]}
+        >
+          <Image source={backChevron} style={styles.backIcon} accessibilityIgnoresInvertColors />
         </TouchableOpacity>
-        <Text style={[styles.screenTitle, { color: palette.text }]}>Add List</Text>
-        <View style={styles.topBarSpacer} />
+        <Text style={styles.screenTitle} pointerEvents="none">Add List</Text>
       </View>
 
       <View style={styles.content}>
-        <Text style={[styles.sectionLabel, { color: palette.subtext }]}>
+        <Text style={styles.sectionLabel}>
           How do you want to build your list?
         </Text>
 
+        <View style={styles.cardList}>
         <ChoiceCard
-          icon="📖"
+          icon={checklistIcon}
+          well="rgba(56,161,154,0.12)"
           title="Curated Lists"
           description="Words organized by topic"
           onPress={() => router.push('/curated-list' as never)}
@@ -106,7 +122,8 @@ export default function AddListScreen() {
         />
 
         <ChoiceCard
-          icon="✏️"
+          icon={pencilIcon}
+          well="#FFF5E7"
           title="Build Your Own"
           description="Choose your own words"
           onPress={() => router.push('/build-your-own' as never)}
@@ -114,58 +131,122 @@ export default function AddListScreen() {
         />
 
         <ChoiceCard
-          icon="🎲"
+          icon={shuffleIcon}
+          iconStyle={styles.shuffleIcon}
+          well="#E0F0FF"
           title="Random"
           description="Randomly selected words"
           onPress={() => router.push('/random-list' as never)}
           palette={palette}
         />
+        </View>
       </View>
     </SafeAreaView>
   );
 }
 
+const cardShadow = {
+  shadowColor: '#000',
+  shadowOpacity: 0.05,
+  shadowRadius: 6,
+  shadowOffset: { width: 0, height: 4 },
+  elevation: 2,
+} as const;
+
 const styles = StyleSheet.create({
-  safe: { flex: 1 },
+  safe: { flex: 1, backgroundColor: '#F7F5FD' },
 
   topBar: {
+    height: 36,
+    marginHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
   },
-  backBtn: { fontSize: 15, fontWeight: '500', minWidth: 60 },
-  screenTitle: { fontSize: 17, fontWeight: '700' },
-  topBarSpacer: { minWidth: 60 },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backIcon: {
+    width: 17,
+    height: 17,
+    transform: [{ rotate: '-90deg' }],
+  },
+  screenTitle: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    fontFamily: HomeFonts.interSemiBold,
+    fontSize: 22,
+    lineHeight: 27,
+    color: '#25262B',
+  },
 
   content: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 28,
-    gap: 14,
+    paddingHorizontal: 16,
+    paddingTop: 25,
+    gap: 18,
   },
+  cardList: { gap: 10 },
 
   sectionLabel: {
+    fontFamily: HomeFonts.jakartaRegular,
     fontSize: 14,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-    marginBottom: 4,
+    lineHeight: 18,
+    color: 'rgba(0,0,0,0.6)',
   },
 
+  cardShadow: {
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    ...cardShadow,
+  },
   card: {
+    height: 112,
+    borderRadius: 12,
+    borderWidth: 1,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 15,
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 18,
-    gap: 16,
+    gap: 15,
   },
-  cardIcon: { fontSize: 30 },
-  cardText: { flex: 1, gap: 3 },
-  cardTitle: { fontSize: 17, fontWeight: '700' },
-  cardDesc: { fontSize: 13, lineHeight: 18 },
-  chevron: { fontSize: 22, fontWeight: '300' },
+  iconWell: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  choiceIcon: { width: 32, height: 32 },
+  shuffleIcon: { width: 32, height: 26 },
+  cardText: { flex: 1, gap: 6 },
+  cardTitle: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontSize: 16,
+    lineHeight: 19,
+    color: '#25262B',
+  },
+  cardDesc: {
+    fontFamily: HomeFonts.jakartaRegular,
+    fontSize: 12,
+    lineHeight: 17,
+    color: 'rgba(0,0,0,0.7)',
+  },
+  chevronBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 6,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chevron: {
+    width: 14,
+    height: 13,
+    transform: [{ rotate: '90deg' }],
+  },
 });

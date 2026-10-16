@@ -54,9 +54,16 @@ export const FREQUENCY_LABELS: Record<WordFrequencySetting, string> = {
 };
 
 export const FREQUENCY_INDICATOR_COLORS: Record<WordFrequencySetting, string> = {
-  low: '#FF4444',
-  normal: '#FFB300',
-  high: '#44BB44',
+  low: '#FF6B77',
+  normal: '#FFB200',
+  high: '#38A19A',
+};
+
+/** Unfilled track behind the frequency thumb. High uses Figma's gray track. */
+export const FREQUENCY_TRACK_COLORS: Record<WordFrequencySetting, string> = {
+  low: 'rgba(255,107,119,0.12)',
+  normal: 'rgba(255,178,0,0.12)',
+  high: '#EAF0F1',
 };
 
 export const FREQUENCY_MULTIPLIER: Record<WordFrequencySetting, number> = {

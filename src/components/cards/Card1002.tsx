@@ -3,14 +3,9 @@
  * Shows a word pair and asks the user to identify their relationship.
  */
 import React, { useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  useColorScheme,
-} from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
 import { Colors, GenderColors } from '@/constants/theme';
 import type { Card1002Data, Card1002WordDisplay, RelationshipType } from '@/src/types/cards';
 import { getRelationshipLabel, isRelationshipType } from '@/src/types/cards';

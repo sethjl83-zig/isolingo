@@ -7,21 +7,13 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { getAddListLaunchSource } from './add-list';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  useColorScheme,
-  KeyboardAvoidingView,
-  TouchableWithoutFeedback,
-  Keyboard,
-  Platform,
-  ScrollView,
-} from 'react-native';
+  View, Text, Image, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Platform, ScrollView } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/theme';
+import { HomeFonts } from '@/constants/homeFonts';
 import { useAppContext } from '@/src/context/AppContext';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 import { getMasterDataset } from '@/src/data';
@@ -29,6 +21,11 @@ import type { Pool } from '@/src/types/pool';
 import { generatePoolId, snapToDeckSize } from '@/src/types/pool';
 import type { VocabItem } from '@/src/types/vocab';
 import StudyButton from '@/src/components/ui/StudyButton';
+
+const backChevron = require('@/assets/images/lists/back-chevron.png');
+const minusIcon = require('@/assets/images/lists/stepper-minus.png');
+const plusIcon = require('@/assets/images/lists/stepper-plus.png');
+const generateArrow = require('@/assets/images/lists/generate-arrow.png');
 
 const MIN_WORDS = 10;
 
@@ -186,17 +183,18 @@ export default function RandomListScreen() {
         <SafeAreaView style={styles.flex}>
 
           {/* Top bar */}
-          <View style={[styles.topBar, { borderBottomColor: palette.border }]}>
+          <View style={styles.topBar}>
             <TouchableOpacity
               onPress={step === 'naming' ? () => setStep('count') : () => router.back()}
               hitSlop={8}
+              accessibilityLabel="Back"
+              style={[styles.backBtn, { backgroundColor: 'rgba(94,81,164,0.15)' }]}
             >
-              <Text style={[styles.backBtn, { color: palette.tint }]}>← Back</Text>
+              <Image source={backChevron} style={styles.backIcon} accessibilityIgnoresInvertColors />
             </TouchableOpacity>
-            <Text style={[styles.screenTitle, { color: palette.text }]}>
+            <Text style={styles.screenTitle} pointerEvents="none">
               {step === 'count' ? 'Random List' : 'Name Your List'}
             </Text>
-            <View style={styles.topBarSpacer} />
           </View>
 
           <ScrollView
@@ -207,76 +205,62 @@ export default function RandomListScreen() {
             {step === 'count' ? (
               /* ── Step 1: Word count ────────────────────────────────────── */
               <View style={styles.stepContainer}>
-                <Text style={[styles.stepHeading, { color: palette.text }]}>
-                  How Many Words?
-                </Text>
-                <Text style={[styles.stepSub, { color: palette.subtext }]}>
-                  Minimum {MIN_WORDS} ({maxWords} available)
-                </Text>
+                <View style={styles.countBlock}>
+                  <Text style={styles.stepHeading}>
+                    How Many Words?
+                  </Text>
+                  <Text style={styles.stepSub}>
+                    Minimum {MIN_WORDS} ({maxWords} available)
+                  </Text>
 
-                {/* Stepper */}
-                <View style={[styles.stepper, { backgroundColor: palette.card, borderColor: palette.border }]}>
-                  <TouchableOpacity
-                    style={[
-                      styles.stepperBtn,
-                      { borderRightColor: palette.border },
-                      wordCount <= MIN_WORDS && styles.stepperBtnDisabled,
-                    ]}
-                    onPress={decrement}
-                    disabled={wordCount <= MIN_WORDS}
-                    activeOpacity={0.6}
-                  >
-                    <Text style={[
-                      styles.stepperBtnLabel,
-                      { color: wordCount <= MIN_WORDS ? palette.subtext : palette.tint },
-                    ]}>
-                      −
-                    </Text>
-                  </TouchableOpacity>
+                  <View style={[styles.stepper, { borderColor: palette.listCardBorder }]}>
+                    <TouchableOpacity
+                      onPress={decrement}
+                      disabled={wordCount <= MIN_WORDS}
+                      activeOpacity={0.6}
+                      style={wordCount <= MIN_WORDS && styles.stepperBtnDisabled}
+                    >
+                      <Image source={minusIcon} style={styles.minusIcon} accessibilityIgnoresInvertColors />
+                    </TouchableOpacity>
+                    <View style={styles.stepperMid}>
+                      <View style={styles.stepperRule} />
+                      <TextInput
+                        style={styles.stepperInput}
+                        value={countInput}
+                        onChangeText={setCountInput}
+                        onBlur={() => applyCount(countInput)}
+                        onSubmitEditing={() => applyCount(countInput)}
+                        keyboardType="number-pad"
+                        returnKeyType="done"
+                        selectTextOnFocus
+                        textAlign="center"
+                      />
+                      <View style={styles.stepperRule} />
+                    </View>
+                    <TouchableOpacity
+                      onPress={increment}
+                      disabled={wordCount >= maxWords}
+                      activeOpacity={0.6}
+                      style={wordCount >= maxWords && styles.stepperBtnDisabled}
+                    >
+                      <Image source={plusIcon} style={styles.plusIcon} accessibilityIgnoresInvertColors />
+                    </TouchableOpacity>
+                  </View>
 
-                  <TextInput
-                    style={[styles.stepperInput, { color: palette.text }]}
-                    value={countInput}
-                    onChangeText={setCountInput}
-                    onBlur={() => applyCount(countInput)}
-                    onSubmitEditing={() => applyCount(countInput)}
-                    keyboardType="number-pad"
-                    returnKeyType="done"
-                    selectTextOnFocus
-                    textAlign="center"
-                  />
-
-                  <TouchableOpacity
-                    style={[
-                      styles.stepperBtn,
-                      { borderLeftColor: palette.border },
-                      wordCount >= maxWords && styles.stepperBtnDisabled,
-                    ]}
-                    onPress={increment}
-                    disabled={wordCount >= maxWords}
-                    activeOpacity={0.6}
-                  >
-                    <Text style={[
-                      styles.stepperBtnLabel,
-                      { color: wordCount >= maxWords ? palette.subtext : palette.tint },
-                    ]}>
-                      +
-                    </Text>
-                  </TouchableOpacity>
+                  <Text style={styles.wordUnit}>
+                    {wordCount === 1 ? 'word' : 'words'} selected at random from the full vocabulary list
+                  </Text>
                 </View>
 
-                <Text style={[styles.wordUnit, { color: palette.subtext }]}>
-                  {wordCount === 1 ? 'word' : 'words'} selected at random from the full vocabulary list
-                </Text>
-
-                <StudyButton
-                  label="Generate"
-                  variant="primary"
-                  size="large"
+                <TouchableOpacity
+                  style={[styles.generateBtn, wordCount < MIN_WORDS && styles.generateDisabled]}
                   onPress={handleGenerate}
                   disabled={wordCount < MIN_WORDS}
-                  style={styles.actionBtn}
-                />
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.generateLabel}>Generate</Text>
+                  <Image source={generateArrow} style={styles.generateArrow} accessibilityIgnoresInvertColors />
+                </TouchableOpacity>
               </View>
 
             ) : (
@@ -369,104 +353,157 @@ function SummaryRow({
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
+  flex: { flex: 1, backgroundColor: '#F7F5FD' },
 
   topBar: {
+    height: 36,
+    marginHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
   },
-  backBtn: { fontSize: 15, fontWeight: '500', minWidth: 60 },
-  screenTitle: { fontSize: 17, fontWeight: '700' },
-  topBarSpacer: { minWidth: 60 },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backIcon: {
+    width: 17,
+    height: 17,
+    transform: [{ rotate: '-90deg' }],
+  },
+  screenTitle: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    fontFamily: HomeFonts.interSemiBold,
+    fontSize: 22,
+    lineHeight: 27,
+    color: '#25262B',
+  },
 
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 32,
+    paddingHorizontal: 16,
+    paddingTop: 35,
     paddingBottom: 40,
   },
 
-  stepContainer: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 16,
-  },
+  stepContainer: { gap: 40 },
+  countBlock: { alignItems: 'center', gap: 18 },
 
   stepHeading: {
-    fontSize: 26,
-    fontWeight: '700',
+    fontFamily: HomeFonts.interSemiBold,
+    fontSize: 22,
+    lineHeight: 27,
     textAlign: 'center',
+    color: '#25262B',
   },
   stepSub: {
-    fontSize: 15,
+    fontFamily: HomeFonts.jakartaRegular,
+    fontSize: 14,
+    lineHeight: 18,
     textAlign: 'center',
-    marginBottom: 8,
+    color: 'rgba(0,0,0,0.6)',
+    marginTop: -8,
   },
 
-  // Stepper
   stepper: {
+    width: 243,
+    height: 61,
+    borderRadius: 12,
+    borderWidth: 1,
+    backgroundColor: '#FFFFFF',
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 16,
-    overflow: 'hidden',
-    width: 220,
-    height: 60,
-  },
-  stepperBtn: {
-    width: 56,
-    height: '100%',
-    alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 0,
-    borderRightWidth: 1,
-    borderLeftWidth: 1,
+    gap: 20,
+    paddingHorizontal: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  stepperMid: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    height: '100%',
+  },
+  stepperRule: {
+    width: 1,
+    height: '100%',
+    backgroundColor: 'rgba(210,232,215,0.8)',
   },
   stepperBtnDisabled: { opacity: 0.35 },
-  stepperBtnLabel: { fontSize: 28, lineHeight: 32, fontWeight: '300' },
+  minusIcon: { width: 18, height: 24 },
+  plusIcon: { width: 24, height: 24 },
   stepperInput: {
-    flex: 1,
-    fontSize: 22,
-    fontWeight: '700',
+    width: 48,
+    fontFamily: HomeFonts.interSemiBold,
+    fontSize: 26,
+    lineHeight: 31,
+    color: '#25262B',
     textAlign: 'center',
-    height: '100%',
+    padding: 0,
   },
 
   wordUnit: {
-    fontSize: 13,
+    fontFamily: HomeFonts.jakartaRegular,
+    fontSize: 14,
+    lineHeight: 18,
     textAlign: 'center',
-    marginTop: -6,
-    paddingHorizontal: 32,
+    color: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 8,
   },
 
-  actionBtn: {
-    width: '100%',
-    marginTop: 12,
+  generateBtn: {
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: '#5E51A4',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
+  generateDisabled: { opacity: 0.4 },
+  generateLabel: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#FFFFFF',
+  },
+  generateArrow: { width: 12, height: 12 },
 
-  // Naming
   nameInput: {
     width: '100%',
-    borderWidth: 1.5,
-    borderRadius: 10,
+    borderWidth: 1,
+    borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 11,
     fontSize: 16,
+    fontFamily: HomeFonts.interRegular,
   },
   confirmBtn: {
     width: '100%',
-    borderRadius: 28,
+    height: 48,
+    borderRadius: 12,
     minWidth: 0,
+    paddingVertical: 0,
   },
 
   summaryCard: {
     width: '100%',
     borderWidth: 1,
-    borderRadius: 16,
+    borderRadius: 12,
     overflow: 'hidden',
   },
   summaryRow: {
@@ -476,6 +513,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
-  summaryLabel: { fontSize: 14 },
-  summaryValue: { fontSize: 14, fontWeight: '700' },
+  summaryLabel: { fontSize: 14, fontFamily: HomeFonts.interRegular },
+  summaryValue: { fontSize: 14, fontFamily: HomeFonts.interSemiBold },
 });

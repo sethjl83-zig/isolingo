@@ -1,11 +1,7 @@
 import React, { Component, type ErrorInfo, type ReactNode } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  useColorScheme,
-} from 'react-native';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/theme';
 import StudyButton from '@/src/components/ui/StudyButton';

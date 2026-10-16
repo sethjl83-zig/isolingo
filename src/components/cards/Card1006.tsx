@@ -3,16 +3,9 @@
  * Direction-sensitive translation card. German uses gender tiles; FR/ES uses determiner+noun input.
  */
 import React, { useState, useCallback, useRef } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  useColorScheme,
-  Platform,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Platform } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
 import { Colors, GenderColors } from '@/constants/theme';
 import type { Card1006Data } from '@/src/types/cards';
 import type { Gender, Language } from '@/src/types/vocab';

@@ -7,19 +7,9 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { getAddListLaunchSource } from './add-list';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  FlatList,
-  ScrollView,
-  StyleSheet,
-  useColorScheme,
-  Platform,
-  TextInput,
-  KeyboardAvoidingView,
-  TouchableWithoutFeedback,
-  Keyboard,
-} from 'react-native';
+  View, Text, TouchableOpacity, FlatList, ScrollView, StyleSheet, Platform, TextInput, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Colors, GenderColors } from '@/constants/theme';

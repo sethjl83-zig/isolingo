@@ -8,24 +8,38 @@
  * Lists, Build Your Own, or Random.
  */
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  useColorScheme,
-  Alert,
-} from 'react-native';
+import { View, Text, Image, TextInput, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/theme';
+import { HomeFonts } from '@/constants/homeFonts';
 import { useAppContext } from '@/src/context/AppContext';
 import type { VocabItem, PartOfSpeech, Gender, Language } from '@/src/types/vocab';
 import type { Pool } from '@/src/types/pool';
 import StudyButton from '@/src/components/ui/StudyButton';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
+
+const backChevron = require('@/assets/images/lists/back-chevron.png');
+const checkIcon = require('@/assets/images/lists/check-white.png');
+const fieldGlobe = require('@/assets/images/lists/field-globe.png');
+const fieldLanguage = require('@/assets/images/lists/field-language.png');
+const fieldUser = require('@/assets/images/lists/field-user.png');
+
+const CATEGORY_ICONS: Record<string, { source: number; width: number; height: number }> = {
+  people: { source: require('@/assets/images/lists/chip-people.png'), width: 16, height: 16 },
+  animals: { source: require('@/assets/images/lists/chip-animals.png'), width: 14, height: 14 },
+  food: { source: require('@/assets/images/lists/chip-food.png'), width: 17, height: 17 },
+  home: { source: require('@/assets/images/lists/chip-home.png'), width: 15, height: 13 },
+  travel: { source: require('@/assets/images/lists/chip-travel.png'), width: 12, height: 12 },
+  work: { source: require('@/assets/images/lists/chip-work.png'), width: 14, height: 12 },
+  objects: { source: require('@/assets/images/lists/chip-objects.png'), width: 18, height: 18 },
+  nature: { source: require('@/assets/images/lists/chip-nature.png'), width: 14, height: 14 },
+  time: { source: require('@/assets/images/lists/chip-time.png'), width: 13, height: 13 },
+  body: { source: require('@/assets/images/lists/chip-body.png'), width: 14, height: 14 },
+  general: { source: require('@/assets/images/lists/chip-general.png'), width: 12, height: 12 },
+};
 
 const POS_OPTIONS: PartOfSpeech[] = ['noun', 'verb', 'adjective', 'adverb'];
 const GENDER_OPTIONS: Gender[] = ['masculine', 'feminine', 'neuter'];
@@ -34,17 +48,29 @@ const CATEGORIES = [
   'nature', 'time', 'body', 'general',
 ];
 
-function pillSurface(
-  selected: boolean,
-  palette: (typeof Colors)['light'],
-) {
-  return selected
-    ? { backgroundColor: palette.tint, borderColor: palette.tint }
-    : { backgroundColor: palette.card, borderColor: palette.border };
+function titleCase(value: string) {
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-function pillLabel(selected: boolean, palette: (typeof Colors)['light']) {
-  return { color: selected ? '#fff' : palette.text };
+function choiceSurface(selected: boolean) {
+  return selected
+    ? { backgroundColor: '#38A19A', borderColor: '#38A19A' }
+    : { backgroundColor: '#FFFFFF', borderColor: 'rgba(94,81,164,0.2)' };
+}
+
+function choiceLabel(selected: boolean) {
+  return { color: selected ? '#FFFFFF' : 'rgba(0,0,0,0.5)' };
+}
+
+function categorySurface(selected: boolean) {
+  return {
+    backgroundColor: '#FFFFFF',
+    borderColor: selected ? '#38A19A' : 'rgba(94,81,164,0.2)',
+  };
+}
+
+function categoryLabel(selected: boolean) {
+  return { color: selected ? '#38A19A' : 'rgba(0,0,0,0.5)' };
 }
 
 function buildId(language: Language, lemma: string): string {
@@ -82,43 +108,40 @@ function PoolCheckRow({
   checked,
   onToggle,
   palette,
+  isFirst,
+  isLast,
 }: {
   pool: Pool;
   checked: boolean;
   onToggle: () => void;
   palette: (typeof Colors)['light'];
+  isFirst: boolean;
+  isLast: boolean;
 }) {
   return (
     <TouchableOpacity
-      style={[
-        styles.poolRow,
-        {
-          backgroundColor: checked ? palette.feedback : palette.card,
-          borderColor: checked ? palette.tint : palette.border,
-        },
-      ]}
+      style={[styles.poolRow, isFirst && styles.poolRowFirst, isLast && styles.poolRowLast]}
       onPress={onToggle}
       activeOpacity={0.75}
     >
       <View
         style={[
           styles.checkbox,
-          {
-            borderColor: palette.tint,
-            backgroundColor: checked ? palette.tint : 'transparent',
-          },
+          checked
+            ? { borderColor: palette.teal, backgroundColor: palette.teal }
+            : { borderColor: 'rgba(0,0,0,0.4)', backgroundColor: 'transparent' },
         ]}
       >
-        {checked && <Text style={styles.checkmark}>✓</Text>}
+        {checked && (
+          <Image source={checkIcon} style={styles.checkIcon} accessibilityIgnoresInvertColors />
+        )}
       </View>
-      <View style={styles.poolInfo}>
-        <Text style={[styles.poolName, { color: palette.text }]} numberOfLines={1}>
-          {pool.name}
-        </Text>
-        <Text style={[styles.poolCount, { color: palette.subtext }]}>
-          {pool.words.length} {pool.words.length === 1 ? 'word' : 'words'}
-        </Text>
-      </View>
+      <Text style={styles.poolName} numberOfLines={1}>
+        {pool.name}
+      </Text>
+      <Text style={styles.poolCount}>
+        {pool.words.length} {pool.words.length === 1 ? 'word' : 'words'}
+      </Text>
     </TouchableOpacity>
   );
 }
@@ -241,76 +264,79 @@ export default function AddWordScreen() {
     }, [router]),
   );
 
-  const inputStyle = [
-    styles.input,
-    { backgroundColor: palette.card, borderColor: palette.border, color: palette.text },
-  ];
-  const labelStyle = [styles.label, { color: palette.subtext }];
+  const languageName = language === 'de' ? 'German' : language === 'fr' ? 'French' : 'Spanish';
+  const labelStyle = styles.label;
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]}>
-      {/* Top bar */}
-      <View style={[styles.topBar, { borderBottomColor: palette.border }]}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={[styles.topBarBtn, { color: palette.tint }]}>Cancel</Text>
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      <View style={styles.topBar}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          hitSlop={8}
+          accessibilityLabel="Cancel"
+          style={styles.backBtn}
+        >
+          <Image source={backChevron} style={styles.backIcon} accessibilityIgnoresInvertColors />
         </TouchableOpacity>
-        <Text style={[styles.screenTitle, { color: palette.text }]}>New Word</Text>
-        <View style={styles.topBarSpacer} />
+        <Text style={styles.screenTitle} pointerEvents="none">New Word</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
-        <Text style={[styles.formTitle, { color: palette.text }]}>New Word</Text>
 
-        {/* Target language word */}
-        <Text style={labelStyle}>
-          {language === 'de' ? 'German' : language === 'fr' ? 'French' : 'Spanish'} Word (Bare Form)
-        </Text>
-        <TextInput
-          style={inputStyle}
-          value={lemma}
-          onChangeText={setLemma}
-          placeholder={
-            language === 'de' ? 'e.g. Hund' : language === 'fr' ? 'e.g. chien' : 'e.g. perro'
-          }
-          placeholderTextColor={palette.subtext}
-          autoCorrect={false}
-          autoCapitalize="none"
-        />
-
-        {/* English translation */}
-        <Text style={labelStyle}>English Translation</Text>
-        <TextInput
-          style={inputStyle}
-          value={english}
-          onChangeText={setEnglish}
-          placeholder="e.g. dog (separate multiple with commas)"
-          placeholderTextColor={palette.subtext}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-
-        {/* Part of speech */}
-        <Text style={labelStyle}>Part of Speech</Text>
-        <View style={styles.chipRow}>
-          {posOptions.map(option => (
-            <TouchableOpacity
-              key={option}
-              style={[styles.chip, pillSurface(pos === option, palette)]}
-              onPress={() => {
-                setPos(option);
-                if (option !== 'noun') setGender(null);
-              }}
-            >
-              <Text style={[styles.chipText, pillLabel(pos === option, palette)]}>
-                {option}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <View style={styles.field}>
+          <Text style={labelStyle}>{languageName} Word (Bare Form)</Text>
+          <View style={styles.inputRow}>
+            <Image source={fieldGlobe} style={styles.fieldIcon} accessibilityIgnoresInvertColors />
+            <TextInput
+              style={styles.input}
+              value={lemma}
+              onChangeText={setLemma}
+              placeholder={`Enter ${languageName} word`}
+              placeholderTextColor="rgba(0,0,0,0.5)"
+              autoCorrect={false}
+              autoCapitalize="none"
+            />
+          </View>
         </View>
 
-        {/* Gender (nouns only) */}
+        <View style={styles.field}>
+          <Text style={labelStyle}>English Translation</Text>
+          <View style={styles.inputRow}>
+            <Image source={fieldLanguage} style={styles.fieldIcon} accessibilityIgnoresInvertColors />
+            <TextInput
+              style={styles.input}
+              value={english}
+              onChangeText={setEnglish}
+              placeholder="e.g. dog (separate multiple with commas)"
+              placeholderTextColor="rgba(0,0,0,0.5)"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </View>
+        </View>
+
+        <View style={styles.field}>
+          <Text style={labelStyle}>Part of Speech</Text>
+          <View style={styles.chipRow}>
+            {posOptions.map(option => (
+              <TouchableOpacity
+                key={option}
+                style={[styles.chip, choiceSurface(pos === option)]}
+                onPress={() => {
+                  setPos(option);
+                  if (option !== 'noun') setGender(null);
+                }}
+              >
+                <Text style={[styles.chipText, choiceLabel(pos === option)]}>
+                  {titleCase(option)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
         {showGender && (
-          <>
+          <View style={styles.field}>
             <Text style={labelStyle}>Gender</Text>
             <View style={styles.chipRow}>
               {GENDER_OPTIONS.filter(g =>
@@ -318,99 +344,115 @@ export default function AddWordScreen() {
               ).map(g => (
                 <TouchableOpacity
                   key={g}
-                  style={[styles.chip, pillSurface(gender === g, palette)]}
+                  style={[styles.chip, choiceSurface(gender === g)]}
                   onPress={() => setGender(g)}
                 >
-                  <Text style={[styles.chipText, pillLabel(gender === g, palette)]}>
-                    {g}
+                  <Text style={[styles.chipText, choiceLabel(gender === g)]}>
+                    {titleCase(g)}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
-          </>
+          </View>
         )}
 
-        {/* Plural (nouns only) */}
         {showPlural && (
-          <>
+          <View style={styles.field}>
             <Text style={labelStyle}>Plural Form (Optional)</Text>
-            <TextInput
-              style={inputStyle}
-              value={plural}
-              onChangeText={setPlural}
-              placeholder="Plural form"
-              placeholderTextColor={palette.subtext}
-              autoCorrect={false}
-              autoCapitalize="none"
-            />
-          </>
+            <View style={styles.inputRow}>
+              <Image source={fieldUser} style={styles.fieldUserIcon} accessibilityIgnoresInvertColors />
+              <TextInput
+                style={styles.input}
+                value={plural}
+                onChangeText={setPlural}
+                placeholder="Enter plural form"
+                placeholderTextColor="rgba(0,0,0,0.5)"
+                autoCorrect={false}
+                autoCapitalize="none"
+              />
+            </View>
+          </View>
         )}
 
-        {/* Category chips */}
-        <Text style={labelStyle}>Categories (Optional — select all that apply)</Text>
-        <View style={styles.chipRow}>
-          {CATEGORIES.map(cat => {
-            const active = categories.includes(cat);
-            return (
-              <TouchableOpacity
-                key={cat}
-                style={[styles.chip, pillSurface(active, palette)]}
-                onPress={() => toggleCategory(cat)}
-              >
-                <Text style={[styles.chipText, pillLabel(active, palette)]}>
-                  {cat}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+        <View style={styles.field}>
+          <Text style={labelStyle}>Categories (Optional — select all that apply)</Text>
+          <View style={styles.categoryRow}>
+            {CATEGORIES.map(cat => {
+              const active = categories.includes(cat);
+              const icon = CATEGORY_ICONS[cat];
+              return (
+                <TouchableOpacity
+                  key={cat}
+                  style={[styles.categoryChip, categorySurface(active)]}
+                  onPress={() => toggleCategory(cat)}
+                >
+                  <Image
+                    source={icon.source}
+                    style={{ width: icon.width, height: icon.height, tintColor: active ? '#38A19A' : '#000000', opacity: active ? 1 : 0.5 }}
+                    accessibilityIgnoresInvertColors
+                  />
+                  <Text style={[styles.categoryText, categoryLabel(active)]}>
+                    {titleCase(cat)}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
 
-        {/* ── Pool selection ───────────────────────────────────────────────── */}
-        <Text style={[styles.label, styles.poolSectionLabel, { color: palette.subtext }]}>
+        <View style={styles.field}>
+        <Text style={styles.label}>
           Add to which list(s)?
         </Text>
 
         {hasPools ? (
-          <View style={styles.poolList}>
-            {allPools.map(pool => (
-              <PoolCheckRow
-                key={pool.id}
-                pool={pool}
-                checked={selectedPoolIds.has(pool.id)}
-                onToggle={() => togglePool(pool.id)}
-                palette={palette}
-              />
-            ))}
+          <>
+            <View style={styles.poolList}>
+              {allPools.map((pool, index) => (
+                <PoolCheckRow
+                  key={pool.id}
+                  pool={pool}
+                  checked={selectedPoolIds.has(pool.id)}
+                  onToggle={() => togglePool(pool.id)}
+                  palette={palette}
+                  isFirst={index === 0}
+                  isLast={index === allPools.length - 1}
+                />
+              ))}
+            </View>
             {selectedPoolIds.size === 0 && (
-              <Text style={[styles.poolHint, { color: palette.subtext }]}>
+              <Text style={styles.poolHint}>
                 Select at least one list.
               </Text>
             )}
-          </View>
+          </>
         ) : (
           <View style={[styles.noPoolsBox, { backgroundColor: palette.card, borderColor: palette.border }]}>
-            <Text style={[styles.noPoolsText, { color: palette.subtext }]}>
+            <Text style={styles.noPoolsText}>
               You need at least one list before adding a new word. Create one in My Vocabulary first.
             </Text>
           </View>
         )}
+        </View>
 
         {/* Actions */}
         <View style={styles.saveRow}>
-          <StudyButton
-            label="Save"
-            variant="primary"
-            size="medium"
-            onPress={handleSave}
-            disabled={!canSave}
-            style={styles.actionBtn}
-          />
           <StudyButton
             label="Cancel"
             variant="secondary"
             size="medium"
             onPress={() => router.back()}
             style={styles.actionBtn}
+            textStyle={styles.actionLabel}
+          />
+          <StudyButton
+            label="Save Word"
+            variant="primary"
+            size="medium"
+            onPress={handleSave}
+            disabled={!canSave}
+            style={styles.actionBtn}
+            textStyle={styles.actionLabel}
           />
         </View>
       </ScrollView>
@@ -421,79 +463,194 @@ export default function AddWordScreen() {
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safe: { flex: 1 },
+  safe: { flex: 1, backgroundColor: '#F7F5FD' },
   topBar: {
+    height: 36,
+    marginHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
   },
-  topBarBtn: { fontSize: 15, fontWeight: '500', minWidth: 60 },
-  topBarSpacer: { minWidth: 60 },
-  screenTitle: { fontSize: 17, fontWeight: '600' },
-  form: { paddingHorizontal: 20, paddingVertical: 20, gap: 8 },
-  formTitle: { fontSize: 20, fontWeight: '700', marginBottom: 12 },
-  label: { fontSize: 13, fontWeight: '600', marginTop: 8 },
-  input: {
-    borderWidth: 1.5,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(94,81,164,0.15)',
+  },
+  backIcon: {
+    width: 17,
+    height: 17,
+    transform: [{ rotate: '-90deg' }],
+  },
+  screenTitle: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    fontFamily: HomeFonts.interSemiBold,
+    fontSize: 22,
+    lineHeight: 27,
+    color: '#25262B',
+  },
+  form: { paddingHorizontal: 16, paddingTop: 25, paddingBottom: 32, gap: 20 },
+  field: { gap: 6, width: '100%' },
+  label: {
+    fontFamily: HomeFonts.jakartaMedium,
+    fontWeight: 'normal',
     fontSize: 16,
-    marginTop: 4,
+    lineHeight: 24,
+    color: 'rgba(0,0,0,0.8)',
   },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 6 },
+  inputRow: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.4)',
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  fieldIcon: { width: 18, height: 18 },
+  fieldUserIcon: { width: 19.5, height: 16.6 },
+  input: {
+    flex: 1,
+    padding: 0,
+    fontFamily: HomeFonts.jakartaMedium,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#25262B',
+  },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: {
     borderWidth: 1,
-    borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  chipText: { fontSize: 14 },
-
-  // Pool selection
-  poolSectionLabel: { marginTop: 20 },
-  poolList: { gap: 8, marginTop: 6 },
-  poolRow: {
+  chipText: {
+    fontFamily: HomeFonts.jakartaMedium,
+    fontWeight: 'normal',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  categoryRow: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 6, rowGap: 8 },
+  categoryChip: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 11,
+    paddingVertical: 8,
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 4,
+  },
+  categoryText: {
+    fontFamily: HomeFonts.jakartaMedium,
+    fontWeight: 'normal',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+
+  poolList: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    borderWidth: 1.5,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    gap: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  poolRow: {
+    minHeight: 42,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderColor: 'rgba(0,0,0,0.2)',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    gap: 14,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderBottomWidth: 1,
+  },
+  poolRowFirst: {
+    borderTopWidth: 1,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  poolRowLast: {
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
   },
   checkbox: {
-    width: 22,
-    height: 22,
+    width: 21,
+    height: 21,
     borderRadius: 11,
-    borderWidth: 2,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
-  checkmark: { color: '#fff', fontSize: 12, fontWeight: '700', lineHeight: 15 },
-  poolInfo: { flex: 1, gap: 2 },
-  poolName: { fontSize: 15, fontWeight: '600' },
-  poolCount: { fontSize: 12 },
-  poolHint: { fontSize: 13, marginTop: 4 },
+  checkIcon: { width: 13, height: 13 },
+  poolName: {
+    flex: 1,
+    fontFamily: HomeFonts.jakartaMedium,
+    fontWeight: 'normal',
+    fontSize: 14.8,
+    color: '#25262B',
+  },
+  poolCount: {
+    fontFamily: HomeFonts.interMedium,
+    fontWeight: 'normal',
+    fontSize: 13,
+    lineHeight: 16,
+    color: '#5E51A4',
+  },
+  poolHint: {
+    fontFamily: HomeFonts.jakartaMedium,
+    fontWeight: 'normal',
+    fontSize: 14,
+    lineHeight: 24,
+    color: 'rgba(0,0,0,0.6)',
+  },
   noPoolsBox: {
     borderWidth: 1,
     borderRadius: 12,
+    borderColor: '#DAECDF',
+    backgroundColor: '#FFFFFF',
     padding: 16,
     marginTop: 6,
   },
-  noPoolsText: { fontSize: 14, lineHeight: 21 },
+  noPoolsText: {
+    fontFamily: HomeFonts.interRegular,
+    fontSize: 14,
+    lineHeight: 21,
+    color: 'rgba(0,0,0,0.6)',
+  },
 
   saveRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 28,
+    gap: 10,
+    marginTop: 5,
     alignItems: 'stretch',
-    justifyContent: 'center',
     width: '100%',
   },
-  actionBtn: { flex: 1, minWidth: 0 },
+  actionBtn: { flex: 1, height: 48, minWidth: 0, paddingVertical: 0, borderRadius: 12 },
+  actionLabel: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+  },
 });

@@ -1,37 +1,32 @@
 import React, { useCallback, useState } from 'react';
-import {
-  View,
-  Text,
-  Pressable,
-  StyleSheet,
-  useColorScheme,
-  LayoutChangeEvent,
-} from 'react-native';
-import { Colors } from '@/constants/theme';
+import { View, Text, Pressable, StyleSheet, LayoutChangeEvent } from 'react-native';
+
 import {
   FREQUENCY_ORDER,
   FREQUENCY_LABELS,
   FREQUENCY_INDICATOR_COLORS,
+  FREQUENCY_TRACK_COLORS,
   type WordFrequencySetting,
 } from '@/src/types/state';
 
 const TRACK_HEIGHT = 9;
-const THUMB_SIZE = 28;
+const THUMB_SIZE = 27;
 const POSITION_COUNT = FREQUENCY_ORDER.length;
 
 interface FrequencySnapSliderProps {
   value: WordFrequencySetting;
   onChange: (value: WordFrequencySetting) => void;
   compact?: boolean;
+  /** Vocab-bank rows put the value label beside the track. */
+  hideLabel?: boolean;
 }
 
 function FrequencySnapSlider({
   value,
   onChange,
   compact = false,
+  hideLabel = false,
 }: FrequencySnapSliderProps) {
-  const scheme = useColorScheme() ?? 'light';
-  const palette = Colors[scheme];
   const activeIndex = FREQUENCY_ORDER.indexOf(value);
   const [trackWidth, setTrackWidth] = useState(0);
 
@@ -47,14 +42,16 @@ function FrequencySnapSlider({
   const fillWidth = trackWidth > 0 ? thumbLeft + THUMB_SIZE / 2 : 0;
 
   return (
-    <View style={[styles.wrap, compact && styles.wrapCompact]}>
-      <Text style={[styles.label, { color: indicatorColor }]}>
-        {FREQUENCY_LABELS[value]}
-      </Text>
+    <View style={[styles.wrap, compact && styles.wrapCompact, hideLabel && styles.wrapInline]}>
+      {!hideLabel && (
+        <Text style={[styles.label, { color: indicatorColor }]}>
+          {FREQUENCY_LABELS[value]}
+        </Text>
+      )}
 
-      <View style={styles.touchArea}>
+      <View style={[styles.touchArea, hideLabel && styles.touchAreaInline]}>
         <View
-          style={[styles.track, { backgroundColor: palette.border }]}
+          style={[styles.track, { backgroundColor: FREQUENCY_TRACK_COLORS[value] }]}
           onLayout={onTrackLayout}
         >
           {trackWidth > 0 && (
@@ -100,6 +97,7 @@ function FrequencySnapSlider({
 const styles = StyleSheet.create({
   wrap: { width: 132, alignItems: 'center', gap: 8 },
   wrapCompact: { width: 112 },
+  wrapInline: { width: 159, gap: 0 },
   label: {
     fontSize: 13,
     fontWeight: '700',
@@ -111,6 +109,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
     justifyContent: 'center',
   },
+  touchAreaInline: { minHeight: 27 },
   track: {
     width: '100%',
     height: TRACK_HEIGHT,
@@ -141,13 +140,6 @@ const styles = StyleSheet.create({
     height: THUMB_SIZE,
     borderRadius: THUMB_SIZE / 2,
     top: (TRACK_HEIGHT - THUMB_SIZE) / 2,
-    borderWidth: 2,
-    borderColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
   },
 });
 
