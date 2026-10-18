@@ -5,7 +5,8 @@
  * It runs a scale-pop animation once on mount and then stays visible.
  */
 import React, { useEffect } from 'react';
-import { StyleProp, ViewStyle } from 'react-native';
+import { StyleProp, TextStyle } from 'react-native';
+import { HomeFonts } from '@/constants/homeFonts';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -17,7 +18,7 @@ import Animated, {
 interface Props {
   color: string;
   /** Optional outer wrapper style (use for marginTop, alignment, etc.) */
-  style?: StyleProp<ViewStyle>;
+  style?: StyleProp<TextStyle>;
 }
 
 export default function CorrectText({ color, style }: Props) {
@@ -40,12 +41,14 @@ export default function CorrectText({ color, style }: Props) {
     <Animated.Text
       style={[
         {
-          fontSize: 36,
-          fontWeight: '800',
+          fontFamily: HomeFonts.jakartaSemiBold,
+          fontWeight: 'normal',
+          fontSize: 14.5,
+          lineHeight: 20,
           textAlign: 'center',
           color,
         },
-        style as object,
+        style,
         animStyle,
       ]}
     >

@@ -27,10 +27,10 @@ export type RelationshipType =
 
 /** Canonical answer-button labels for Card 1002. */
 export const RELATIONSHIP_LABELS: Record<RelationshipType, string> = {
-  opposites: "They're opposites",
+  opposites: "They’re opposites",
   go_hand_in_hand: 'They go hand in hand',
   same_meaning: 'They mean the same thing',
-  same_kind: "They're different kinds of the same thing",
+  same_kind: "They’re different kinds of the same thing",
   hyponym: 'One is a type of the other',
   no_clear_relationship: 'No clear relationship',
 };

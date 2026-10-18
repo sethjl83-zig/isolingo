@@ -3,17 +3,25 @@
  * Direction-sensitive translation card. German uses gender tiles; FR/ES uses determiner+noun input.
  */
 import React, { useState, useCallback, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { Colors, GenderColors } from '@/constants/theme';
+import { HomeFonts } from '@/constants/homeFonts';
 import type { Card1006Data } from '@/src/types/cards';
 import type { Gender, Language } from '@/src/types/vocab';
 import { splitDisplayForm } from '@/src/engines/articleHelper';
 import GenderTile from '../ui/GenderTile';
 import StudyButton from '../ui/StudyButton';
 import CorrectText from '../ui/CorrectText';
+import FeedbackNote from '../ui/FeedbackNote';
 import StudyCardLayout from './StudyCardLayout';
+import {
+  studyChrome,
+  actionLabelStyle,
+  flipButtonStyle,
+  submitButtonStyle,
+} from './studyChrome';
 import {
   validateAnswer,
   validateGermanNoun,
@@ -82,7 +90,7 @@ export default function Card1006({
   const inputTextColor =
     showGenderTiles && selectedGender && !resolved
       ? GenderColors[selectedGender]
-      : palette.text;
+      : 'rgba(0,0,0,0.8)';
 
   const handleSubmit = useCallback(() => {
     if (!canSubmit) return;
@@ -163,7 +171,7 @@ export default function Card1006({
     card.item.partOfSpeech === 'noun' &&
     card.item.gender
       ? GenderColors[card.item.gender as Gender]
-      : palette.text;
+      : '#000000';
 
   // ── Split article/noun for FR/ES — only the noun gets the gender colour ────────
   const isFrEs = language === 'fr' || language === 'es';
@@ -207,21 +215,16 @@ export default function Card1006({
 
   // ── Feedback text (non-German answer reveal uses plain feedback string) ─────
   let feedbackText = '';
-  let feedbackColor = palette.text;
   if (cardState === 'correct') {
     feedbackText = 'Correct!';
-    feedbackColor = palette.correct;
   } else if (cardState === 'incorrect_1') {
     feedbackText = showTypoHint
       ? 'Almost! Check your spelling'
       : 'Not quite — try again';
-    feedbackColor = palette.incorrect;
   } else if (cardState === 'incorrect_final' && !showGenderTiles) {
     feedbackText = `Correct Answer: ${card.canonicalAnswer}`;
-    feedbackColor = palette.incorrect;
   } else if (cardState === 'flipped' && !showGenderTiles) {
     feedbackText = 'Answer shown';
-    feedbackColor = palette.subtext;
   }
 
   const germanErrorHints =
@@ -250,22 +253,24 @@ export default function Card1006({
       style={{ backgroundColor: palette.background }}
       words={[{ id: card.item.id, lemma: card.item.lemma }]}
       bottomBar={
-        <View style={styles.bottomBar}>
+        <View style={studyChrome.bottomBar}>
           <StudyButton
             label="Flip"
             variant="secondary"
-            size="small"
             onPress={handleFlip}
             disabled={resolved}
+            style={flipButtonStyle}
+            textStyle={actionLabelStyle}
           />
 
           {cardState === 'typing' && (
             <StudyButton
               label="Submit"
-              variant={canSubmit ? 'primary' : 'inactive'}
-              size="medium"
+              variant="primary"
               onPress={handleSubmit}
               disabled={!canSubmit}
+              style={submitButtonStyle}
+              textStyle={actionLabelStyle}
             />
           )}
 
@@ -273,33 +278,39 @@ export default function Card1006({
             <StudyButton
               label="Submit"
               variant="primary"
-              size="medium"
               onPress={handleSubmit}
+              style={submitButtonStyle}
+              textStyle={actionLabelStyle}
             />
           )}
 
           {(cardState === 'correct' ||
             cardState === 'incorrect_final' ||
             cardState === 'flipped') && (
-            <StudyButton label="Next" variant="primary" size="medium" onPress={onNext} />
+            <StudyButton
+              label="Next"
+              variant="primary"
+              onPress={onNext}
+              style={submitButtonStyle}
+              textStyle={actionLabelStyle}
+            />
           )}
         </View>
       }
     >
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
+        style={studyChrome.scroll}
+        contentContainerStyle={studyChrome.content}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="none"
         showsVerticalScrollIndicator={false}
       >
-            {/* Top bar */}
-            <View style={styles.topBar}>
+            <View style={studyChrome.topBar}>
               <TouchableOpacity onPress={onExit}>
-                <Text style={[styles.topBarBtn, { color: palette.tint }]}>Exit Study</Text>
+                <Text style={studyChrome.exit}>Exit Study</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={onHome}>
-                <Text style={[styles.topBarBtn, { color: palette.tint }]}>Home</Text>
+                <Text style={studyChrome.home}>Home</Text>
               </TouchableOpacity>
             </View>
 
@@ -307,7 +318,7 @@ export default function Card1006({
             <View style={styles.promptArea}>
               {promptParts ? (
                 <Text style={styles.prompt}>
-                  <Text style={{ color: palette.text }}>
+                  <Text style={styles.promptArticle}>
                     {promptParts.article}{promptParts.separator}
                   </Text>
                   <Text style={{ color: promptColor }}>
@@ -318,7 +329,7 @@ export default function Card1006({
                 <Text style={[styles.prompt, { color: promptColor }]}>{card.prompt}</Text>
               )}
               {senseLabel && (
-                <Text style={[styles.senseLabel, { color: palette.subtext }]}>
+                <Text style={styles.senseLabel}>
                   ({senseLabel})
                 </Text>
               )}
@@ -328,12 +339,10 @@ export default function Card1006({
             <TextInput
               style={[
                 styles.input,
-                {
-                  backgroundColor: palette.card,
-                  borderColor: palette.border,
-                  color: inputTextColor,
-                },
-                resolved && styles.inputResolved,
+                cardState === 'correct' && styles.inputCorrect,
+                (cardState === 'incorrect_1' || cardState === 'incorrect_final') &&
+                  styles.inputIncorrect,
+                { color: inputTextColor },
               ]}
               value={inputText}
               onChangeText={text => {
@@ -370,10 +379,10 @@ export default function Card1006({
             {/* Correct answer reveal — FR/ES and non-gender cards only */}
             {(cardState === 'incorrect_final' || cardState === 'flipped') &&
               !showGenderTiles && (
-              <View style={styles.answerReveal}>
+              <View style={[styles.answerReveal, styles.inputCorrect]}>
                 {answerParts && correctDisplayGender ? (
                   <Text style={styles.answerText}>
-                    <Text style={{ color: palette.text }}>
+                    <Text style={styles.answerArticle}>
                       {answerParts.article}{answerParts.separator}
                     </Text>
                     <Text style={{ color: GenderColors[correctDisplayGender] }}>
@@ -385,7 +394,7 @@ export default function Card1006({
                     {card.canonicalAnswer}
                   </Text>
                 ) : (
-                  <Text style={[styles.answerText, { color: palette.text }]}>
+                  <Text style={styles.answerText}>
                     {card.canonicalAnswer}
                   </Text>
                 )}
@@ -394,34 +403,34 @@ export default function Card1006({
 
             {/* Feedback */}
             {cardState === 'correct' ? (
-              <View style={styles.feedbackArea}>
-                <CorrectText color={palette.correct} />
+              <FeedbackNote tone="correct">
+                <CorrectText color="#38A19A" style={styles.correctLabel} />
                 {alsoCorrect.length > 0 && (
-                  <Text style={[styles.alsoCorrect, { color: palette.subtext }]}>
+                  <Text style={styles.alsoCorrect}>
                     Also Accepted: {alsoCorrect.join(', ')}
                   </Text>
                 )}
-              </View>
+              </FeedbackNote>
             ) : (cardState === 'incorrect_final' || cardState === 'flipped') &&
               showGenderTiles &&
               correctDisplayGender ? (
-              <View style={styles.feedbackArea}>
-                <Text style={[styles.feedback, { color: palette.incorrect }]}>
+              <FeedbackNote tone="info">
+                <Text style={styles.noteText}>
                   {'Correct Answer: '}
                   <Text style={{ color: GenderColors[correctDisplayGender] }}>
                     {correctDisplayNoun}
                   </Text>
                 </Text>
                 {germanErrorHints.length > 0 && (
-                  <Text style={[styles.errorHints, { color: palette.subtext }]}>
+                  <Text style={styles.errorHints}>
                     {germanErrorHints.join(' ')}
                   </Text>
                 )}
-              </View>
+              </FeedbackNote>
             ) : feedbackText !== '' ? (
-              <View style={styles.feedbackArea}>
-                <Text style={[styles.feedback, { color: feedbackColor }]}>{feedbackText}</Text>
-              </View>
+              <FeedbackNote tone="info">
+                <Text style={styles.noteText}>{feedbackText}</Text>
+              </FeedbackNote>
             ) : null}
 
       </ScrollView>
@@ -430,55 +439,106 @@ export default function Card1006({
 }
 
 const styles = StyleSheet.create({
-  scroll: { flex: 1 },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 16,
+  promptArea: { marginBottom: 12 },
+  prompt: {
+    fontFamily: HomeFonts.jakartaMedium,
+    fontWeight: 'normal',
+    fontSize: 14.8,
+    color: '#000000',
   },
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 24,
-  },
-  topBarBtn: { fontSize: 15, fontWeight: '500' },
-  promptArea: { alignItems: 'center', marginBottom: 28 },
-  prompt: { fontSize: 26, fontWeight: '700', textAlign: 'center' },
+  promptArticle: { color: '#000000' },
   senseLabel: {
-    fontSize: 15,
-    fontWeight: '400',
-    textAlign: 'center',
-    marginTop: 6,
+    fontFamily: HomeFonts.interMedium,
+    fontWeight: 'normal',
+    fontSize: 14.5,
+    lineHeight: 24,
+    color: 'rgba(0,0,0,0.8)',
+    marginTop: 12,
   },
   input: {
-    borderWidth: 1.5,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#DAECDF',
     borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: Platform.OS === 'ios' ? 14 : 10,
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
+    minHeight: 60,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    fontFamily: HomeFonts.interMedium,
+    fontWeight: 'normal',
+    fontSize: 14.5,
+    lineHeight: 24,
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  inputResolved: { opacity: 0.7 },
+  inputCorrect: {
+    backgroundColor: 'rgba(56,161,154,0.05)',
+    borderColor: '#38A19A',
+    shadowRadius: 12,
+  },
+  inputIncorrect: {
+    backgroundColor: 'rgba(247,72,86,0.05)',
+    borderColor: '#F74856',
+  },
   tilesRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 16,
+    gap: 10,
     marginBottom: 20,
   },
-  answerReveal: { alignItems: 'center', marginBottom: 8 },
-  answerText: { fontSize: 20, fontWeight: '700' },
-  feedbackArea: { alignItems: 'center', marginTop: 8, gap: 4 },
-  feedback: { fontSize: 16, fontWeight: '600', textAlign: 'center' },
-  errorHints: { fontSize: 14, fontWeight: '500', textAlign: 'center' },
-  alsoCorrect: { fontSize: 13, textAlign: 'center' },
-  bottomBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 24,
+  answerReveal: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#DAECDF',
+    borderRadius: 12,
+    minHeight: 60,
+    paddingHorizontal: 15,
     paddingVertical: 12,
-    gap: 12,
+    justifyContent: 'center',
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  answerText: {
+    fontFamily: HomeFonts.interMedium,
+    fontWeight: 'normal',
+    fontSize: 14.5,
+    lineHeight: 24,
+    color: 'rgba(0,0,0,0.8)',
+  },
+  answerArticle: { color: 'rgba(0,0,0,0.8)' },
+  correctLabel: {
+    fontFamily: HomeFonts.jakartaSemiBold,
+    fontWeight: 'normal',
+    fontSize: 14.5,
+    lineHeight: 20,
+    textAlign: 'left',
+  },
+  noteText: {
+    fontFamily: HomeFonts.jakartaMedium,
+    fontWeight: 'normal',
+    fontSize: 14.5,
+    lineHeight: 20,
+    color: '#5E51A4',
+  },
+  errorHints: {
+    fontFamily: HomeFonts.interMedium,
+    fontWeight: 'normal',
+    fontSize: 14,
+    lineHeight: 20,
+    color: 'rgba(0,0,0,0.6)',
+  },
+  alsoCorrect: {
+    fontFamily: HomeFonts.jakartaRegular,
+    fontWeight: 'normal',
+    fontSize: 13,
+    lineHeight: 18,
+    color: '#38A19A',
   },
 });

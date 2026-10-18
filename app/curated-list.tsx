@@ -429,14 +429,7 @@ export default function CuratedListScreen() {
               </Text>
 
               <TextInput
-                style={[
-                  styles.nameInput,
-                  {
-                    backgroundColor: palette.card,
-                    borderColor: palette.border,
-                    color: palette.text,
-                  },
-                ]}
+                style={styles.nameInput}
                 value={listName}
                 onChangeText={setListName}
                 placeholder="Enter list name"
@@ -448,21 +441,8 @@ export default function CuratedListScreen() {
                 selectTextOnFocus
               />
 
-              <View
-                style={[
-                  styles.summaryCard,
-                  { backgroundColor: palette.card, borderColor: palette.border },
-                ]}
-              >
-                <View
-                  style={[
-                    styles.summaryRow,
-                    {
-                      borderBottomWidth: StyleSheet.hairlineWidth,
-                      borderBottomColor: palette.border,
-                    },
-                  ]}
-                >
+              <View style={styles.summaryCard}>
+                <View style={[styles.summaryRow, styles.summaryDivider]}>
                   <Text style={[styles.summaryLabel, { color: palette.subtext }]}>Words</Text>
                   <Text style={[styles.summaryValue, { color: palette.text }]}>
                     {combinedWordCount}
@@ -483,6 +463,7 @@ export default function CuratedListScreen() {
                 onPress={handleConfirmCombined}
                 disabled={listName.trim().length === 0}
                 style={styles.confirmBtn}
+                textStyle={styles.confirmLabel}
               />
             </ScrollView>
           </SafeAreaView>
@@ -757,19 +738,33 @@ const styles = StyleSheet.create({
     marginTop: -8,
   },
   nameInput: {
+    height: 48,
     borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.4)',
     borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    fontSize: 16,
-    fontFamily: HomeFonts.interRegular,
     backgroundColor: '#FFFFFF',
+    paddingHorizontal: 15,
+    fontFamily: HomeFonts.jakartaMedium,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#25262B',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
   summaryCard: {
     borderWidth: 1,
+    borderColor: '#DAECDF',
     borderRadius: 12,
     overflow: 'hidden',
     backgroundColor: '#FFFFFF',
+  },
+  summaryDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(210,232,215,0.8)',
   },
   summaryRow: {
     flexDirection: 'row',

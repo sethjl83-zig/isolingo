@@ -2,6 +2,7 @@ import React from 'react';
 import { InputAccessoryView, View, Text, TouchableOpacity, Platform, Keyboard, StyleSheet } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
+import { HomeFonts } from '@/constants/homeFonts';
 import { Colors } from '@/constants/theme';
 
 export const KEYBOARD_DONE_ACCESSORY_ID = 'isolingo-keyboard-done';
@@ -17,14 +18,14 @@ export default function KeyboardDoneAccessory() {
       <View
         style={[
           styles.bar,
-          { backgroundColor: palette.card, borderTopColor: palette.border },
+          { backgroundColor: palette.card, borderTopColor: 'rgba(210,232,215,0.8)' },
         ]}
       >
         <TouchableOpacity
           onPress={Keyboard.dismiss}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Text style={[styles.done, { color: palette.tint }]}>Done</Text>
+          <Text style={styles.done}>Done</Text>
         </TouchableOpacity>
       </View>
     </InputAccessoryView>
@@ -41,7 +42,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   done: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
     fontSize: 17,
-    fontWeight: '600',
+    color: '#5E51A4',
   },
 });

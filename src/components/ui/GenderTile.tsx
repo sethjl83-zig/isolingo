@@ -1,8 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, StyleSheet, type ViewStyle } from 'react-native';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
-import { Colors, GenderColors } from '@/constants/theme';
+import { GenderColors } from '@/constants/theme';
 import type { Gender } from '@/src/types/vocab';
 
 interface GenderTileProps {
@@ -23,57 +22,48 @@ export default function GenderTile({
   disabled = false,
   style,
 }: GenderTileProps) {
-  const scheme = useColorScheme() ?? 'light';
-  const palette = Colors[scheme];
   const color = GenderColors[gender];
 
   return (
     <TouchableOpacity
       style={[
         styles.tile,
-        { backgroundColor: color },
+        gender === 'neuter' && styles.neuter,
+        { backgroundColor: color, borderColor: color },
         selected && !showCorrect && styles.selected,
-        showCorrect && [
-          styles.correct,
-          {
-            borderColor: palette.correct,
-            shadowColor: palette.correct,
-          },
-        ],
+        showCorrect && styles.correct,
         disabled && !showCorrect && styles.disabled,
         style,
       ]}
       onPress={onPress}
       disabled={disabled || !onPress}
       activeOpacity={0.75}
+      accessibilityRole="button"
     />
   );
 }
 
 const styles = StyleSheet.create({
   tile: {
-    width: 52,
-    height: 52,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 110,
+    height: 80,
+    borderRadius: 16,
+    borderWidth: 2,
+  },
+  neuter: {
+    borderRadius: 12,
   },
   selected: {
-    borderWidth: 3,
-    borderColor: '#fff',
+    borderColor: '#FFFFFF',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
     elevation: 4,
   },
   correct: {
-    borderWidth: 4,
-    transform: [{ scale: 1.12 }],
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.65,
-    shadowRadius: 10,
-    elevation: 10,
+    borderColor: '#38A19A',
+    borderWidth: 3,
   },
   disabled: {
     opacity: 0.4,

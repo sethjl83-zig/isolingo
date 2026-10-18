@@ -309,7 +309,6 @@ export default function VocabBankScreen() {
           value={searchQuery}
           onChangeText={setSearchQuery}
           icon={searchIcon}
-          containerStyle={styles.search}
         />
         <View style={styles.countPill}>
           <Text style={styles.counter}>
@@ -321,7 +320,7 @@ export default function VocabBankScreen() {
       {loadingWords ? (
         <View style={styles.loadingBox}>
           <ActivityIndicator size="large" color={palette.tint} />
-          <Text style={[styles.loadingText, { color: palette.subtext }]}>
+          <Text style={styles.loadingText}>
             Loading words…
           </Text>
         </View>
@@ -340,7 +339,7 @@ export default function VocabBankScreen() {
           windowSize={7}
           removeClippedSubviews={Platform.OS === 'android'}
           ListEmptyComponent={
-            <Text style={[styles.emptyText, { color: palette.subtext }]}>
+            <Text style={styles.emptyText}>
               {searchQuery
                 ? 'No words match your search.'
                 : 'No words in this list yet.'}
@@ -418,21 +417,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 15,
   },
-  search: {
-    flex: 1,
-    height: 45,
-    borderRadius: 12,
-    borderColor: 'rgba(0,0,0,0.4)',
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 11,
-    paddingVertical: 0,
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-  },
   countPill: {
     height: 46,
     minWidth: 92,
@@ -461,7 +445,13 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 24,
   },
-  loadingText: { fontSize: 15, textAlign: 'center' },
+  loadingText: {
+    fontFamily: HomeFonts.jakartaRegular,
+    fontSize: 14,
+    lineHeight: 18,
+    color: 'rgba(0,0,0,0.6)',
+    textAlign: 'center',
+  },
 
   list: { flex: 1 },
   listContent: {
@@ -470,7 +460,15 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     gap: 10,
   },
-  emptyText: { textAlign: 'center', fontSize: 15, marginTop: 32, paddingHorizontal: 20 },
+  emptyText: {
+    fontFamily: HomeFonts.jakartaRegular,
+    fontSize: 14,
+    lineHeight: 18,
+    color: 'rgba(0,0,0,0.6)',
+    textAlign: 'center',
+    marginTop: 32,
+    paddingHorizontal: 20,
+  },
 
   bottomBar: {
     flexDirection: 'row',

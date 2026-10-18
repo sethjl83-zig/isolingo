@@ -274,14 +274,7 @@ export default function RandomListScreen() {
                 </Text>
 
                 <TextInput
-                  style={[
-                    styles.nameInput,
-                    {
-                      backgroundColor: palette.card,
-                      borderColor: palette.border,
-                      color: palette.text,
-                    },
-                  ]}
+                  style={styles.nameInput}
                   value={listName}
                   onChangeText={setListName}
                   placeholder="Enter list name"
@@ -293,7 +286,7 @@ export default function RandomListScreen() {
                   selectTextOnFocus
                 />
 
-                <View style={[styles.summaryCard, { backgroundColor: palette.card, borderColor: palette.border }]}>
+                <View style={styles.summaryCard}>
                   <SummaryRow
                     label="Words"
                     value={String(pickedWords.length)}
@@ -310,6 +303,7 @@ export default function RandomListScreen() {
                   onPress={handleConfirm}
                   disabled={listName.trim().length === 0}
                   style={styles.confirmBtn}
+                  textStyle={styles.confirmLabel}
                 />
               </View>
             )}
@@ -338,10 +332,7 @@ function SummaryRow({
     <View
       style={[
         styles.summaryRow,
-        showDivider && {
-          borderBottomWidth: StyleSheet.hairlineWidth,
-          borderBottomColor: palette.border,
-        },
+        showDivider && styles.summaryDivider,
       ]}
     >
       <Text style={[styles.summaryLabel, { color: palette.subtext }]}>{label}</Text>
@@ -485,12 +476,28 @@ const styles = StyleSheet.create({
 
   nameInput: {
     width: '100%',
+    height: 48,
     borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.4)',
     borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 15,
+    fontFamily: HomeFonts.jakartaMedium,
+    fontWeight: 'normal',
     fontSize: 16,
-    fontFamily: HomeFonts.interRegular,
+    lineHeight: 24,
+    color: '#25262B',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  confirmLabel: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
   },
   confirmBtn: {
     width: '100%',
@@ -503,8 +510,14 @@ const styles = StyleSheet.create({
   summaryCard: {
     width: '100%',
     borderWidth: 1,
+    borderColor: '#DAECDF',
     borderRadius: 12,
     overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
+  },
+  summaryDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(210,232,215,0.8)',
   },
   summaryRow: {
     flexDirection: 'row',

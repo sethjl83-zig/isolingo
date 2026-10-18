@@ -7,12 +7,13 @@
  * minimum word count, and no naming step.
  */
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { View, Text, TouchableOpacity, FlatList, ScrollView, StyleSheet, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { View, Text, Image, TouchableOpacity, FlatList, ScrollView, StyleSheet, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Colors, GenderColors } from '@/constants/theme';
+import { HomeFonts } from '@/constants/homeFonts';
 import { useAppContext } from '@/src/context/AppContext';
 import { getMasterDataset } from '@/src/data';
 import {
@@ -30,17 +31,15 @@ import SearchModeToggle from '@/src/components/ui/SearchModeToggle';
 import StudyButton from '@/src/components/ui/StudyButton';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
-function pillSurface(
-  selected: boolean,
-  palette: (typeof Colors)['light'],
-) {
-  return selected
-    ? { backgroundColor: palette.tint, borderColor: palette.tint }
-    : { backgroundColor: palette.card, borderColor: palette.border };
-}
+const backChevron = require('@/assets/images/lists/back-chevron.png');
+const checkIcon = require('@/assets/images/lists/check-white.png');
 
-function pillLabel(selected: boolean, palette: (typeof Colors)['light']) {
-  return { color: selected ? '#fff' : palette.text };
+function hexAlpha(hex: string, alpha: number) {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
 }
 
 export default function AddExistingWordScreen() {
@@ -150,39 +149,46 @@ export default function AddExistingWordScreen() {
 
     return (
       <TouchableOpacity
-        style={[styles.wordRow, { borderBottomColor: palette.border }]}
+        style={styles.cardShadow}
         onPress={() => toggleSelection(item.id)}
-        activeOpacity={0.7}
+        activeOpacity={0.75}
       >
-        <View
-          style={[
-            styles.checkbox,
-            {
-              borderColor: palette.tint,
-              backgroundColor: isSelected ? palette.tint : 'transparent',
-            },
-          ]}
-        >
-          {isSelected && <Text style={styles.checkmark}>✓</Text>}
-        </View>
-        <View style={styles.wordInfo}>
-          <Text style={[styles.lemma, { color: lemmaColor }]}>{item.lemma}</Text>
-          <Text style={[styles.english, { color: palette.subtext }]}>{item.english}</Text>
+        <View style={[styles.card, { borderColor: palette.listCardBorder }]}>
+          <View style={styles.wordInfo}>
+            <Text style={[styles.lemma, { color: lemmaColor }]}>{item.lemma}</Text>
+            <Text style={styles.english}>{item.english}</Text>
+          </View>
+          <View
+            style={[
+              styles.checkbox,
+              isSelected
+                ? { backgroundColor: palette.teal, borderColor: palette.teal }
+                : { backgroundColor: 'transparent', borderColor: 'rgba(0,0,0,0.2)' },
+            ]}
+          >
+            {isSelected && (
+              <Image source={checkIcon} style={styles.checkIcon} accessibilityIgnoresInvertColors />
+            )}
+          </View>
         </View>
       </TouchableOpacity>
     );
   };
 
   return (
-    <SafeAreaView style={[styles.flex, { backgroundColor: palette.background }]}>
+    <SafeAreaView style={styles.flex} edges={['top', 'left', 'right']}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View>
-          <View style={[styles.topBar, { borderBottomColor: palette.border }]}>
-            <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-              <Text style={[styles.backBtn, { color: palette.tint }]}>← Back</Text>
+          <View style={styles.topBar}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              hitSlop={8}
+              accessibilityLabel="Back"
+              style={[styles.backBtn, { backgroundColor: hexAlpha(palette.primary, 0.15) }]}
+            >
+              <Image source={backChevron} style={styles.backIcon} accessibilityIgnoresInvertColors />
             </TouchableOpacity>
-            <Text style={[styles.screenTitle, { color: palette.text }]}>Add Word</Text>
-            <View style={styles.topBarSpacer} />
+            <Text style={styles.screenTitle} pointerEvents="none">Add Word</Text>
           </View>
 
           <View style={styles.searchWrap}>
@@ -206,10 +212,10 @@ export default function AddExistingWordScreen() {
             keyboardShouldPersistTaps="always"
           >
             <TouchableOpacity
-              style={[styles.chip, pillSurface(selectedCategory === null, palette)]}
+              style={[styles.chip, selectedCategory === null ? styles.chipOn : styles.chipOff]}
               onPress={() => setSelectedCategory(null)}
             >
-              <Text style={[styles.chipText, pillLabel(selectedCategory === null, palette)]}>
+              <Text style={[styles.chipText, selectedCategory === null ? styles.chipTextOn : styles.chipTextOff]}>
                 All
               </Text>
             </TouchableOpacity>
@@ -217,12 +223,12 @@ export default function AddExistingWordScreen() {
             {allCategories.map(cat => (
               <TouchableOpacity
                 key={cat}
-                style={[styles.chip, pillSurface(selectedCategory === cat, palette)]}
+                style={[styles.chip, selectedCategory === cat ? styles.chipOn : styles.chipOff]}
                 onPress={() =>
                   setSelectedCategory(prev => (prev === cat ? null : cat))
                 }
               >
-                <Text style={[styles.chipText, pillLabel(selectedCategory === cat, palette)]}>
+                <Text style={[styles.chipText, selectedCategory === cat ? styles.chipTextOn : styles.chipTextOff]}>
                   {cat}
                 </Text>
               </TouchableOpacity>
@@ -236,10 +242,11 @@ export default function AddExistingWordScreen() {
         keyExtractor={item => item.id}
         renderItem={renderWord}
         style={styles.list}
+        contentContainerStyle={styles.listContent}
         keyboardShouldPersistTaps="never"
         keyboardDismissMode="on-drag"
         ListEmptyComponent={
-          <Text style={[styles.emptyText, { color: palette.subtext }]}>
+          <Text style={styles.emptyText}>
             {masterWords.length === 0
               ? 'All words from the vocabulary list are already in this list.'
               : 'No words match your search.'}
@@ -247,100 +254,183 @@ export default function AddExistingWordScreen() {
         }
       />
 
-      <View
-        style={[
-          styles.bottomBar,
-          { borderTopColor: palette.border, backgroundColor: palette.background },
-        ]}
-      >
-        <Text style={[styles.counter, { color: palette.text }]}>
+      <View style={styles.bottomBar}>
+        <Text style={styles.counter}>
           {selectedCount} {selectedCount === 1 ? 'word' : 'words'} selected
         </Text>
         <StudyButton
           label="Add to List"
-          variant={canAdd ? 'primary' : 'inactive'}
-          size="large"
+          variant="primary"
+          size="medium"
           onPress={handleAdd}
           disabled={!canAdd}
           style={styles.addBtn}
+          textStyle={styles.addLabel}
         />
       </View>
     </SafeAreaView>
   );
 }
 
+const cardShadow = {
+  shadowColor: '#000',
+  shadowOpacity: 0.05,
+  shadowRadius: 6,
+  shadowOffset: { width: 0, height: 4 },
+  elevation: 2,
+} as const;
+
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
+  flex: { flex: 1, backgroundColor: '#F7F5FD' },
 
   topBar: {
+    height: 36,
+    marginHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
   },
-  backBtn: { fontSize: 15, fontWeight: '500', minWidth: 60 },
-  screenTitle: { fontSize: 17, fontWeight: '700' },
-  topBarSpacer: { minWidth: 60 },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backIcon: {
+    width: 17,
+    height: 17,
+    transform: [{ rotate: '-90deg' }],
+  },
+  screenTitle: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    fontFamily: HomeFonts.interSemiBold,
+    fontSize: 22,
+    lineHeight: 27,
+    color: '#25262B',
+  },
 
-  searchWrap: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 4, gap: 8 },
+  searchWrap: {
+    marginTop: 15,
+    marginHorizontal: 16,
+    gap: 15,
+  },
 
-  chipScroll: { maxHeight: 48, flexGrow: 0 },
+  chipScroll: { flexGrow: 0, marginTop: 15 },
   chipRow: {
     paddingHorizontal: 16,
-    paddingVertical: 6,
-    gap: 8,
+    gap: 6,
     alignItems: 'center',
   },
   chip: {
     borderWidth: 1,
-    borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-  },
-  chipText: { fontSize: 13, fontWeight: '600', textTransform: 'capitalize' },
-
-  list: { flex: 1 },
-  emptyText: {
-    textAlign: 'center',
-    fontSize: 15,
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-
-  wordRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 11,
-    paddingHorizontal: 20,
-    gap: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
+    borderRadius: 10,
+    paddingHorizontal: 11,
+    paddingVertical: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    flexShrink: 0,
+    backgroundColor: '#FFFFFF',
   },
-  checkmark: { color: '#fff', fontSize: 12, fontWeight: '700', lineHeight: 15 },
-  wordInfo: { flex: 1, gap: 2 },
-  lemma: { fontSize: 16, fontWeight: '600' },
-  english: { fontSize: 13 },
+  chipOn: { borderColor: '#38A19A' },
+  chipOff: { borderColor: 'rgba(94,81,164,0.2)' },
+  chipText: {
+    fontFamily: HomeFonts.jakartaMedium,
+    fontWeight: 'normal',
+    fontSize: 14,
+    lineHeight: 20,
+    textTransform: 'capitalize',
+  },
+  chipTextOn: { color: '#38A19A' },
+  chipTextOff: { color: 'rgba(0,0,0,0.5)' },
 
-  bottomBar: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderTopWidth: 1,
+  list: { flex: 1 },
+  listContent: {
+    paddingHorizontal: 16,
+    paddingTop: 15,
+    paddingBottom: 16,
     gap: 10,
   },
-  counter: {
+  emptyText: {
+    fontFamily: HomeFonts.jakartaRegular,
     fontSize: 14,
-    fontWeight: '700',
+    lineHeight: 18,
+    color: 'rgba(0,0,0,0.6)',
+    textAlign: 'center',
+    marginTop: 32,
+    paddingHorizontal: 20,
+  },
+
+  cardShadow: {
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    ...cardShadow,
+  },
+  card: {
+    borderRadius: 12,
+    borderWidth: 1,
+    backgroundColor: '#FFFFFF',
+    padding: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  wordInfo: { flex: 1, gap: 6 },
+  lemma: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontSize: 18,
+    lineHeight: 22,
+  },
+  english: {
+    fontFamily: HomeFonts.interRegular,
+    fontSize: 13.5,
+    lineHeight: 16,
+    color: 'rgba(0,0,0,0.6)',
+  },
+  checkbox: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkIcon: { width: 18, height: 18 },
+
+  bottomBar: {
+    alignItems: 'center',
+    paddingTop: 15,
+    paddingBottom: 29,
+    paddingHorizontal: 29,
+    gap: 10,
+    backgroundColor: '#F7F5FD',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: -2 },
+    elevation: 8,
+  },
+  counter: {
+    fontFamily: HomeFonts.jakartaRegular,
+    fontSize: 14,
+    lineHeight: 18,
+    color: 'rgba(0,0,0,0.6)',
     textAlign: 'center',
   },
-  addBtn: { width: '100%', borderRadius: 28, minWidth: 0 },
+  addBtn: {
+    alignSelf: 'stretch',
+    height: 48,
+    minWidth: 0,
+    paddingVertical: 0,
+    borderRadius: 12,
+  },
+  addLabel: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+  },
 });

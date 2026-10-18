@@ -8,18 +8,30 @@
  * Back always returns to the Dashboard (not to intermediate creation screens).
  */
 import React, { useMemo, useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/theme';
+import { HomeFonts } from '@/constants/homeFonts';
 import { useAppContext } from '@/src/context/AppContext';
 import type { StudyType } from '@/src/types/state';
 import type { Pool } from '@/src/types/pool';
 import StudyButton from '@/src/components/ui/StudyButton';
 import { countStudyWords, getDeckSizeLaunchDecision } from '@/src/utils/studyLaunch';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
+
+const backChevron = require('@/assets/images/lists/back-chevron.png');
+const checkIcon = require('@/assets/images/lists/check-white.png');
+
+function hexAlpha(hex: string, alpha: number) {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -135,26 +147,34 @@ export default function SelectStudyListScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]}>
-      {/* Top bar */}
-      <View style={[styles.topBar, { borderBottomColor: palette.border }]}>
-        <TouchableOpacity onPress={handleBack} hitSlop={8}>
-          <Text style={[styles.backBtn, { color: palette.tint }]}>← Back</Text>
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      <View style={styles.topBar}>
+        <TouchableOpacity
+          onPress={handleBack}
+          hitSlop={8}
+          accessibilityLabel="Back"
+          style={[styles.backBtn, { backgroundColor: hexAlpha(palette.primary, 0.15) }]}
+        >
+          <Image source={backChevron} style={styles.backIcon} accessibilityIgnoresInvertColors />
         </TouchableOpacity>
-        <Text style={[styles.screenTitle, { color: palette.text }]}>
+        <Text style={styles.screenTitle} pointerEvents="none">
           Choose What to Study
         </Text>
-        <View style={styles.topBarSpacer} />
       </View>
 
-      {/* Pool list */}
+      <Text style={styles.totalText}>
+        {canContinue
+          ? `${totalCount} ${countLabel} selected`
+          : `Select at least one list to continue`}
+      </Text>
+
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator
       >
         {pools.length === 0 ? (
-          <Text style={[styles.emptyText, { color: palette.subtext }]}>
+          <Text style={styles.emptyText}>
             No lists found. Go back and create one first.
           </Text>
         ) : (
@@ -166,45 +186,39 @@ export default function SelectStudyListScreen() {
             return (
               <TouchableOpacity
                 key={pool.id}
-                style={[
-                  styles.poolRow,
-                  {
-                    backgroundColor: selected ? palette.feedback : palette.card,
-                    borderColor: selected ? palette.tint : palette.border,
-                    opacity: disabled ? 0.38 : 1,
-                  },
-                ]}
+                style={[styles.cardShadow, disabled && styles.rowDisabled]}
                 onPress={() => !disabled && togglePool(pool.id)}
                 activeOpacity={disabled ? 1 : 0.75}
               >
-                {/* Checkbox */}
-                <View
-                  style={[
-                    styles.checkbox,
-                    {
-                      borderColor: disabled ? palette.border : palette.tint,
-                      backgroundColor: selected ? palette.tint : 'transparent',
-                    },
-                  ]}
-                >
-                  {selected && <Text style={styles.checkmark}>✓</Text>}
-                </View>
-
-                {/* Pool info */}
-                <View style={styles.poolInfo}>
-                  <Text
+                <View style={[styles.card, { borderColor: palette.listCardBorder }]}>
+                  <View style={styles.poolInfo}>
+                    <Text
+                      style={[styles.poolName, disabled && styles.poolNameDisabled]}
+                      numberOfLines={1}
+                    >
+                      {pool.name}
+                    </Text>
+                    <Text style={styles.poolCount}>
+                      {count} {countLabel}
+                      {disabled ? ' — no nouns for Gender mode' : ''}
+                    </Text>
+                  </View>
+                  <View
                     style={[
-                      styles.poolName,
-                      { color: disabled ? palette.subtext : palette.text },
+                      styles.checkbox,
+                      selected
+                        ? { backgroundColor: palette.teal, borderColor: palette.teal }
+                        : { backgroundColor: 'transparent', borderColor: 'rgba(0,0,0,0.2)' },
                     ]}
-                    numberOfLines={1}
                   >
-                    {pool.name}
-                  </Text>
-                  <Text style={[styles.poolCount, { color: palette.subtext }]}>
-                    {count} {countLabel}
-                    {disabled ? ' — no nouns for Gender mode' : ''}
-                  </Text>
+                    {selected && (
+                      <Image
+                        source={checkIcon}
+                        style={styles.checkIcon}
+                        accessibilityIgnoresInvertColors
+                      />
+                    )}
+                  </View>
                 </View>
               </TouchableOpacity>
             );
@@ -212,24 +226,15 @@ export default function SelectStudyListScreen() {
         )}
       </ScrollView>
 
-      {/* Footer with running total and Continue button */}
-      <View
-        style={[
-          styles.footer,
-          { borderTopColor: palette.border, backgroundColor: palette.background },
-        ]}
-      >
-        <Text style={[styles.totalText, { color: palette.subtext }]}>
-          {canContinue
-            ? `${totalCount} ${countLabel} selected`
-            : `Select at least one list to continue`}
-        </Text>
+      <View style={styles.bottomBar}>
         <StudyButton
           label={isNavigating ? 'Loading…' : 'Continue'}
           variant="primary"
-          size="large"
+          size="medium"
           onPress={handleContinue}
           disabled={!canContinue || isNavigating}
+          style={styles.continueBtn}
+          textStyle={styles.continueLabel}
         />
       </View>
     </SafeAreaView>
@@ -238,67 +243,136 @@ export default function SelectStudyListScreen() {
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
+const cardShadow = {
+  shadowColor: '#000',
+  shadowOpacity: 0.05,
+  shadowRadius: 6,
+  shadowOffset: { width: 0, height: 4 },
+  elevation: 2,
+} as const;
+
 const styles = StyleSheet.create({
-  safe: { flex: 1 },
+  safe: { flex: 1, backgroundColor: '#F7F5FD' },
 
   topBar: {
+    height: 36,
+    marginHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
   },
-  backBtn: { fontSize: 15, fontWeight: '500', minWidth: 60 },
-  screenTitle: { fontSize: 17, fontWeight: '700' },
-  topBarSpacer: { minWidth: 60 },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backIcon: {
+    width: 17,
+    height: 17,
+    transform: [{ rotate: '-90deg' }],
+  },
+  screenTitle: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    fontFamily: HomeFonts.interSemiBold,
+    fontSize: 22,
+    lineHeight: 27,
+    color: '#25262B',
+  },
+
+  totalText: {
+    marginTop: 25,
+    marginHorizontal: 16,
+    fontFamily: HomeFonts.jakartaRegular,
+    fontSize: 14,
+    lineHeight: 18,
+    color: 'rgba(0,0,0,0.6)',
+  },
 
   scroll: { flex: 1 },
   listContent: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 20,
+    paddingHorizontal: 16,
+    paddingTop: 18,
+    paddingBottom: 16,
     gap: 10,
   },
 
   emptyText: {
-    fontSize: 15,
-    textAlign: 'center',
-    marginTop: 40,
+    fontFamily: HomeFonts.jakartaRegular,
+    fontSize: 14,
+    lineHeight: 18,
+    color: 'rgba(0,0,0,0.6)',
   },
 
-  poolRow: {
+  cardShadow: {
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    ...cardShadow,
+  },
+  card: {
+    minHeight: 78,
+    borderRadius: 12,
+    borderWidth: 1,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+    paddingVertical: 11,
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 14,
-    borderWidth: 1.5,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
     gap: 14,
   },
-
+  rowDisabled: { opacity: 0.45 },
+  poolInfo: { flex: 1, gap: 6 },
+  poolName: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontSize: 18,
+    lineHeight: 22,
+    color: '#25262B',
+  },
+  poolNameDisabled: { color: 'rgba(0,0,0,0.45)' },
+  poolCount: {
+    fontFamily: HomeFonts.interRegular,
+    fontSize: 13.5,
+    lineHeight: 16,
+    color: 'rgba(0,0,0,0.6)',
+  },
   checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    borderWidth: 2,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
-    flexShrink: 0,
   },
-  checkmark: { color: '#fff', fontSize: 13, fontWeight: '700', lineHeight: 16 },
+  checkIcon: { width: 18, height: 18 },
 
-  poolInfo: { flex: 1, gap: 3 },
-  poolName: { fontSize: 16, fontWeight: '600' },
-  poolCount: { fontSize: 13 },
-
-  footer: {
-    paddingHorizontal: 20,
-    paddingTop: 14,
-    paddingBottom: 28,
-    borderTopWidth: 1,
-    gap: 10,
+  bottomBar: {
     alignItems: 'center',
+    paddingTop: 15,
+    paddingBottom: 29,
+    paddingHorizontal: 29,
+    backgroundColor: '#F7F5FD',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: -2 },
+    elevation: 8,
   },
-  totalText: { fontSize: 14 },
+  continueBtn: {
+    alignSelf: 'stretch',
+    height: 48,
+    minWidth: 0,
+    paddingVertical: 0,
+    borderRadius: 12,
+  },
+  continueLabel: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+  },
 });

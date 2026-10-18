@@ -1,8 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-import { Colors } from '@/constants/theme';
+import { HomeFonts } from '@/constants/homeFonts';
 import type { Language } from '@/src/types/vocab';
 import {
   getLanguageDisplayName,
@@ -16,8 +14,6 @@ interface Props {
 }
 
 export default function SearchModeToggle({ mode, onModeChange, language }: Props) {
-  const scheme = useColorScheme() ?? 'light';
-  const palette = Colors[scheme];
   const languageLabel = getLanguageDisplayName(language);
 
   const options: { id: VocabSearchMode; label: string }[] = [
@@ -26,30 +22,17 @@ export default function SearchModeToggle({ mode, onModeChange, language }: Props
   ];
 
   return (
-    <View
-      style={[
-        styles.track,
-        { backgroundColor: '#FFFFFF' },
-      ]}
-    >
+    <View style={styles.row}>
       {options.map(opt => {
         const active = mode === opt.id;
         return (
           <TouchableOpacity
             key={opt.id}
-            style={[
-              styles.segment,
-              active && { backgroundColor: palette.tint },
-            ]}
+            style={[styles.chip, active ? styles.chipOn : styles.chipOff]}
             onPress={() => onModeChange(opt.id)}
             activeOpacity={0.75}
           >
-            <Text
-              style={[
-                styles.segmentText,
-                { color: active ? '#FFFFFF' : palette.text },
-              ]}
-            >
+            <Text style={[styles.chipText, active ? styles.chipTextOn : styles.chipTextOff]}>
               {opt.label}
             </Text>
           </TouchableOpacity>
@@ -60,19 +43,27 @@ export default function SearchModeToggle({ mode, onModeChange, language }: Props
 }
 
 const styles = StyleSheet.create({
-  track: {
+  row: {
     flexDirection: 'row',
-    borderRadius: 22,
-    padding: 3,
+    gap: 6,
   },
-  segment: {
-    flex: 1,
-    alignItems: 'center',
+  chip: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 11,
     paddingVertical: 8,
-    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
   },
-  segmentText: {
+  chipOn: { borderColor: '#38A19A' },
+  chipOff: { borderColor: 'rgba(94,81,164,0.2)' },
+  chipText: {
+    fontFamily: HomeFonts.jakartaMedium,
+    fontWeight: 'normal',
     fontSize: 14,
-    fontWeight: '700',
+    lineHeight: 20,
   },
+  chipTextOn: { color: '#38A19A' },
+  chipTextOff: { color: 'rgba(0,0,0,0.5)' },
 });

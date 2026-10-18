@@ -427,7 +427,7 @@ export default function AddWordScreen() {
             )}
           </>
         ) : (
-          <View style={[styles.noPoolsBox, { backgroundColor: palette.card, borderColor: palette.border }]}>
+          <View style={styles.noPoolsBox}>
             <Text style={styles.noPoolsText}>
               You need at least one list before adding a new word. Create one in My Vocabulary first.
             </Text>
@@ -442,7 +442,7 @@ export default function AddWordScreen() {
             variant="secondary"
             size="medium"
             onPress={() => router.back()}
-            style={styles.actionBtn}
+            style={[styles.actionBtn, styles.cancelBorder]}
             textStyle={styles.actionLabel}
           />
           <StudyButton
@@ -647,6 +647,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   actionBtn: { flex: 1, height: 48, minWidth: 0, paddingVertical: 0, borderRadius: 12 },
+  cancelBorder: { borderWidth: 1, borderColor: '#5E51A4' },
   actionLabel: {
     fontFamily: HomeFonts.interSemiBold,
     fontWeight: 'normal',

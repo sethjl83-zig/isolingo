@@ -41,6 +41,7 @@ export const Colors = {
     listIconBlue: '#5DB0FA',
     listIconFood: '#D04598',
     listIconNature: '#709E1E',
+    detailText: '#434655',
   },
   // Kept for a later dark-mode pass. V0 does not read this object.
   dark: {
@@ -71,6 +72,7 @@ export const Colors = {
     listIconBlue: '#5DB0FA',
     listIconFood: '#D04598',
     listIconNature: '#709E1E',
+    detailText: '#434655',
   },
 };
 

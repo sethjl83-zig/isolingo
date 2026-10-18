@@ -8,6 +8,7 @@ import {
   FREQUENCY_TRACK_COLORS,
   type WordFrequencySetting,
 } from '@/src/types/state';
+import { HomeFonts } from '@/constants/homeFonts';
 
 const TRACK_HEIGHT = 9;
 const THUMB_SIZE = 27;
@@ -99,8 +100,10 @@ const styles = StyleSheet.create({
   wrapCompact: { width: 112 },
   wrapInline: { width: 159, gap: 0 },
   label: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontFamily: HomeFonts.jakartaMedium,
+    fontWeight: 'normal',
+    fontSize: 14,
+    lineHeight: 20,
     textAlign: 'center',
     width: '100%',
   },

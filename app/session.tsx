@@ -15,6 +15,7 @@ import Animated, {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Colors } from '@/constants/theme';
+import { HomeFonts } from '@/constants/homeFonts';
 import { useAppContext } from '@/src/context/AppContext';
 import type { WordFrequencySetting } from '@/src/types/state';
 import type { VocabItem } from '@/src/types/vocab';
@@ -333,13 +334,20 @@ export default function SessionScreen() {
 
   if (!language) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: palette.background }]}>
+      <SafeAreaView style={styles.messageScreen}>
         <View style={styles.messageBox}>
-          <Text style={[styles.messageTitle, { color: palette.text }]}>Session unavailable</Text>
-          <Text style={[styles.messageBody, { color: palette.subtext }]}>
+          <Text style={styles.messageTitle}>Session unavailable</Text>
+          <Text style={styles.messageBody}>
             No language is selected.
           </Text>
-          <StudyButton label="Back to Study Menu" variant="primary" size="medium" onPress={handleExit} />
+          <StudyButton
+            label="Back to Study Menu"
+            variant="primary"
+            size="medium"
+            onPress={handleExit}
+            style={styles.primaryBtn}
+            textStyle={styles.primaryLabel}
+          />
         </View>
       </SafeAreaView>
     );
@@ -348,13 +356,20 @@ export default function SessionScreen() {
   const sessionVocab = getSessionVocab();
   if (!state.studyTypeSelected || !sessionVocab || sessionVocab.vocabBank.length === 0) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: palette.background }]}>
+      <SafeAreaView style={styles.messageScreen}>
         <View style={styles.messageBox}>
-          <Text style={[styles.messageTitle, { color: palette.text }]}>Session unavailable</Text>
-          <Text style={[styles.messageBody, { color: palette.subtext }]}>
+          <Text style={styles.messageTitle}>Session unavailable</Text>
+          <Text style={styles.messageBody}>
             No vocabulary bank is set up for this study mode.
           </Text>
-          <StudyButton label="Back to Study Menu" variant="primary" size="medium" onPress={handleExit} />
+          <StudyButton
+            label="Back to Study Menu"
+            variant="primary"
+            size="medium"
+            onPress={handleExit}
+            style={styles.primaryBtn}
+            textStyle={styles.primaryLabel}
+          />
         </View>
       </SafeAreaView>
     );
@@ -362,10 +377,10 @@ export default function SessionScreen() {
 
   if (!hasAttemptedLoad) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: palette.background }]}>
+      <SafeAreaView style={styles.messageScreen}>
         <View style={styles.messageBox}>
           <ActivityIndicator size="large" color={palette.tint} />
-          <Text style={[styles.messageBody, { color: palette.subtext }]}>Loading card…</Text>
+          <Text style={styles.messageBody}>Loading card…</Text>
         </View>
       </SafeAreaView>
     );
@@ -373,16 +388,30 @@ export default function SessionScreen() {
 
   if (!currentCard) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: palette.background }]}>
+      <SafeAreaView style={styles.messageScreen}>
         <View style={styles.messageBox}>
-          <Text style={[styles.messageTitle, { color: palette.incorrect }]}>
+          <Text style={styles.errorTitle}>
             Could not load card
           </Text>
-          <Text style={[styles.messageBody, { color: palette.text }]}>
+          <Text style={styles.messageBody}>
             {loadError ?? 'The next study card could not be loaded.'}
           </Text>
-          <StudyButton label="Try Again" variant="primary" size="medium" onPress={() => loadCard()} />
-          <StudyButton label="Exit Study" variant="secondary" size="medium" onPress={handleExit} />
+          <StudyButton
+            label="Try Again"
+            variant="primary"
+            size="medium"
+            onPress={() => loadCard()}
+            style={styles.primaryBtn}
+            textStyle={styles.primaryLabel}
+          />
+          <StudyButton
+            label="Exit Study"
+            variant="secondary"
+            size="medium"
+            onPress={handleExit}
+            style={styles.outlineBtn}
+            textStyle={styles.outlineLabel}
+          />
         </View>
       </SafeAreaView>
     );
@@ -490,6 +519,7 @@ export default function SessionScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  messageScreen: { flex: 1, backgroundColor: '#F7F5FD' },
   messageBox: {
     flex: 1,
     justifyContent: 'center',
@@ -497,6 +527,60 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     gap: 16,
   },
-  messageTitle: { fontSize: 20, fontWeight: '700', textAlign: 'center' },
-  messageBody: { fontSize: 15, textAlign: 'center', lineHeight: 22 },
+  messageTitle: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 22,
+    color: '#25262B',
+    textAlign: 'center',
+  },
+  errorTitle: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 22,
+    color: '#F74856',
+    textAlign: 'center',
+  },
+  messageBody: {
+    fontFamily: HomeFonts.jakartaRegular,
+    fontWeight: 'normal',
+    fontSize: 14,
+    lineHeight: 18,
+    color: 'rgba(0,0,0,0.6)',
+    textAlign: 'center',
+  },
+  primaryBtn: {
+    height: 48,
+    minWidth: 220,
+    paddingVertical: 0,
+    borderRadius: 12,
+  },
+  primaryLabel: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  outlineBtn: {
+    width: 220,
+    height: 48,
+    minWidth: 0,
+    paddingVertical: 0,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#5E51A4',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  outlineLabel: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#5E51A4',
+  },
 });

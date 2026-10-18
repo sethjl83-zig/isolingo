@@ -4,6 +4,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/theme';
+import { HomeFonts } from '@/constants/homeFonts';
 import StudyButton from '@/src/components/ui/StudyButton';
 
 interface ErrorBoundaryProps {
@@ -36,12 +37,12 @@ function ErrorFallback({
   const palette = Colors[scheme];
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]}>
+    <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={[styles.title, { color: palette.incorrect }]}>
+        <Text style={styles.title}>
           {title ?? 'Something went wrong'}
         </Text>
-        <Text style={[styles.message, { color: palette.text }]}>
+        <Text style={styles.message}>
           {error.message || 'An unexpected error occurred.'}
         </Text>
         {__DEV__ && error.stack ? (
@@ -51,7 +52,14 @@ function ErrorFallback({
         ) : null}
         <View style={styles.actions}>
           {onRetry ? (
-            <StudyButton label="Try Again" variant="primary" size="medium" onPress={onRetry} />
+            <StudyButton
+              label="Try Again"
+              variant="primary"
+              size="medium"
+              onPress={onRetry}
+              style={styles.primaryBtn}
+              textStyle={styles.primaryLabel}
+            />
           ) : null}
           {onExit ? (
             <StudyButton
@@ -59,6 +67,8 @@ function ErrorFallback({
               variant="secondary"
               size="medium"
               onPress={onExit}
+              style={styles.outlineBtn}
+              textStyle={styles.outlineLabel}
             />
           ) : null}
         </View>
@@ -118,15 +128,28 @@ function arraysEqual(a?: unknown[], b?: unknown[]): boolean {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1 },
+  safe: { flex: 1, backgroundColor: '#F7F5FD' },
   content: {
     flexGrow: 1,
     paddingHorizontal: 24,
     paddingVertical: 32,
     gap: 16,
   },
-  title: { fontSize: 22, fontWeight: '700' },
-  message: { fontSize: 16, lineHeight: 22 },
+  title: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 22,
+    color: '#F74856',
+    textAlign: 'center',
+  },
+  message: {
+    fontFamily: HomeFonts.jakartaRegular,
+    fontWeight: 'normal',
+    fontSize: 14,
+    lineHeight: 18,
+    color: 'rgba(0,0,0,0.6)',
+    textAlign: 'center',
+  },
   stack: {
     fontSize: 11,
     fontFamily: 'monospace',
@@ -134,4 +157,38 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   actions: { gap: 12, marginTop: 16, alignItems: 'center' },
+  primaryBtn: {
+    height: 48,
+    minWidth: 220,
+    paddingVertical: 0,
+    borderRadius: 12,
+  },
+  primaryLabel: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  outlineBtn: {
+    width: 220,
+    height: 48,
+    minWidth: 0,
+    paddingVertical: 0,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#5E51A4',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  outlineLabel: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#5E51A4',
+  },
 });

@@ -707,7 +707,7 @@ export default function DashboardScreen() {
       >
         <Pressable style={styles.langOverlay} onPress={() => setLangModalVisible(false)}>
           <Pressable style={[styles.langSheet, { backgroundColor: palette.card }]} onPress={() => {}}>
-            <Text style={[styles.sheetTitle, { color: palette.text }]}>Select Language</Text>
+            <Text style={styles.sheetTitle}>Select Language</Text>
             {LANGUAGES.map((lang, idx) => (
               <TouchableOpacity
                 key={lang.id}
@@ -715,9 +715,9 @@ export default function DashboardScreen() {
                   styles.langOption,
                   idx < LANGUAGES.length - 1 && {
                     borderBottomWidth: StyleSheet.hairlineWidth,
-                    borderBottomColor: palette.border,
+                    borderBottomColor: 'rgba(210,232,215,0.8)',
                   },
-                  lang.id === language && { backgroundColor: palette.feedback },
+                  lang.id === language && { backgroundColor: 'rgba(94,81,164,0.12)' },
                 ]}
                 onPress={() => handleLanguageSelect(lang.id)}
                 activeOpacity={0.75}
@@ -725,7 +725,7 @@ export default function DashboardScreen() {
                 <Image source={FLAG_IMAGES[lang.id]} style={styles.langOptionFlag} />
                 <Text style={[styles.langOptionLabel, { color: palette.text }]}>{lang.label}</Text>
                 {lang.id === language && (
-                  <Text style={[styles.checkmark, { color: palette.tint }]}>✓</Text>
+                  <Text style={styles.checkmark}>✓</Text>
                 )}
               </TouchableOpacity>
             ))}
@@ -1042,7 +1042,14 @@ const styles = StyleSheet.create({
   detailsArrow: { width: 12, height: 12 },
 
   // ── Language modal ───────────────────────────────────────────────────────────
-  sheetTitle: { fontSize: 20, fontWeight: '700', marginBottom: 4 },
+  sheetTitle: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#25262B',
+    marginBottom: 4,
+  },
   langOverlay: {
     flex: 1,
     justifyContent: 'center',
@@ -1052,7 +1059,7 @@ const styles = StyleSheet.create({
   },
   langSheet: {
     width: '100%',
-    borderRadius: 20,
+    borderRadius: 15,
     padding: 24,
     gap: 4,
   },
@@ -1064,6 +1071,17 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   langOptionFlag: { width: 32, height: 32, borderRadius: 16 },
-  langOptionLabel: { flex: 1, fontSize: 17, fontWeight: '600' },
-  checkmark: { fontSize: 18, fontWeight: '700' },
+  langOptionLabel: {
+    flex: 1,
+    fontFamily: HomeFonts.interMedium,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  checkmark: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 18,
+    color: '#5E51A4',
+  },
 });

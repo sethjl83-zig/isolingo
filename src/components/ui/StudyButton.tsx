@@ -2,6 +2,7 @@ import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, type ViewStyle, type TextStyle } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
+import { HomeFonts } from '@/constants/homeFonts';
 import { Colors } from '@/constants/theme';
 
 interface StudyButtonProps {
@@ -32,13 +33,13 @@ export default function StudyButton({
     ...(variant === 'primary' && { backgroundColor: palette.buttonPrimary }),
     ...(variant === 'secondary' && {
       backgroundColor: 'transparent',
-      borderWidth: 2,
+      borderWidth: 1,
       borderColor: palette.tint,
     }),
     ...(variant === 'correct' && { backgroundColor: palette.correct }),
-    ...(variant === 'incorrect' && { backgroundColor: palette.incorrect }),
-    ...(variant === 'inactive' && { backgroundColor: palette.border, opacity: 0.6 }),
-    ...(disabled && { opacity: 0.4 }),
+    ...(variant === 'incorrect' && { backgroundColor: '#F74856' }),
+    ...(variant === 'inactive' && { backgroundColor: 'rgba(94,81,164,0.4)' }),
+    ...(disabled && variant !== 'inactive' && { opacity: 0.4 }),
   };
 
   const labelStyle: TextStyle = {
@@ -46,7 +47,7 @@ export default function StudyButton({
     ...labelSizeStyles[size],
     ...(variant === 'primary' && { color: palette.buttonPrimaryText }),
     ...(variant === 'secondary' && { color: palette.tint }),
-    ...((variant === 'correct' || variant === 'incorrect') && { color: '#fff' }),
+    ...((variant === 'correct' || variant === 'incorrect') && { color: palette.buttonPrimaryText }),
     ...(variant === 'inactive' && { color: palette.subtext }),
   };
 
@@ -75,12 +76,32 @@ const styles = StyleSheet.create({
 
 const sizeStyles: Record<string, ViewStyle> = {
   large: { paddingVertical: 18, paddingHorizontal: 28, minWidth: 220 },
-  medium: { paddingVertical: 14, paddingHorizontal: 22, minWidth: 160 },
+  medium: {
+    height: 48,
+    paddingVertical: 0,
+    paddingHorizontal: 22,
+    minWidth: 160,
+    borderRadius: 12,
+  },
   small: { paddingVertical: 10, paddingHorizontal: 16, minWidth: 80 },
 };
 
 const labelSizeStyles: Record<string, TextStyle> = {
-  large: { fontSize: 18 },
-  medium: { fontSize: 16 },
-  small: { fontSize: 14 },
+  large: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  medium: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  small: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 14,
+  },
 };

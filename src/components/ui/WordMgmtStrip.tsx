@@ -2,20 +2,19 @@
  * WordMgmtStrip — word-management row shown at the bottom of every study card.
  */
 import React, { useCallback, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Image } from 'react-native';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors } from '@/constants/theme';
+import { HomeFonts } from '@/constants/homeFonts';
 import { useSessionWordMgmt } from '@/src/context/SessionWordMgmtContext';
 import WordFrequencyModal, { type WordFrequencyTarget } from './WordFrequencyModal';
 import WordPickerModal from './WordPickerModal';
 
 const BUTTONS = [
-  { id: 'remove', label: 'Remove' },
-  { id: 'replace', label: 'Replace' },
-  { id: 'frequency', label: 'Frequency' },
-  { id: 'pause', label: 'Pause' },
+  { id: 'remove', label: 'Remove', icon: require('@/assets/images/gameplay/remove.png') },
+  { id: 'replace', label: 'Replace', icon: require('@/assets/images/gameplay/replace.png') },
+  { id: 'frequency', label: 'Frequency', icon: require('@/assets/images/gameplay/frequency.png') },
+  { id: 'pause', label: 'Pause', icon: require('@/assets/images/gameplay/pause.png') },
 ] as const;
 
 type PickerFlow = 'remove' | 'replace' | 'pause';
@@ -25,8 +24,6 @@ interface Props {
 }
 
 export default function WordMgmtStrip({ words }: Props) {
-  const scheme = useColorScheme() ?? 'light';
-  const palette = Colors[scheme];
   const insets = useSafeAreaInsets();
   const { removeWord, replaceWord, pauseWord } = useSessionWordMgmt();
   const [frequencyVisible, setFrequencyVisible] = useState(false);
@@ -134,19 +131,11 @@ export default function WordMgmtStrip({ words }: Props) {
 
   return (
     <>
-      <View
-        style={[
-          styles.strip,
-          {
-            borderTopColor: palette.border,
-            paddingBottom: Math.max(insets.bottom, 14),
-          },
-        ]}
-      >
+      <View style={[styles.strip, { paddingBottom: Math.max(insets.bottom, 14) }]}>
         {BUTTONS.map(btn => (
           <TouchableOpacity
             key={btn.id}
-            style={[styles.btn, { borderColor: palette.border }]}
+            style={styles.btn}
             onPress={() => {
               if (btn.id === 'frequency') setFrequencyVisible(true);
               if (btn.id === 'remove') startFlow('remove');
@@ -155,9 +144,8 @@ export default function WordMgmtStrip({ words }: Props) {
             }}
             activeOpacity={0.7}
           >
-            <Text style={[styles.label, { color: palette.subtext }]}>
-              {btn.label}
-            </Text>
+            <Image source={btn.icon} style={styles.icon} />
+            <Text style={styles.label}>{btn.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -182,21 +170,29 @@ export default function WordMgmtStrip({ words }: Props) {
 const styles = StyleSheet.create({
   strip: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(210,232,215,0.8)',
   },
   btn: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 8,
     borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.2)',
   },
+  icon: { width: 14, height: 14 },
   label: {
+    fontFamily: HomeFonts.jakartaSemiBold,
+    fontWeight: 'normal',
     fontSize: 12,
-    fontWeight: '500',
-    letterSpacing: 0.2,
+    lineHeight: 18,
+    color: 'rgba(0,0,0,0.6)',
   },
 });

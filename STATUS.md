@@ -22,7 +22,6 @@ Every session: read this first, update it before you finish.
 | Vocab | Vocab data files for all three languages (follow the vocab rules in CLAUDE.md). Currently idle. |
 
 ## Next code changes (queued)
-- Remove gender symbols from Card 1006 tiles entirely (not just the text labels)
 - Rename "Top Personal Best Streaks" to "Longest Streaks"
 - Update the Living Spec: the Frequency button already works, but the spec says it doesn't
 
@@ -51,6 +50,19 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-10-18: Cleanup of leftover system type, #E0E0E0 borders, and the unused starter modal. Naming Confirm buttons and name fields match the designed screens.
+- 2026-10-18: Session empty states, the error screen, the Home language sheet, and the Add New Word empty-list box now use the designed type and buttons. Shared button defaults match those screens; designed screens keep their own overrides.
+- 2026-10-18: Word-management dialogs visual pass. Frequency and word-picker sheets copy the Set Default dialog. Slider labels use Add New Word’s chip type. Track colors unchanged.
+- 2026-10-18: Add Existing Word visual pass. Header, search, chips, word rows, and Add to List copy Build Your Own. Vocab Bank empty line uses Plus Jakarta Regular 14. The paused-words rule uses the card divider color.
+- 2026-10-18: Build Your Own visual pass. Header, rows, chips, search, and buttons copy Curated Lists, Vocab Bank, and Add New Word. SearchBar now carries the Vocab Bank search box. Text and selection rules unchanged.
+- 2026-10-18: Select Study List visual pass. Header, rows, checkmarks, count, and Continue copy the Curated Lists screen. Text, selection, and navigation unchanged.
+- 2026-10-18: Noun Production visual pass. Prompt, typing field, and revealed answer copy the relationship card’s prompt and answer-row styles. Text, validation, and behavior unchanged.
+- 2026-10-17: Matching instruction is now "Tap a word, then tap its gender below".
+- 2026-10-17: Gameplay visual pass. Matching (1001) and Relationship Judgment (1002) match the four Gameplay frames. Gender tiles are plain blocks in the official gender colors. Card behavior, scoring, and strings are unchanged.
+- 2026-10-17: Stats follow-up. Words in Your Lists shows four words, then an amber View More pill that expands the rest in place. Weak has the line "Needs more practice".
+- 2026-10-17: Stats visual pass. Matched Current and Lifetime, with data and empty, to the four Statistics frames (Lifetime with-data is node 9:1254). "Longest Streaks" and "1st Attempt" stay. Stats math and the opening tab are unchanged.
+- 2026-10-15: Curly apostrophes in user-facing strings. Stats visual pass stopped: the with-data Lifetime frame is named "Stats - Lifetime Stats " (trailing space), not "Stats - Lifetime Stats".
+- 2026-10-15: Get Started visual pass. Matched the welcome screen to Figma "Get Started". The personalize subtitle stays off. Name entry, the disabled rule, and navigation are unchanged.
 - 2026-10-15: Add List Part B follow-up. Dialog Cancel is a purple outline. The Already Default badge uses the book or the gender icon for the mode already set. Study Direction title is "General Vocabulary".
 - 2026-10-15: Add List Part B visual pass. Matched Deck Size, Study Direction ("General Vocab 4"), Set Default, and Already Default to those four frames. Strings unchanged. Copy differences are listed in the session report.
 - 2026-10-15: Add List correction pass. Re-read Figma "Add List", "Curated Lists Words 2", and "Add New Word 2" (not rate-limited). Replaced stand-in icons and colors with the frame assets. Approved strings only: curated button includes the selected count, Add New Word placeholders, Title Case chip labels, and "Save Word".

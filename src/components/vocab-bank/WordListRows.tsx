@@ -149,10 +149,10 @@ export const PausedSectionHeader = memo(function PausedSectionHeader({
     <View
       style={[
         styles.pausedHeader,
-        { borderTopColor: palette.border, backgroundColor: palette.background },
+        { borderTopColor: 'rgba(210,232,215,0.8)', backgroundColor: palette.background },
       ]}
     >
-      <Text style={[styles.pausedHeaderText, { color: palette.subtext }]}>{title}</Text>
+      <Text style={styles.pausedHeaderText}>{title}</Text>
     </View>
   );
 });

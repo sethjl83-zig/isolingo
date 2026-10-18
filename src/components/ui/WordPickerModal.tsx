@@ -1,8 +1,7 @@
 import React from 'react';
 import { Modal, View, Text, Pressable, TouchableOpacity, StyleSheet } from 'react-native';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
-import { Colors } from '@/constants/theme';
+import { HomeFonts } from '@/constants/homeFonts';
 import type { WordFrequencyTarget } from './WordFrequencyModal';
 
 interface Props {
@@ -20,9 +19,6 @@ export default function WordPickerModal({
   onSelect,
   onDismiss,
 }: Props) {
-  const scheme = useColorScheme() ?? 'light';
-  const palette = Colors[scheme];
-
   return (
     <Modal
       visible={visible}
@@ -31,27 +27,24 @@ export default function WordPickerModal({
       onRequestClose={onDismiss}
     >
       <Pressable style={styles.overlay} onPress={onDismiss}>
-        <Pressable
-          style={[styles.sheet, { backgroundColor: palette.card, borderColor: palette.border }]}
-          onPress={() => {}}
-        >
-          <Text style={[styles.title, { color: palette.text }]}>{title}</Text>
+        <Pressable style={styles.sheet} onPress={() => {}}>
+          <Text style={styles.title}>{title}</Text>
 
           <View style={styles.options}>
             {words.map(word => (
               <TouchableOpacity
                 key={word.id}
-                style={[styles.option, { borderColor: palette.border }]}
+                style={styles.option}
                 onPress={() => onSelect(word)}
                 activeOpacity={0.75}
               >
-                <Text style={[styles.optionText, { color: palette.text }]}>{word.lemma}</Text>
+                <Text style={styles.optionText}>{word.lemma}</Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          <Pressable onPress={onDismiss}>
-            <Text style={[styles.cancel, { color: palette.subtext }]}>Cancel</Text>
+          <Pressable style={styles.cancel} onPress={onDismiss}>
+            <Text style={styles.cancelLabel}>Cancel</Text>
           </Pressable>
         </Pressable>
       </Pressable>
@@ -64,40 +57,68 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: 'rgba(0,0,0,0.4)',
     paddingHorizontal: 28,
   },
   sheet: {
-    width: '100%',
-    maxWidth: 340,
-    borderRadius: 16,
-    borderWidth: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 16,
-    gap: 14,
+    width: 313,
+    maxWidth: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    padding: 20,
+    alignItems: 'center',
+    gap: 20,
   },
   title: {
-    fontSize: 17,
-    fontWeight: '700',
+    fontFamily: HomeFonts.interSemiBold,
+    fontSize: 22,
+    color: '#25262B',
     textAlign: 'center',
   },
-  options: { gap: 10 },
+  options: { gap: 10, alignSelf: 'stretch', alignItems: 'center' },
   option: {
+    width: 220,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderRadius: 10,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    borderColor: '#DAECDF',
+    borderRadius: 12,
+    paddingHorizontal: 30,
+    paddingVertical: 10,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
   optionText: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
     fontSize: 16,
-    fontWeight: '600',
+    lineHeight: 24,
+    color: '#25262B',
+    textAlign: 'center',
   },
   cancel: {
-    fontSize: 15,
-    fontWeight: '500',
-    textAlign: 'center',
-    paddingVertical: 8,
+    width: 220,
+    height: 48,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#5E51A4',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  cancelLabel: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#5E51A4',
   },
 });
