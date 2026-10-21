@@ -50,6 +50,9 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-10-20: Exit Study opens Choose What to Study with a Home link. The back chevron stays when that screen is opened from Home or after creating a list.
+- 2026-10-20: Noun Production no longer shows the iOS Done bar. Flip and Submit still lift by the status-bar inset so they sit above the keyboard.
+- 2026-10-20: Noun Production prompt word is large and centered again. Size 26, Plus Jakarta SemiBold, center. The sense label is centered too. The typing field is unchanged.
 - 2026-10-18: Cleanup of leftover system type, #E0E0E0 borders, and the unused starter modal. Naming Confirm buttons and name fields match the designed screens.
 - 2026-10-18: Session empty states, the error screen, the Home language sheet, and the Add New Word empty-list box now use the designed type and buttons. Shared button defaults match those screens; designed screens keep their own overrides.
 - 2026-10-18: Word-management dialogs visual pass. Frequency and word-picker sheets copy the Set Default dialog. Slider labels use Add New Word’s chip type. Track colors unchanged.

@@ -12,7 +12,7 @@ import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView } from 'rea
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Colors } from '@/constants/theme';
 import { HomeFonts } from '@/constants/homeFonts';
 import { useAppContext } from '@/src/context/AppContext';
@@ -46,6 +46,8 @@ function countNouns(pool: Pool): number {
 
 export default function SelectStudyListScreen() {
   const router = useRouter();
+  const { fromExit } = useLocalSearchParams<{ fromExit?: string | string[] }>();
+  const showHome = fromExit === '1' || (Array.isArray(fromExit) && fromExit.includes('1'));
   const { state, getLanguagePools } = useAppContext();
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
@@ -149,14 +151,23 @@ export default function SelectStudyListScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <View style={styles.topBar}>
-        <TouchableOpacity
-          onPress={handleBack}
-          hitSlop={8}
-          accessibilityLabel="Back"
-          style={[styles.backBtn, { backgroundColor: hexAlpha(palette.primary, 0.15) }]}
-        >
-          <Image source={backChevron} style={styles.backIcon} accessibilityIgnoresInvertColors />
-        </TouchableOpacity>
+        {showHome ? (
+          <TouchableOpacity
+            onPress={handleBack}
+            accessibilityLabel="Home"
+          >
+            <Text style={styles.homeLink}>Home</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            onPress={handleBack}
+            hitSlop={8}
+            accessibilityLabel="Back"
+            style={[styles.backBtn, { backgroundColor: hexAlpha(palette.primary, 0.15) }]}
+          >
+            <Image source={backChevron} style={styles.backIcon} accessibilityIgnoresInvertColors />
+          </TouchableOpacity>
+        )}
         <Text style={styles.screenTitle} pointerEvents="none">
           Choose What to Study
         </Text>
@@ -271,6 +282,12 @@ const styles = StyleSheet.create({
     width: 17,
     height: 17,
     transform: [{ rotate: '-90deg' }],
+  },
+  homeLink: {
+    fontFamily: HomeFonts.interMedium,
+    fontWeight: 'normal',
+    fontSize: 18,
+    color: '#5E51A4',
   },
   screenTitle: {
     position: 'absolute',

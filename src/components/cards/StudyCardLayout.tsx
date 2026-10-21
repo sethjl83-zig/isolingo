@@ -12,6 +12,7 @@ import {
   StyleSheet,
   type ViewStyle,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import WordMgmtStrip from '../ui/WordMgmtStrip';
 
 export type StudyCardWord = { id: string; lemma: string };
@@ -24,12 +25,17 @@ interface Props {
 }
 
 export default function StudyCardLayout({ words, bottomBar, children, style }: Props) {
+  const insets = useSafeAreaInsets();
+  // iOS reports the keyboard from the top of the screen, while this view
+  // starts below the status bar. Android stays at 0.
+  const keyboardVerticalOffset = Platform.OS === 'ios' ? insets.top : 0;
+
   return (
     <View style={[styles.container, style]}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={0}
+        keyboardVerticalOffset={keyboardVerticalOffset}
       >
         <View style={styles.inner}>
           {children}

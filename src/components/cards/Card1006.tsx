@@ -439,11 +439,12 @@ export default function Card1006({
 }
 
 const styles = StyleSheet.create({
-  promptArea: { marginBottom: 12 },
+  promptArea: { alignItems: 'center', marginBottom: 12 },
   prompt: {
-    fontFamily: HomeFonts.jakartaMedium,
+    fontFamily: HomeFonts.jakartaSemiBold,
     fontWeight: 'normal',
-    fontSize: 14.8,
+    fontSize: 26,
+    textAlign: 'center',
     color: '#000000',
   },
   promptArticle: { color: '#000000' },
@@ -452,6 +453,7 @@ const styles = StyleSheet.create({
     fontWeight: 'normal',
     fontSize: 14.5,
     lineHeight: 24,
+    textAlign: 'center',
     color: 'rgba(0,0,0,0.8)',
     marginTop: 12,
   },

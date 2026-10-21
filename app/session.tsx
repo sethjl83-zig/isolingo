@@ -14,6 +14,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { CommonActions, useNavigation } from '@react-navigation/native';
 import { Colors } from '@/constants/theme';
 import { HomeFonts } from '@/constants/homeFonts';
 import { useAppContext } from '@/src/context/AppContext';
@@ -57,6 +58,7 @@ function getCardKey(card: CardData, index: number): string {
 
 export default function SessionScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { state, recordCardResult, incrementCardIndex } = useAppContext();
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
@@ -318,8 +320,39 @@ export default function SessionScreen() {
   );
 
   const handleExit = useCallback(() => {
-    router.replace('/select-study-list');
-  }, [router]);
+    const exitTarget = {
+      pathname: '/select-study-list' as const,
+      params: { fromExit: '1' },
+    };
+    const state = navigation.getState();
+    const listIndex = state?.routes.findIndex(route => route.name === 'select-study-list') ?? -1;
+
+    if (!state || listIndex < 0 || listIndex >= state.index) {
+      router.replace(exitTarget);
+      return;
+    }
+
+    // Choose What to Study is already underneath. Return to that one screen
+    // instead of stacking a second copy on top of the session.
+    navigation.dispatch(stackState => {
+      const index = stackState.routes.findIndex(route => route.name === 'select-study-list');
+      const kept = index >= 0 ? stackState.routes[index] : undefined;
+      const routes = kept
+        ? [
+            ...stackState.routes.slice(0, index),
+            { ...kept, params: { ...kept.params, fromExit: '1' } },
+          ]
+        : [
+            ...stackState.routes.slice(0, stackState.index),
+            { name: 'select-study-list', params: { fromExit: '1' } },
+          ];
+      return CommonActions.reset({
+        ...stackState,
+        routes,
+        index: routes.length - 1,
+      });
+    });
+  }, [navigation, router]);
 
   useAndroidBackHandler(
     useCallback(() => {
