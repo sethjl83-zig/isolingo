@@ -4,14 +4,14 @@
  *   Step 1 — Browse + filter the master vocab list, tap to select words (min 10)
  *   Step 2 — Name the list and confirm pool creation
  */
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { getAddListLaunchSource } from './add-list';
 import {
   View, Text, Image, TouchableOpacity, FlatList, ScrollView, StyleSheet, Platform, TextInput, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect, useNavigation } from 'expo-router';
 import { Colors, GenderColors } from '@/constants/theme';
 import { HomeFonts } from '@/constants/homeFonts';
 import { useAppContext } from '@/src/context/AppContext';
@@ -35,6 +35,37 @@ import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 const MIN_WORDS = 10;
 const backChevron = require('@/assets/images/lists/back-chevron.png');
 const checkIcon = require('@/assets/images/lists/check-white.png');
+
+/** Words saved on New Word while Build Your Own is still open. */
+let pendingBuildWords: VocabItem[] = [];
+
+type BuildDraft = {
+  step: 'select' | 'naming';
+  searchQuery: string;
+  searchMode: VocabSearchMode;
+  selectedCategory: string | null;
+  selectedIds: string[];
+  newWords: VocabItem[];
+  listName: string;
+};
+
+/** Keeps the in-progress list if this screen remounts on the way back from New Word. */
+let buildDraft: BuildDraft | null = null;
+
+export function holdBuildYourOwnWord(item: VocabItem): void {
+  pendingBuildWords = [...pendingBuildWords, item];
+}
+
+function takePendingBuildWords(): VocabItem[] {
+  const words = pendingBuildWords;
+  pendingBuildWords = [];
+  return words;
+}
+
+function clearBuildDraft(): void {
+  buildDraft = null;
+  pendingBuildWords = [];
+}
 
 function hexAlpha(hex: string, alpha: number) {
   const h = hex.replace('#', '');
@@ -63,6 +94,8 @@ type Step = 'select' | 'naming';
 
 export default function BuildYourOwnScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
+  const keepDraft = useRef(true);
   const { state, isReady, getLanguagePools, createPool } = useAppContext();
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
@@ -86,14 +119,17 @@ export default function BuildYourOwnScreen() {
   );
 
   // ── Step 1 state ──────────────────────────────────────────────────────────
-  const [step, setStep] = useState<Step>('select');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchMode, setSearchMode] = useState<VocabSearchMode>('target');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [step, setStep] = useState<Step>(buildDraft?.step ?? 'select');
+  const [searchQuery, setSearchQuery] = useState(buildDraft?.searchQuery ?? '');
+  const [searchMode, setSearchMode] = useState<VocabSearchMode>(buildDraft?.searchMode ?? 'target');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(buildDraft?.selectedCategory ?? null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(
+    () => new Set(buildDraft?.selectedIds ?? []),
+  );
+  const [newWords, setNewWords] = useState<VocabItem[]>(buildDraft?.newWords ?? []);
 
   // ── Step 2 state ──────────────────────────────────────────────────────────
-  const [listName, setListName] = useState('');
+  const [listName, setListName] = useState(buildDraft?.listName ?? '');
 
   // ── Derived lists ─────────────────────────────────────────────────────────
   const categoryFiltered = useMemo(
@@ -113,13 +149,54 @@ export default function BuildYourOwnScreen() {
     [categoryFiltered, searchQuery, searchMode, language],
   );
 
+  const listedWords = useMemo(() => {
+    const newIds = new Set(newWords.map(word => word.id));
+    return [...newWords, ...filteredWords.filter(word => !newIds.has(word.id))];
+  }, [newWords, filteredWords]);
+
   const searchPlaceholder =
     searchMode === 'target'
       ? `Search ${getLanguageDisplayName(language)} words…`
       : 'Search English words…';
 
-  const selectedCount = selectedIds.size;
+  const selectedCount = selectedIds.size + newWords.length;
   const canProceed = selectedCount >= MIN_WORDS;
+
+  useFocusEffect(
+    useCallback(() => {
+      const arrived = takePendingBuildWords();
+      if (arrived.length === 0) return;
+      setNewWords(prev => {
+        const seen = new Set(prev.map(word => word.id));
+        const added = arrived.filter(word => !seen.has(word.id));
+        return added.length > 0 ? [...added, ...prev] : prev;
+      });
+    }, []),
+  );
+
+  useEffect(() => {
+    if (!keepDraft.current) return;
+    buildDraft = {
+      step,
+      searchQuery,
+      searchMode,
+      selectedCategory,
+      selectedIds: [...selectedIds],
+      newWords,
+      listName,
+    };
+  }, [step, searchQuery, searchMode, selectedCategory, selectedIds, newWords, listName]);
+
+  useEffect(() => {
+    return navigation.addListener('beforeRemove', () => {
+      keepDraft.current = false;
+      clearBuildDraft();
+    });
+  }, [navigation]);
+
+  const leaveBuild = useCallback(() => {
+    router.back();
+  }, [router]);
 
   // ── Toggle word selection ─────────────────────────────────────────────────
   const toggleSelection = useCallback((id: string) => {
@@ -134,6 +211,10 @@ export default function BuildYourOwnScreen() {
     });
   }, []);
 
+  const removeNewWord = useCallback((id: string) => {
+    setNewWords(prev => prev.filter(word => word.id !== id));
+  }, []);
+
   // ── Proceed to naming step ────────────────────────────────────────────────
   const handleProceed = useCallback(() => {
     if (!language || !canProceed) return;
@@ -145,7 +226,10 @@ export default function BuildYourOwnScreen() {
   // ── Confirm pool creation ─────────────────────────────────────────────────
   const handleConfirm = useCallback(() => {
     if (!language) return;
-    const selectedWords = masterWords.filter(w => selectedIds.has(w.id));
+    const selectedWords = [
+      ...newWords,
+      ...masterWords.filter(w => selectedIds.has(w.id)),
+    ];
     if (selectedWords.length === 0) return;
 
     const trimmed = listName.trim() || nextListName(getLanguagePools(language));
@@ -162,6 +246,7 @@ export default function BuildYourOwnScreen() {
     };
 
     createPool(pool);
+    clearBuildDraft();
 
     const { source } = getAddListLaunchSource();
     if (source === 'study_mode') {
@@ -169,17 +254,17 @@ export default function BuildYourOwnScreen() {
     } else {
       router.dismiss(2);
     }
-  }, [language, masterWords, selectedIds, listName, getLanguagePools, createPool, router]);
+  }, [language, masterWords, selectedIds, newWords, listName, getLanguagePools, createPool, router]);
 
   useAndroidBackHandler(
     useCallback(() => {
       if (step === 'naming') {
         setStep('select');
       } else {
-        router.back();
+        leaveBuild();
       }
       return true;
-    }, [step, router]),
+    }, [step, leaveBuild]),
   );
 
   // ── Guard ─────────────────────────────────────────────────────────────────
@@ -187,13 +272,14 @@ export default function BuildYourOwnScreen() {
 
   // ── Row renderer ──────────────────────────────────────────────────────────
   const renderWord = ({ item }: { item: VocabItem }) => {
-    const isSelected = selectedIds.has(item.id);
+    const isNew = newWords.some(word => word.id === item.id);
+    const isSelected = isNew || selectedIds.has(item.id);
     const lemmaColor = getWordLemmaColor(item, palette.text, GenderColors);
 
     return (
       <TouchableOpacity
         style={styles.cardShadow}
-        onPress={() => toggleSelection(item.id)}
+        onPress={() => (isNew ? removeNewWord(item.id) : toggleSelection(item.id))}
         activeOpacity={0.75}
       >
         <View style={[styles.card, { borderColor: palette.listCardBorder }]}>
@@ -296,7 +382,7 @@ export default function BuildYourOwnScreen() {
         <View>
           <View style={styles.topBar}>
             <TouchableOpacity
-              onPress={() => router.back()}
+              onPress={leaveBuild}
               hitSlop={8}
               accessibilityLabel="Back"
               style={[styles.backBtn, { backgroundColor: hexAlpha(palette.primary, 0.15) }]}
@@ -355,9 +441,10 @@ export default function BuildYourOwnScreen() {
       </TouchableWithoutFeedback>
 
       <FlatList
-        data={filteredWords}
+        data={listedWords}
         keyExtractor={item => item.id}
         renderItem={renderWord}
+        extraData={newWords}
         style={styles.list}
         contentContainerStyle={styles.listContent}
         keyboardShouldPersistTaps="never"
@@ -377,6 +464,14 @@ export default function BuildYourOwnScreen() {
           onPress={handleProceed}
           disabled={!canProceed}
           style={styles.primaryBtn}
+          textStyle={styles.primaryLabel}
+        />
+        <StudyButton
+          label="Create New Word"
+          variant="secondary"
+          size="medium"
+          onPress={() => router.push({ pathname: '/add-word', params: { fromBuild: '1' } } as never)}
+          style={styles.createWordBtn}
           textStyle={styles.primaryLabel}
         />
       </View>
@@ -544,6 +639,7 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     shadowOffset: { width: 0, height: -2 },
     elevation: 8,
+    gap: 12,
   },
   primaryBtn: {
     alignSelf: 'stretch',
@@ -551,6 +647,16 @@ const styles = StyleSheet.create({
     minWidth: 0,
     paddingVertical: 0,
     borderRadius: 12,
+  },
+  createWordBtn: {
+    alignSelf: 'stretch',
+    height: 48,
+    minWidth: 0,
+    paddingVertical: 0,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#5E51A4',
   },
   primaryLabel: {
     fontFamily: HomeFonts.interSemiBold,

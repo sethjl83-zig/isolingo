@@ -33,7 +33,6 @@ Every session: read this first, update it before you finish.
 5. App Store submission materials: privacy policy, screenshots, listing copy
 
 ## Waiting on the designer
-- App icon
 - App Store screenshots, in this order: Gameplay 3B German, Gameplay 2C (redo in correct-answer state), Home 5C, Stats Lifetime Stats
 
 ## After launch (backlog)
@@ -50,6 +49,10 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-10-25: Build Your Own can add a new word from the word list. The word stays on that screen until the list is confirmed, then it is saved only in that pool. Add List is three cards again.
+- 2026-10-25: Curated Lists hides a category when this language already has a curated list named for it, including numbered names like "People 2". Deleting that list brings the category back. Existing lists are left in place.
+- 2026-10-25: New Word shows Noun, Verb, Adjective, and Adverb, with Noun selected. Gender mode no longer hides the other three. Splash now uses the Akuity symbol on white. A new TestFlight build is required for the splash.
+- 2026-10-25: App icon now points at assets/akuity-icon-symbol-1024.png. Android adaptive background is white. A new TestFlight / EAS build is required before the icon shows on a device.
 - 2026-10-20: Exit Study opens Choose What to Study with a Home link. The back chevron stays when that screen is opened from Home or after creating a list.
 - 2026-10-20: Noun Production no longer shows the iOS Done bar. Flip and Submit still lift by the status-bar inset so they sit above the keyboard.
 - 2026-10-20: Noun Production prompt word is large and centered again. Size 26, Plus Jakarta SemiBold, center. The sense label is centered too. The typing field is unchanged.

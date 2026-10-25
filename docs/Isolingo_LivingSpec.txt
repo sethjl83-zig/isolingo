@@ -104,6 +104,7 @@ Scrollable multi-select word list (checkboxes)
 Counter showing selected word count (minimum 10)
 "Add to My Lists" button active once 10+ words selected
 On confirm: naming screen with default name "List N"
+"Create New Word" opens New Word without the list checklist. That word stays on this screen, already selected, until the list is confirmed. It is saved only in the new pool.
 Returns to My Lists after creation
 If launched from study mode tap: routes to Select Study List after creation
 

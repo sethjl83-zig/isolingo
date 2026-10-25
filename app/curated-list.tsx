@@ -155,6 +155,18 @@ function uniquePoolName(baseName: string, takenNames: Set<string>): string {
   return `${baseName} ${n}`;
 }
 
+/**
+ * Pools do not store the source category. A curated list counts as that
+ * category when its name is the display name, or that name plus " " and a
+ * number ("People", "People 2", "Basic Words 3").
+ */
+function poolNameMatchesCuratedCategory(poolName: string, displayName: string): boolean {
+  const name = poolName.trim();
+  if (name.toLowerCase() === displayName.toLowerCase()) return true;
+  if (name.slice(0, displayName.length).toLowerCase() !== displayName.toLowerCase()) return false;
+  return /^ \d+$/.test(name.slice(displayName.length));
+}
+
 function nextCombinedListName(existingPools: Pool[]): string {
   const nums = existingPools
     .map(p => {
@@ -241,6 +253,15 @@ export default function CuratedListScreen() {
     return result;
   }, [language]);
 
+  const languagePools = language ? (state.languagePools[language] ?? []) : [];
+
+  const visibleEntries = useMemo(() => {
+    const curatedPools = languagePools.filter(pool => pool.createdVia === 'curated');
+    return entries.filter(entry =>
+      !curatedPools.some(pool => poolNameMatchesCuratedCategory(pool.name, entry.displayName)),
+    );
+  }, [entries, languagePools]);
+
   // ── Selection state ───────────────────────────────────────────────────────
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
   const [step, setStep] = useState<ScreenStep>('select');
@@ -259,7 +280,7 @@ export default function CuratedListScreen() {
     });
   }, []);
 
-  const selectedCount = selectedKeys.size;
+  const selectedCount = visibleEntries.filter(entry => selectedKeys.has(entry.key)).length;
   const canProceed = selectedCount > 0;
 
   const navigateAfterCreate = useCallback(() => {
@@ -278,7 +299,7 @@ export default function CuratedListScreen() {
     const takenNames = new Set(existingPools.map(p => p.name));
 
     for (const key of selectedKeys) {
-      const entry = entries.find(e => e.key === key);
+      const entry = visibleEntries.find(e => e.key === key);
       if (!entry || entry.words.length === 0) continue;
 
       const poolName = uniquePoolName(entry.displayName, takenNames);
@@ -302,7 +323,7 @@ export default function CuratedListScreen() {
     language,
     canProceed,
     selectedKeys,
-    entries,
+    visibleEntries,
     getLanguagePools,
     createPool,
     navigateAfterCreate,
@@ -311,7 +332,7 @@ export default function CuratedListScreen() {
   const startCombineFlow = useCallback(() => {
     if (!language || !canProceed) return;
 
-    const selectedEntries = getSelectedEntries(entries, selectedKeys);
+    const selectedEntries = getSelectedEntries(visibleEntries, selectedKeys);
     const words = combineWords(selectedEntries);
     if (words.length === 0) return;
 
@@ -319,12 +340,12 @@ export default function CuratedListScreen() {
     setCombinedWordCount(words.length);
     setListName(defaultCombinedListName(selectedEntries, existingPools));
     setStep('naming');
-  }, [language, canProceed, entries, selectedKeys, getLanguagePools]);
+  }, [language, canProceed, visibleEntries, selectedKeys, getLanguagePools]);
 
   const handleConfirmCombined = useCallback(() => {
     if (!language || !canProceed) return;
 
-    const selectedEntries = getSelectedEntries(entries, selectedKeys);
+    const selectedEntries = getSelectedEntries(visibleEntries, selectedKeys);
     const words = combineWords(selectedEntries);
     if (words.length === 0) return;
 
@@ -350,7 +371,7 @@ export default function CuratedListScreen() {
   }, [
     language,
     canProceed,
-    entries,
+    visibleEntries,
     selectedKeys,
     listName,
     getLanguagePools,
@@ -552,12 +573,15 @@ export default function CuratedListScreen() {
       </Text>
 
       <FlatList
-        data={entries}
+        data={visibleEntries}
         keyExtractor={e => e.key}
         renderItem={renderEntry}
         style={styles.list}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>You've added every curated list.</Text>
+        }
       />
 
       <View style={styles.bottomBar}>
@@ -628,6 +652,12 @@ const styles = StyleSheet.create({
   },
 
   list: { flex: 1 },
+  emptyText: {
+    fontFamily: HomeFonts.jakartaRegular,
+    fontSize: 14,
+    lineHeight: 18,
+    color: 'rgba(0,0,0,0.6)',
+  },
   listContent: {
     paddingHorizontal: 16,
     paddingTop: 18,

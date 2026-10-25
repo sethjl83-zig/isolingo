@@ -7,12 +7,12 @@
  * lives only in the pool(s) the user selects and will never appear in Curated
  * Lists, Build Your Own, or Random.
  */
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { View, Text, Image, TextInput, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Colors } from '@/constants/theme';
 import { HomeFonts } from '@/constants/homeFonts';
 import { useAppContext } from '@/src/context/AppContext';
@@ -20,6 +20,7 @@ import type { VocabItem, PartOfSpeech, Gender, Language } from '@/src/types/voca
 import type { Pool } from '@/src/types/pool';
 import StudyButton from '@/src/components/ui/StudyButton';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
+import { holdBuildYourOwnWord } from './build-your-own';
 
 const backChevron = require('@/assets/images/lists/back-chevron.png');
 const checkIcon = require('@/assets/images/lists/check-white.png');
@@ -150,13 +151,13 @@ function PoolCheckRow({
 
 export default function AddWordScreen() {
   const router = useRouter();
+  const { fromBuild } = useLocalSearchParams<{ fromBuild?: string | string[] }>();
+  const isFromBuild = fromBuild === '1' || (Array.isArray(fromBuild) && fromBuild.includes('1'));
   const { state, updatePool, getLanguagePools } = useAppContext();
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
 
   const language = state.languageSelected ?? 'de';
-  const isGenderMode = state.studyTypeSelected === 'gender';
-  const posOptions: PartOfSpeech[] = isGenderMode ? ['noun'] : POS_OPTIONS;
 
   const allPools = useMemo(
     () => getLanguagePools(language),
@@ -167,17 +168,11 @@ export default function AddWordScreen() {
   // ── Form state ────────────────────────────────────────────────────────────
   const [lemma, setLemma] = useState('');
   const [english, setEnglish] = useState('');
-  const [pos, setPos] = useState<PartOfSpeech | null>(null);
+  const [pos, setPos] = useState<PartOfSpeech>('noun');
   const [gender, setGender] = useState<Gender | null>(null);
   const [plural, setPlural] = useState('');
   const [categories, setCategories] = useState<string[]>(['general']);
   const [selectedPoolIds, setSelectedPoolIds] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    if (isGenderMode) {
-      setPos('noun');
-    }
-  }, [isGenderMode]);
 
   const toggleCategory = (cat: string) => {
     setCategories(prev =>
@@ -195,17 +190,10 @@ export default function AddWordScreen() {
 
   const showGender = pos === 'noun';
   const showPlural = pos === 'noun';
-  const canSave = hasPools && selectedPoolIds.size > 0;
+  const canSave = isFromBuild || (hasPools && selectedPoolIds.size > 0);
 
   // ── Save ──────────────────────────────────────────────────────────────────
   const handleSave = () => {
-    if (!hasPools) return; // button is disabled anyway
-
-    if (selectedPoolIds.size === 0) {
-      Alert.alert('No list selected', 'Please choose at least one list to add this word to.');
-      return;
-    }
-
     const error = validateEntry(lemma, english, pos, gender, language);
     if (error) {
       Alert.alert('Check your entry', error);
@@ -213,20 +201,6 @@ export default function AddWordScreen() {
     }
 
     const normalizedLemma = lemma.trim().toLowerCase();
-
-    // Duplicate check — only within the selected pools (not the master dataset)
-    const selectedPools = allPools.filter(p => selectedPoolIds.has(p.id));
-    const duplicate = selectedPools.some(pool =>
-      pool.words.some(pw => pw.item.lemma.toLowerCase() === normalizedLemma),
-    );
-    if (duplicate) {
-      Alert.alert(
-        'Word already in list',
-        'This word already exists in one or more of your selected lists.',
-      );
-      return;
-    }
-
     const englishNormalized = english
       .split(',')
       .map(s => s.trim())
@@ -246,6 +220,32 @@ export default function AddWordScreen() {
       competencies: pos === 'noun' ? ['vocab', 'gender'] : ['vocab'],
       user_added: 'y',
     };
+
+    if (isFromBuild) {
+      holdBuildYourOwnWord(item);
+      router.back();
+      return;
+    }
+
+    if (!hasPools) return;
+
+    if (selectedPoolIds.size === 0) {
+      Alert.alert('No list selected', 'Please choose at least one list to add this word to.');
+      return;
+    }
+
+    // Duplicate check — only within the selected pools (not the master dataset)
+    const selectedPools = allPools.filter(p => selectedPoolIds.has(p.id));
+    const duplicate = selectedPools.some(pool =>
+      pool.words.some(pw => pw.item.lemma.toLowerCase() === normalizedLemma),
+    );
+    if (duplicate) {
+      Alert.alert(
+        'Word already in list',
+        'This word already exists in one or more of your selected lists.',
+      );
+      return;
+    }
 
     // Write directly into each selected pool — master dataset is NOT touched.
     for (const pool of selectedPools) {
@@ -318,7 +318,7 @@ export default function AddWordScreen() {
         <View style={styles.field}>
           <Text style={labelStyle}>Part of Speech</Text>
           <View style={styles.chipRow}>
-            {posOptions.map(option => (
+            {POS_OPTIONS.map(option => (
               <TouchableOpacity
                 key={option}
                 style={[styles.chip, choiceSurface(pos === option)]}
@@ -400,6 +400,7 @@ export default function AddWordScreen() {
           </View>
         </View>
 
+        {isFromBuild ? null : (
         <View style={styles.field}>
         <Text style={styles.label}>
           Add to which list(s)?
@@ -434,6 +435,7 @@ export default function AddWordScreen() {
           </View>
         )}
         </View>
+        )}
 
         {/* Actions */}
         <View style={styles.saveRow}>
