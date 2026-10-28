@@ -19,9 +19,11 @@ DATA THAT PERSISTS BETWEEN SESSIONS
 User's name
 Selected language
 All named pools per language (words, frequency settings, paused words, deck size preference per pool combination)
+Last study deck (the word ids) per pool combination and study type
 Default pool assignments per study type per language
 Direction mode preference
 Stats per word per language
+Sound effects preference (on by default)
 onboardingComplete flag
 
 
@@ -39,7 +41,10 @@ SCREEN FLOW — RETURNING USER
 
 Dashboard
 Select Study List (if no default pool set, or user wants to choose)
-Deck Size (first time only for this pool combination, skipped thereafter)
+If a default list is set and a deck was saved for that list and study type: “Pick up where you left off?”
+Resume skips Deck Size and opens Direction Select with that deck
+Start Fresh clears the saved deck, then Deck Size, Direction Select, and a new random deck
+If a default list is set and no deck is saved: Deck Size the first time for this pool combination, skipped thereafter
 Direction Select
 Study Session
 
@@ -64,19 +69,33 @@ Stats card below the study mode cards: heading "Your Progress" (shown in upperca
 Tapping the stats card → Stats screen
 One "My Vocabulary" button below the stats card
 Tapping My Vocabulary → My Lists screen
-Tapping a study mode with pools → Select Study List screen
+Gear icon at the top right, lined up with the welcome heading and “What do you want to study?”, above the language selector. Tapping it opens Settings.
+Tapping a study mode with pools and no default list → Select Study List screen
+Tapping a study mode with a default list and a saved deck still in those lists → “Pick up where you left off?” (Resume or Start Fresh)
+Tapping a study mode with a default list and no saved deck → Deck Size or Direction Select, same as before
 Tapping a study mode with no pools → Add List screen (with study_mode source flag)
 If no language selected and user taps My Vocabulary or a study mode → prompt to select a language first
+
+Settings Screen
+
+Header: "Settings"
+Sound Effects toggle, stored at @isolingo/sound_enabled, on by default. When on, a correct answer plays Correct.wav and an incorrect answer plays Incorrect.wav. Flip does not play a sound.
+Privacy Policy opens akuity.app/privacy in the device browser
+Contact Support opens mailto:support@akuity.app
+Request a Feature opens mailto:support@akuity.app?subject=Feature%20Request
+Rate Akuity opens the App Store page on iOS
+Start Over asks for confirmation, then deletes lists, progress, and settings and returns to the Welcome screen
+Version shows the app version from app.json and is not tappable
 
 My Lists Screen
 
 Header: "My Lists"
 Persistent "Add List" button always visible
-Lists all existing pools for current language, each showing: name, word count, default badges (General Vocab / Gender), View/Edit button, Set as Default button (hidden if already default for both), Delete button
+Lists all existing pools for current language, each showing: name, word count, default badges (General Vocab / Gender), View/Edit button, Set as Default button, Delete button
 Empty state: friendly message when no pools exist
 Tapping Add List → Add List screen
 Tapping View/Edit → Vocab Bank Manager for that pool
-Set as Default popup asks which study type (General Vocab, Gender, or Both) — only shows options not already set
+Set as Default popup asks which study type (General Vocab, Gender, or Both) — only shows options not already set. If this list is already the default for a mode, the dialog also offers “Remove as Default” for that mode, which clears it back to no default.
 Delete requires confirmation
 
 Add List Screen
@@ -149,13 +168,17 @@ Study Session
 
 Infinite loop of flashcards
 Card pool drawn from selected pools combined, subset to deck size, using existing repetition/frequency logic
+When a session starts, that deck’s word ids are saved for the pool combination and study type
+Resume reuses those ids and does not draw a new subset. Start Fresh clears them first
+Words that are gone or paused are left out. If none of the saved words remain, there is no resume prompt
 Card types for V0: Card 1001 (Matching), Card 1002 (Relationship Judgment), Card 1006 (Noun Production)
 Card distribution: 1006 dominant (40-50% General Vocab, 60-75% Gender), 1002 and 1001 support
 Card 1001 eligible in mixed mode only, Gender mode only
 Card 1002 eligible in mixed mode only
 Direction mode controls prompt/answer direction
 Each card has: Exit Study (top left), Home (top right), Flip and Submit/Next above word management buttons
-Flip reveals answer, disables input, shows Next button, no penalty
+Flip reveals answer, disables input, shows Next button, no penalty, and plays no sound
+A correct Submit plays the correct sound. An incorrect Submit plays the incorrect sound. Both stay silent when Sound Effects is off. Noun Production plays the incorrect sound on the first miss and again if the second attempt is also wrong.
 Keyboard stays open after submission, only dismisses on Next
 Text input auto-focuses on card load
 Horizontal sweep transition between cards
@@ -312,8 +335,6 @@ Drills, challenges, assessments
 Scoring or streaks
 Real stats data (structure built, data is placeholder)
 Any competency beyond vocab and gender
-Sound effects
-Settings screen
 Dark mode
 User accounts or cross-device sync
 Determiner type toggles

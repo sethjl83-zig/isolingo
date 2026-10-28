@@ -40,6 +40,7 @@ import {
 } from '@/src/storage/statsStorage';
 import { enrichVocabItemsFromMaster } from '@/src/data';
 import { parsePoolIdsParam } from '@/src/utils/studyLaunch';
+import { saveSavedDeck } from '@/src/storage/savedDecks';
 import { updateWordStats } from '@/src/types/stats';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
@@ -80,12 +81,17 @@ export default function SessionScreen() {
   // ── Pool-derived session vocab ─────────────────────────────────────────────
   // Pool IDs are passed via navigation params from select-study-list / deck-size.
 
-  const { poolIds: poolIdsParam, deckSize: deckSizeParam } =
-    useLocalSearchParams<{ poolIds?: string; deckSize?: string }>();
+  const { poolIds: poolIdsParam, deckSize: deckSizeParam, deckIds: deckIdsParam } =
+    useLocalSearchParams<{ poolIds?: string; deckSize?: string; deckIds?: string }>();
 
   const poolIds = useMemo<string[]>(
     () => parsePoolIdsParam(poolIdsParam),
     [poolIdsParam],
+  );
+
+  const explicitDeckIds = useMemo<string[]>(
+    () => parsePoolIdsParam(deckIdsParam),
+    [deckIdsParam],
   );
 
   const baseSessionVocab = useMemo<SessionVocabContext | null>(() => {
@@ -115,13 +121,32 @@ export default function SessionScreen() {
 
     const enrichedBank = enrichVocabItemsFromMaster(fullBank, language);
     const deckSize = deckSizeParam ? parseInt(deckSizeParam, 10) : NaN;
+    const byId = new Map(enrichedBank.map(word => [word.id, word]));
+    const resumed = explicitDeckIds.flatMap(id => {
+      const word = byId.get(id);
+      return word ? [word] : [];
+    });
     const vocabBank =
-      !isNaN(deckSize) && deckSize > 0 && deckSize < enrichedBank.length
-        ? selectSessionSubset(enrichedBank, deckSize, settings)
-        : enrichedBank;
+      resumed.length > 0
+        ? resumed
+        : !isNaN(deckSize) && deckSize > 0 && deckSize < enrichedBank.length
+          ? selectSessionSubset(enrichedBank, deckSize, settings)
+          : enrichedBank;
 
     return { vocabBank, wordFrequencySettings: settings };
-  }, [language, poolIds, state.languagePools, deckSizeParam]);
+  }, [language, poolIds, state.languagePools, deckSizeParam, explicitDeckIds]);
+
+  const deckSavedRef = useRef(false);
+  useEffect(() => {
+    if (!language || !baseSessionVocab || deckSavedRef.current) return;
+    deckSavedRef.current = true;
+    void saveSavedDeck(
+      language,
+      state.studyTypeSelected ?? 'general_vocab',
+      poolIds,
+      baseSessionVocab.vocabBank.map(word => word.id),
+    );
+  }, [language, baseSessionVocab, poolIds, state.studyTypeSelected]);
 
   const getSessionVocab = useCallback((): SessionVocabContext | null => {
     if (!baseSessionVocab) return null;

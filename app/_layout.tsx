@@ -67,6 +67,7 @@ export default function RootLayout() {
             <Stack.Screen name="select-study-list" />
             <Stack.Screen name="deck-size" />
             <Stack.Screen name="stats" />
+            <Stack.Screen name="settings" />
             <Stack.Screen name="session" />
             <Stack.Screen name="vocab-bank" />
             <Stack.Screen name="add-word" />

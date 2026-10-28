@@ -190,9 +190,11 @@ export default function MyListsScreen() {
       ? `Already Default for: ${alreadyLabels.join(' & ')}`
       : 'Set as Default';
 
-    const message = alreadyLabels.length
-      ? `"${pool.name}" is already the default list for ${alreadyLabels.join(' & ')}. Set it as default for the remaining type(s) below:`
-      : `Which study mode should "${pool.name}" be the default list for?`;
+    const message = alreadyLabels.length === 0
+      ? `Which study mode should "${pool.name}" be the default list for?`
+      : isDefaultGeneral && isDefaultGender
+        ? `"${pool.name}" is already the default list for ${alreadyLabels.join(' & ')}.`
+        : `"${pool.name}" is already the default list for ${alreadyLabels.join(' & ')}. Set it as default for the remaining type(s) below:`;
 
     const options: DefaultDialogOption[] = [];
 
@@ -219,6 +221,18 @@ export default function MyListsScreen() {
         },
       });
     }
+    if (isDefaultGeneral) {
+      options.push({
+        text: 'Remove as Default (General Vocab)',
+        onPress: () => setDefaultPool('general_vocab' as StudyType, language, []),
+      });
+    }
+    if (isDefaultGender) {
+      options.push({
+        text: 'Remove as Default (Gender)',
+        onPress: () => setDefaultPool('gender' as StudyType, language, []),
+      });
+    }
 
     setDefaultDialog({ title, message, options });
   };
@@ -243,7 +257,6 @@ export default function MyListsScreen() {
   const renderPool = ({ item: pool }: { item: Pool }) => {
     const isDefaultGeneral = defaultGeneralIds.includes(pool.id);
     const isDefaultGender  = defaultGenderIds.includes(pool.id);
-    const isFullyDefault   = isDefaultGeneral && isDefaultGender;
     const icon = iconForPool(pool);
     const wellColor = {
       purple: hexAlpha(palette.primary, 0.12),
@@ -291,15 +304,13 @@ export default function MyListsScreen() {
           <View style={styles.cardDivider} />
 
           <View style={styles.actionRow}>
-            {!isFullyDefault && (
-              <TouchableOpacity
-                onPress={() => handleSetDefault(pool)}
-                activeOpacity={0.65}
-                hitSlop={6}
-              >
-                <Text style={[styles.setDefault, { color: palette.primary }]}>Set as Default</Text>
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity
+              onPress={() => handleSetDefault(pool)}
+              activeOpacity={0.65}
+              hitSlop={6}
+            >
+              <Text style={[styles.setDefault, { color: palette.primary }]}>Set as Default</Text>
+            </TouchableOpacity>
             <View style={styles.iconActions}>
               <TouchableOpacity
                 style={[

@@ -16,6 +16,7 @@ import StudyButton from '../ui/StudyButton';
 import CorrectText from '../ui/CorrectText';
 import FeedbackNote from '../ui/FeedbackNote';
 import StudyCardLayout from './StudyCardLayout';
+import { playCorrect, playIncorrect } from '@/src/utils/soundPlayer';
 import {
   studyChrome,
   actionLabelStyle,
@@ -118,6 +119,7 @@ export default function Card1001({
       setResult('correct');
       setSubmitted(true);
       setShowNext(true);
+      playCorrect();
       onSubmit(true);
     } else {
       const newLocked = new Set(lockedCorrect);
@@ -132,6 +134,7 @@ export default function Card1001({
       setLockedCorrect(newLocked);
       setPairs(newPairs);
       setResult('partial');
+      playIncorrect();
       onSubmit(false);
     }
   }, [card.nouns, pairs, lockedCorrect, onSubmit]);

@@ -17,6 +17,7 @@ import StudyButton from '../ui/StudyButton';
 import CorrectText from '../ui/CorrectText';
 import FeedbackNote from '../ui/FeedbackNote';
 import StudyCardLayout from './StudyCardLayout';
+import { playCorrect, playIncorrect } from '@/src/utils/soundPlayer';
 import {
   studyChrome,
   actionLabelStyle,
@@ -112,6 +113,8 @@ export default function Card1002({
     if (answerState !== 'idle' || selected === null) return;
     const correct = selected === card.correctRelationship;
     setAnswerState(correct ? 'correct' : 'incorrect');
+    if (correct) playCorrect();
+    else playIncorrect();
     onSubmit(correct);
   }, [answerState, selected, card.correctRelationship, onSubmit]);
 

@@ -39,8 +39,6 @@ Every session: read this first, update it before you finish.
 - More grammar competencies (German cases, French/Spanish equivalents)
 - Passive review mode
 - User-added photos and mnemonics
-- Sound effects
-- Settings screen
 - Persistent decks
 - Possibly revisit the color palette
 
@@ -49,6 +47,10 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-10-27: Correct and incorrect answers play a sound on Matching, Relationship, and Noun Production when Sound Effects is on. Flip stays silent.
+- 2026-10-27: Settings is on Home via the gear. Sound Effects is stored and on by default. Start Over clears lists, progress, and settings, then returns to Welcome.
+- 2026-10-26: Home asks “Pick up where you left off?” when a default list already has a saved deck. Resume opens Direction with that deck. Start Fresh clears it and opens Deck Size. The deck is saved when a session starts.
+- 2026-10-26: Set as Default can remove a list as the General Vocab or Gender default. The button stays available when a list is already the default for both.
 - 2026-10-25: Build Your Own can add a new word from the word list. The word stays on that screen until the list is confirmed, then it is saved only in that pool. Add List is three cards again.
 - 2026-10-25: Curated Lists hides a category when this language already has a curated list named for it, including numbered names like "People 2". Deleting that list brings the category back. Existing lists are left in place.
 - 2026-10-25: New Word shows Noun, Verb, Adjective, and Adverb, with Noun selected. Gender mode no longer hides the other three. Splash now uses the Akuity symbol on white. A new TestFlight build is required for the splash.

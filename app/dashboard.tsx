@@ -35,12 +35,22 @@ import {
 import { USER_NAME_KEY, CELEBRATION_PENDING_KEY, takePendingCelebration } from './welcome';
 import { setAddListLaunchSource } from './add-list';
 import { countStudyWords, getDeckSizeLaunchDecision } from '@/src/utils/studyLaunch';
+import { clearSavedDeck, getSavedDeck } from '@/src/storage/savedDecks';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
 const FLAG_IMAGES: Record<Language, number> = {
   es: require('@/assets/images/home/flag-es.png'),
   fr: require('@/assets/images/home/flag-fr.png'),
   de: require('@/assets/images/home/flag-de.png'),
+};
+const gearIcon = require('@/assets/images/study/gear.png');
+
+type ResumePrompt = {
+  studyType: StudyType;
+  poolIds: string[];
+  poolIdsStr: string;
+  deckIds: string[];
+  totalCount: number;
 };
 
 const LANGUAGES: { id: Language; label: string }[] = [
@@ -363,6 +373,7 @@ export default function DashboardScreen() {
   const language = state.languageSelected;
 
   const [langModalVisible,  setLangModalVisible]  = useState(false);
+  const [resumePrompt,      setResumePrompt]      = useState<ResumePrompt | null>(null);
   const [statsSnap,         setStatsSnap]         = useState<StatsSnapshot>({ mastered: 0, accuracy: -1, today: 0 });
   const [statsLoading,      setStatsLoading]      = useState(false);
   const [showLangHint,      setShowLangHint]      = useState(false);
@@ -429,12 +440,16 @@ export default function DashboardScreen() {
 
   useAndroidBackHandler(
     useCallback(() => {
+      if (resumePrompt) {
+        setResumePrompt(null);
+        return true;
+      }
       Alert.alert('Exit app?', undefined, [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Exit', style: 'destructive', onPress: () => BackHandler.exitApp() },
       ]);
       return true;
-    }, []),
+    }, [resumePrompt]),
   );
 
   if (!isReady) return null;
@@ -471,6 +486,19 @@ export default function DashboardScreen() {
       const poolIds = defaultPools.map(p => p.id);
       const poolIdsStr = JSON.stringify(poolIds);
       const totalCount = countStudyWords(defaultPools, studyType);
+      const liveIds = new Set<string>();
+      for (const pool of defaultPools) {
+        const paused = new Set(pool.pausedWordIds ?? []);
+        for (const pw of pool.words) {
+          if (!paused.has(pw.item.id)) liveIds.add(pw.item.id);
+        }
+      }
+      const savedIds = await getSavedDeck(language, studyType, poolIds);
+      const deckIds = savedIds.filter(id => liveIds.has(id));
+      if (deckIds.length > 0) {
+        setResumePrompt({ studyType, poolIds, poolIdsStr, deckIds, totalCount });
+        return;
+      }
 
       const { showDeckSizePicker, deckSize } = await getDeckSizeLaunchDecision(
         language,
@@ -500,6 +528,38 @@ export default function DashboardScreen() {
     router.push('/select-study-list' as never);
   };
 
+  const handleResumeDeck = () => {
+    const prompt = resumePrompt;
+    if (!prompt) return;
+    setResumePrompt(null);
+    router.push({
+      pathname: '/direction',
+      params: {
+        poolIds: prompt.poolIdsStr,
+        deckSize: String(prompt.deckIds.length),
+        deckIds: JSON.stringify(prompt.deckIds),
+      },
+    } as never);
+  };
+
+  const handleStartFresh = async () => {
+    const prompt = resumePrompt;
+    if (!prompt || !language) return;
+    setResumePrompt(null);
+    await clearSavedDeck(language, prompt.studyType, prompt.poolIds);
+    if (prompt.totalCount < 10) {
+      router.push({
+        pathname: '/direction',
+        params: { poolIds: prompt.poolIdsStr, deckSize: '' },
+      } as never);
+      return;
+    }
+    router.push({
+      pathname: '/deck-size',
+      params: { poolIds: prompt.poolIdsStr, totalCount: String(prompt.totalCount) },
+    } as never);
+  };
+
   return (
     <SafeAreaView edges={['left', 'right', 'bottom']} style={styles.safe}>
       <StatusBar style="dark" />
@@ -511,27 +571,39 @@ export default function DashboardScreen() {
 
       {/* ── Welcome header ──────────────────────────────────────────────────── */}
       <View style={styles.welcomeSection}>
-        {/* collapsable={false} ensures Android preserves this View for measure() */}
-        <View
-          ref={welcomeWrapRef}
-          collapsable={false}
-          onLayout={handleWelcomeMeasure}
-        >
-          <Text
-            style={[
-              styles.welcomeHeading,
-              {
-                // Hidden while the overlay text is in flight; revealed when overlay unmounts
-                color: celebrationActive ? 'transparent' : '#25262B',
-              },
-            ]}
+        <View style={styles.welcomeCopy}>
+          {/* collapsable={false} ensures Android preserves this View for measure() */}
+          <View
+            ref={welcomeWrapRef}
+            collapsable={false}
+            onLayout={handleWelcomeMeasure}
           >
-            {`Welcome, ${userName ?? ''}!`}
+            <Text
+              style={[
+                styles.welcomeHeading,
+                {
+                  // Hidden while the overlay text is in flight; revealed when overlay unmounts
+                  color: celebrationActive ? 'transparent' : '#25262B',
+                },
+              ]}
+            >
+              {`Welcome, ${userName ?? ''}!`}
+            </Text>
+          </View>
+          <Text style={styles.studyPrompt}>
+            What do you want to study?
           </Text>
         </View>
-        <Text style={styles.studyPrompt}>
-          What do you want to study?
-        </Text>
+        <TouchableOpacity
+          style={styles.gearBtn}
+          onPress={() => router.push('/settings' as never)}
+          hitSlop={8}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Settings"
+        >
+          <Image source={gearIcon} style={styles.gearIcon} accessibilityIgnoresInvertColors />
+        </TouchableOpacity>
       </View>
 
       {/* ── Language selector ───────────────────────────────────────────────── */}
@@ -733,6 +805,41 @@ export default function DashboardScreen() {
         </Pressable>
       </Modal>
 
+      <Modal
+        visible={resumePrompt !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setResumePrompt(null)}
+      >
+        <ScrollView style={styles.dialogScroll} contentContainerStyle={styles.dialogOverlay}>
+          <Pressable style={styles.dialogBackdrop} onPress={() => setResumePrompt(null)}>
+            <Pressable style={styles.dialogSheet} onPress={() => {}}>
+              <Text style={styles.dialogTitle}>Pick up where you left off?</Text>
+              <View style={styles.dialogActions}>
+                <TouchableOpacity
+                  style={styles.dialogResume}
+                  onPress={handleResumeDeck}
+                  activeOpacity={0.75}
+                  accessibilityRole="button"
+                  accessibilityLabel="Resume"
+                >
+                  <Text style={styles.dialogResumeLabel}>Resume</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.dialogFresh}
+                  onPress={handleStartFresh}
+                  activeOpacity={0.75}
+                  accessibilityRole="button"
+                  accessibilityLabel="Start Fresh"
+                >
+                  <Text style={styles.dialogFreshLabel}>Start Fresh</Text>
+                </TouchableOpacity>
+              </View>
+            </Pressable>
+          </Pressable>
+        </ScrollView>
+      </Modal>
+
       {/* ── Celebration overlay (new-user first launch) ──────────────────────── */}
       {/* Blocking placeholder: keeps the dashboard hidden while we wait for the
           welcome banner's layout measurement to complete. */}
@@ -784,6 +891,12 @@ const styles = StyleSheet.create({
 
   // ── Welcome header ───────────────────────────────────────────────────────────
   welcomeSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  welcomeCopy: {
+    flex: 1,
     gap: 3,
   },
   welcomeHeading: {
@@ -798,6 +911,13 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     color: 'rgba(0,0,0,0.6)',
   },
+  gearBtn: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gearIcon: { width: 24, height: 24 },
 
   // ── Language card ────────────────────────────────────────────────────────────
   langCard: {
@@ -1071,6 +1191,70 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   langOptionFlag: { width: 32, height: 32, borderRadius: 16 },
+  dialogScroll: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
+  dialogOverlay: { flexGrow: 1 },
+  dialogBackdrop: {
+    flexGrow: 1,
+    width: '100%',
+    alignItems: 'center',
+    paddingTop: 243,
+    paddingBottom: 24,
+  },
+  dialogSheet: {
+    width: 313,
+    maxWidth: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    padding: 20,
+    alignItems: 'center',
+    gap: 20,
+  },
+  dialogTitle: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 22,
+    lineHeight: 28,
+    color: '#25262B',
+    textAlign: 'center',
+  },
+  dialogActions: { gap: 10, alignItems: 'center', alignSelf: 'stretch' },
+  dialogResume: {
+    width: 220,
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#5E51A4',
+  },
+  dialogResumeLabel: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#FFFFFF',
+  },
+  dialogFresh: {
+    width: 220,
+    height: 48,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#5E51A4',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  dialogFreshLabel: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#5E51A4',
+  },
   langOptionLabel: {
     flex: 1,
     fontFamily: HomeFonts.interMedium,

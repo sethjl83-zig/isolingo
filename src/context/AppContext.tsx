@@ -19,6 +19,7 @@ import { EMPTY_DEFAULT_POOL_IDS } from '../types/pool';
 import { getOrInitStats, updateStatsAfterCard } from '../engines/repetitionEngine';
 import { loadPersistedState, savePersistedState } from '../storage/persistedState';
 import { preloadLanguageStats } from '../storage/statsStorage';
+import { wipeAppData } from '../storage/resetAppData';
 
 type Action =
   | { type: 'HYDRATE'; payload: Partial<AppState> }
@@ -156,8 +157,8 @@ interface AppContextValue {
   recordCardResult: (vocabId: string, correct: boolean) => void;
   incrementCardIndex: () => void;
   resetSession: () => void;
-  /** Dev/testing: returns the app to a pristine fresh-install state. */
-  resetApp: () => void;
+  /** Clears in-memory state and every persisted value, then resolves. */
+  resetApp: () => Promise<void>;
   createPool: (pool: Pool) => void;
   updatePool: (poolId: string, updates: Partial<Omit<Pool, 'id' | 'language'>>) => void;
   deletePool: (poolId: string, language: Language) => void;
@@ -184,6 +185,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isReady, setIsReady] = useState(false);
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
   const hasHydrated = useRef(false);
+  const suppressPersist = useRef(false);
 
   useEffect(() => {
     loadPersistedState().then(stored => {
@@ -210,7 +212,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [isReady, state.languageSelected]);
 
   useEffect(() => {
-    if (!hasHydrated.current || !isReady) return;
+    if (!hasHydrated.current || !isReady || suppressPersist.current) return;
     const payload = toPersistedPayload(state);
     if (payload) savePersistedState(payload);
   }, [
@@ -253,7 +255,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const resetSession = useCallback(() => dispatch({ type: 'RESET_SESSION' }), []);
 
-  const resetApp = useCallback(() => dispatch({ type: 'RESET_APP' }), []);
+  const resetApp = useCallback(async () => {
+    suppressPersist.current = true;
+    dispatch({ type: 'RESET_APP' });
+    try {
+      await wipeAppData();
+    } finally {
+      suppressPersist.current = false;
+    }
+  }, []);
 
   const createPool = useCallback(
     (pool: Pool) => dispatch({ type: 'CREATE_POOL', pool }),

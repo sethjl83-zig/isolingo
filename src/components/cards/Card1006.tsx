@@ -16,6 +16,7 @@ import StudyButton from '../ui/StudyButton';
 import CorrectText from '../ui/CorrectText';
 import FeedbackNote from '../ui/FeedbackNote';
 import StudyCardLayout from './StudyCardLayout';
+import { playCorrect, playIncorrect } from '@/src/utils/soundPlayer';
 import {
   studyChrome,
   actionLabelStyle,
@@ -120,8 +121,10 @@ export default function Card1006({
       setCardState('correct');
       setAlsoCorrect(result.alsoCorrect);
       setShowTypoHint(false);
+      playCorrect();
       onSubmit(true, attemptRef.current === 1);
     } else {
+      playIncorrect();
       if (attemptRef.current >= 2) {
         setCardState('incorrect_final');
         setShowTypoHint(false);

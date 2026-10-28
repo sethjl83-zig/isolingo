@@ -62,9 +62,13 @@ function takePendingBuildWords(): VocabItem[] {
   return words;
 }
 
-function clearBuildDraft(): void {
+export function discardBuildYourOwnDraft(): void {
   buildDraft = null;
   pendingBuildWords = [];
+}
+
+function clearBuildDraft(): void {
+  discardBuildYourOwnDraft();
 }
 
 function hexAlpha(hex: string, alpha: number) {

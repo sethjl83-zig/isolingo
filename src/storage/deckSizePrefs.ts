@@ -57,6 +57,14 @@ export async function getDeckSizePref(
   return isPoolDeckSize(saved) ? saved : null;
 }
 
+export async function clearDeckSizePrefs(): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Best-effort.
+  }
+}
+
 /** Persist the chosen deck size for this launch context. */
 export async function saveDeckSizePref(
   language: Language,

@@ -61,7 +61,11 @@ export default function DirectionScreen() {
   const router = useRouter();
   const { state, setDirectionMode } = useAppContext();
   // Pool IDs and deck size are forwarded from select-study-list / deck-size to session.
-  const { poolIds, deckSize } = useLocalSearchParams<{ poolIds?: string; deckSize?: string }>();
+  const { poolIds, deckSize, deckIds } = useLocalSearchParams<{
+    poolIds?: string;
+    deckSize?: string;
+    deckIds?: string;
+  }>();
 
   // studyTypeSelected is set by the dashboard before navigating here.
   const studyType: StudyType = state.studyTypeSelected ?? 'general_vocab';
@@ -75,7 +79,11 @@ export default function DirectionScreen() {
   const handleStart = () => {
     router.replace({
       pathname: '/session',
-      params: { poolIds: poolIds ?? '', deckSize: deckSize ?? '' },
+      params: {
+        poolIds: poolIds ?? '',
+        deckSize: deckSize ?? '',
+        deckIds: deckIds ?? '',
+      },
     } as never);
   };
 

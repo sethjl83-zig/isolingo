@@ -155,6 +155,24 @@ export function ensureLanguageStatsLoaded(language: Language): Promise<{
   return bundleLoadPromises[language]!;
 }
 
+const STATS_LANGUAGES: Language[] = ['de', 'fr', 'es'];
+
+/** Drop word stats and daily counts for every language, including the in-memory cache. */
+export async function clearAllStats(): Promise<void> {
+  for (const language of STATS_LANGUAGES) {
+    delete wordStatsCache[language];
+    delete dailyCountsCache[language];
+    delete bundleLoadPromises[language];
+  }
+  try {
+    await AsyncStorage.multiRemove(
+      STATS_LANGUAGES.flatMap(language => [wordStatsKey(language), dailyStatsKey(language)]),
+    );
+  } catch (err) {
+    console.warn('[statsStorage] clearAllStats failed', err);
+  }
+}
+
 /** Preload stats for the active language during app startup. */
 export function preloadLanguageStats(language: Language | null): void {
   if (language) {
