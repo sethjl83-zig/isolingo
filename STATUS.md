@@ -47,6 +47,9 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-10-27: Settings has Card Frequency sliders for Matching, Relationship, and Noun Production. They always total 100%, and a session uses that mix.
+- 2026-10-27: A study day counts any 5 answered cards, including Matching and Relationship, not only Noun Production.
+- 2026-10-27: Home progress card shows a consecutive study-day streak. A day counts after 5 Noun Production answers. From 7 days, a caution mark explains that a long run can hurt learning.
 - 2026-10-27: Correct and incorrect answers play a sound on Matching, Relationship, and Noun Production when Sound Effects is on. Flip stays silent.
 - 2026-10-27: Settings is on Home via the gear. Sound Effects is stored and on by default. Start Over clears lists, progress, and settings, then returns to Welcome.
 - 2026-10-26: Home asks “Pick up where you left off?” when a default list already has a saved deck. Resume opens Direction with that deck. Start Fresh clears it and opens Deck Size. The deck is saved when a session starts.

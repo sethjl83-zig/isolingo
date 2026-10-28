@@ -35,12 +35,14 @@ import {
   ensureLanguageStatsLoaded,
   saveWordStats,
   incrementDailyCardCountInMemory,
+  incrementStudyDayCount,
   type LangStats,
   type DailyCardCounts,
 } from '@/src/storage/statsStorage';
 import { enrichVocabItemsFromMaster } from '@/src/data';
 import { parsePoolIdsParam } from '@/src/utils/studyLaunch';
 import { saveSavedDeck } from '@/src/storage/savedDecks';
+import { loadCardFrequency } from '@/src/storage/cardFrequency';
 import { updateWordStats } from '@/src/types/stats';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
@@ -72,6 +74,8 @@ export default function SessionScreen() {
   const statsRef = useRef<LangStats>({});
   const dailyCountsRef = useRef<DailyCardCounts>({});
   const statsSaveChainRef = useRef(Promise.resolve());
+  const cardKeyRef = useRef('');
+  const countedCardKeyRef = useRef<string | null>(null);
   const [currentCard, setCurrentCard] = useState<CardData | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
@@ -226,7 +230,13 @@ export default function SessionScreen() {
   );
 
   useEffect(() => {
-    loadCard();
+    let cancelled = false;
+    loadCardFrequency().finally(() => {
+      if (!cancelled) loadCard();
+    });
+    return () => {
+      cancelled = true;
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -316,6 +326,19 @@ export default function SessionScreen() {
         cardType === 'CARD_1001',
         card1002PairKey,
       );
+
+      if (language) {
+        const key = cardKeyRef.current;
+        if (key && countedCardKeyRef.current !== key) {
+          countedCardKeyRef.current = key;
+          const lang = language;
+          statsSaveChainRef.current = statsSaveChainRef.current
+            .then(() => incrementStudyDayCount(lang))
+            .catch(err => {
+              console.error('[SessionScreen] study day save failed', err);
+            });
+        }
+      }
 
       // Record detailed stats for every resolved Card 1006 result
       if (cardType === 'CARD_1006' && vocabId && language) {
@@ -476,6 +499,7 @@ export default function SessionScreen() {
   }
 
   const cardKey = getCardKey(currentCard, state.sessionCardIndex);
+  cardKeyRef.current = cardKey;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: palette.background }]} edges={['top', 'left', 'right']}>

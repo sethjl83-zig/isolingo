@@ -15,6 +15,11 @@ function dailyStatsKey(language: Language): string {
   return `@isolingo/stats_daily_${language}`;
 }
 
+/** All answered cards (1001, 1002, and 1006) per calendar day. Used for the study-day streak. */
+function studyDayKey(language: Language): string {
+  return `@isolingo/stats_study_days_${language}`;
+}
+
 /** Local calendar date as YYYY-MM-DD. */
 export function formatDateKey(date: Date = new Date()): string {
   const y = date.getFullYear();
@@ -38,6 +43,7 @@ export function lastNDayKeys(days: number): string[] {
 
 const wordStatsCache: Partial<Record<Language, LangStats>> = {};
 const dailyCountsCache: Partial<Record<Language, DailyCardCounts>> = {};
+const studyDayCache: Partial<Record<Language, DailyCardCounts>> = {};
 const bundleLoadPromises: Partial<
   Record<Language, Promise<{ wordStats: LangStats; dailyCounts: DailyCardCounts }>>
 > = {};
@@ -120,6 +126,34 @@ export function incrementDailyCardCountInMemory(
   return { ...counts, [key]: (counts[key] ?? 0) + 1 };
 }
 
+/** Answered cards of every type for one language, keyed by YYYY-MM-DD. */
+export async function loadStudyDayCounts(language: Language): Promise<DailyCardCounts> {
+  const cached = studyDayCache[language];
+  if (cached) return cached;
+  try {
+    const raw = await AsyncStorage.getItem(studyDayKey(language));
+    const parsed = raw ? (JSON.parse(raw) as DailyCardCounts) : {};
+    studyDayCache[language] = parsed;
+    return parsed;
+  } catch (err) {
+    console.warn('[statsStorage] loadStudyDayCounts failed', language, err);
+    return {};
+  }
+}
+
+/** Count one answered card (1001, 1002, or 1006) toward today's study-day total. */
+export async function incrementStudyDayCount(language: Language): Promise<void> {
+  try {
+    const counts = { ...(await loadStudyDayCounts(language)) };
+    const key = formatDateKey();
+    counts[key] = (counts[key] ?? 0) + 1;
+    studyDayCache[language] = counts;
+    await AsyncStorage.setItem(studyDayKey(language), JSON.stringify(counts));
+  } catch (err) {
+    console.warn('[statsStorage] incrementStudyDayCount failed', language, err);
+  }
+}
+
 export async function loadLanguageStatsBundle(language: Language): Promise<{
   wordStats: LangStats;
   dailyCounts: DailyCardCounts;
@@ -162,11 +196,16 @@ export async function clearAllStats(): Promise<void> {
   for (const language of STATS_LANGUAGES) {
     delete wordStatsCache[language];
     delete dailyCountsCache[language];
+    delete studyDayCache[language];
     delete bundleLoadPromises[language];
   }
   try {
     await AsyncStorage.multiRemove(
-      STATS_LANGUAGES.flatMap(language => [wordStatsKey(language), dailyStatsKey(language)]),
+      STATS_LANGUAGES.flatMap(language => [
+        wordStatsKey(language),
+        dailyStatsKey(language),
+        studyDayKey(language),
+      ]),
     );
   } catch (err) {
     console.warn('[statsStorage] clearAllStats failed', err);

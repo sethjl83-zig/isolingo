@@ -7,6 +7,7 @@ import { clearDeckSizePrefs } from './deckSizePrefs';
 import { clearAllSavedDecks } from './savedDecks';
 import { clearAllStats } from './statsStorage';
 import { clearSoundEnabled } from './soundPref';
+import { clearCardFrequency } from './cardFrequency';
 
 const USER_NAME_KEY = '@isolingo/user_name';
 const CELEBRATION_PENDING_KEY = '@isolingo/celebration_pending';
@@ -18,6 +19,7 @@ export async function wipeAppData(): Promise<void> {
     clearAllSavedDecks(),
     clearAllStats(),
     clearSoundEnabled(),
+    clearCardFrequency(),
     AsyncStorage.multiRemove([USER_NAME_KEY, CELEBRATION_PENDING_KEY]).catch(() => {}),
   ]);
 }

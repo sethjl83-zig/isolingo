@@ -1,23 +1,11 @@
 import type { CardType } from '../types/cards';
 import type { StudyType, DirectionMode } from '../types/state';
 import type { Language } from '../types/vocab';
-
-// ── Distribution targets ──────────────────────────────────────────────────────
-
-const GENERAL_VOCAB_DIST: Record<CardType, number> = {
-  CARD_1006: 0.60,
-  CARD_1002: 0.40,
-  CARD_1001: 0.00, // never eligible in general vocab — gender-recognition only
-};
-
-const GENDER_DIST: Record<CardType, number> = {
-  CARD_1006: 0.67,
-  CARD_1001: 0.33,
-  CARD_1002: 0.00,
-};
+import { getCardFrequencySync } from '../storage/cardFrequency';
 
 const MAX_CONSECUTIVE = 2;
-// If CARD_1006 hasn't appeared in the last N cards, prioritise it
+// If Noun Production hasn't appeared in the last N cards, and it is still the
+// user's largest share, prioritise it.
 const PRODUCTION_PRIORITY_WINDOW = 3;
 
 // ── Eligible types by direction + study type ──────────────────────────────────
@@ -56,11 +44,17 @@ export function selectCardType(
   if (!card1002Available) {
     eligible = eligible.filter(t => t !== 'CARD_1002');
   }
-  const dist = studyType === 'gender' ? GENDER_DIST : GENERAL_VOCAB_DIST;
+  const dist = getCardFrequencySync();
 
-  // Prioritise CARD_1006 if it hasn't appeared recently
+  const productionIsDominant =
+    dist.CARD_1006 > 0 &&
+    dist.CARD_1006 >= dist.CARD_1001 &&
+    dist.CARD_1006 >= dist.CARD_1002;
+
+  // Prioritise CARD_1006 if it hasn't appeared recently and the user still wants it most.
   const recentWindow = recentTypes.slice(0, PRODUCTION_PRIORITY_WINDOW);
   if (
+    productionIsDominant &&
     eligible.includes('CARD_1006') &&
     !recentWindow.includes('CARD_1006') &&
     recentWindow.length >= PRODUCTION_PRIORITY_WINDOW
@@ -77,7 +71,11 @@ export function selectCardType(
     consecutiveCount >= MAX_CONSECUTIVE ? lastType : null;
 
   const candidates = eligible.filter(t => t !== blocked && dist[t] > 0);
-  if (candidates.length === 0) return 'CARD_1006';
+  if (candidates.length === 0) {
+    const fallback = eligible.filter(t => t !== blocked);
+    if (fallback.length === 0) return eligible[0] ?? 'CARD_1006';
+    return fallback[Math.floor(Math.random() * fallback.length)];
+  }
 
   const totalWeight = candidates.reduce((sum, t) => sum + dist[t], 0);
   let rand = Math.random() * totalWeight;

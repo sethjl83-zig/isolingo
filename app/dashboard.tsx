@@ -26,10 +26,11 @@ import { useAppContext } from '@/src/context/AppContext';
 import GenderModeIcon from '@/src/components/ui/GenderModeIcon';
 import type { Language } from '@/src/types/vocab';
 import type { StudyType } from '@/src/types/state';
-import { ensureLanguageStatsLoaded } from '@/src/storage/statsStorage';
+import { ensureLanguageStatsLoaded, loadStudyDayCounts } from '@/src/storage/statsStorage';
 import {
   countMasteredInPools,
   computeLanguageAccuracy,
+  consecutiveStudyDayStreak,
   getTodayCardCount,
 } from '@/src/utils/statsHelpers';
 import { USER_NAME_KEY, CELEBRATION_PENDING_KEY, takePendingCelebration } from './welcome';
@@ -63,6 +64,7 @@ interface StatsSnapshot {
   mastered: number;
   accuracy: number; // 0–100, or -1 when no attempts yet
   today: number;
+  studyDays: number;
 }
 
 // ── Accuracy progress ring ────────────────────────────────────────────────────
@@ -361,6 +363,22 @@ const celebStyles = StyleSheet.create({
 
 // ─────────────────────────────────────────────────────────────────────────────
 
+function streakDayColor(days: number): string {
+  if (days >= 10) return '#F74856';
+  if (days >= 7) return '#FFB200';
+  if (days >= 1) return '#38A19A';
+  return 'rgba(0,0,0,0.6)';
+}
+
+function CautionMark() {
+  return (
+    <View style={styles.cautionWrap}>
+      <View style={styles.cautionTriangle} />
+      <Text style={styles.cautionBang}>!</Text>
+    </View>
+  );
+}
+
 export default function DashboardScreen() {
   const router = useRouter();
   const {
@@ -374,11 +392,13 @@ export default function DashboardScreen() {
 
   const [langModalVisible,  setLangModalVisible]  = useState(false);
   const [resumePrompt,      setResumePrompt]      = useState<ResumePrompt | null>(null);
-  const [statsSnap,         setStatsSnap]         = useState<StatsSnapshot>({ mastered: 0, accuracy: -1, today: 0 });
+  const [statsSnap,         setStatsSnap]         = useState<StatsSnapshot>({ mastered: 0, accuracy: -1, today: 0, studyDays: 0 });
+  const [streakNoteOpen,    setStreakNoteOpen]    = useState(false);
   const [statsLoading,      setStatsLoading]      = useState(false);
   const [showLangHint,      setShowLangHint]      = useState(false);
   const [welcomeLayout,     setWelcomeLayout]     = useState<WelcomeLayout | null>(null);
   const welcomeWrapRef = useRef<View>(null);
+  const blockStatsNavRef = useRef(false);
 
   // ── Synchronous first-run detection ──────────────────────────────────────
   // `takePendingCelebration()` is set in welcome.tsx before navigation,
@@ -426,17 +446,23 @@ export default function DashboardScreen() {
     setStatsLoading(true);
     try {
       const { wordStats, dailyCounts } = await ensureLanguageStatsLoaded(language);
+      const studyDayCounts = await loadStudyDayCounts(language);
       const pools = getLanguagePools(language);
       const mastered = countMasteredInPools(pools, wordStats);
       const accuracy = computeLanguageAccuracy(wordStats);
       const today = getTodayCardCount(dailyCounts);
-      setStatsSnap({ mastered, accuracy, today });
+      const studyDays = consecutiveStudyDayStreak(studyDayCounts);
+      setStatsSnap({ mastered, accuracy, today, studyDays });
     } finally {
       setStatsLoading(false);
     }
   }, [language, getLanguagePools]);
 
   useFocusEffect(useCallback(() => { refreshStats(); }, [refreshStats]));
+
+  useEffect(() => {
+    setStreakNoteOpen(false);
+  }, [language]);
 
   useAndroidBackHandler(
     useCallback(() => {
@@ -702,7 +728,10 @@ export default function DashboardScreen() {
       <View style={styles.statsShadow}>
         <TouchableOpacity
           style={styles.statsCard}
-          onPress={() => router.push('/stats')}
+          onPress={() => {
+            if (blockStatsNavRef.current) return;
+            router.push('/stats');
+          }}
           activeOpacity={0.85}
         >
           <LinearGradient
@@ -737,9 +766,44 @@ export default function DashboardScreen() {
                   <Text style={styles.statLabel}>Today</Text>
                   <Text style={styles.statValueToday}>{statsSnap.today}</Text>
                 </View>
+                <View style={styles.statRow}>
+                  <Text style={styles.statLabel}>Streak</Text>
+                  <View style={styles.streakValue}>
+                    <Text style={[styles.statValueToday, { color: streakDayColor(statsSnap.studyDays) }]}>
+                      {statsSnap.studyDays}
+                    </Text>
+                    {statsSnap.studyDays >= 7 ? (
+                      <Pressable
+                        onPressIn={() => { blockStatsNavRef.current = true; }}
+                        onPress={() => setStreakNoteOpen(open => !open)}
+                        onPressOut={() => {
+                          requestAnimationFrame(() => { blockStatsNavRef.current = false; });
+                        }}
+                        hitSlop={10}
+                        accessibilityRole="button"
+                        accessibilityLabel="Study streak caution"
+                      >
+                        <CautionMark />
+                      </Pressable>
+                    ) : null}
+                  </View>
+                </View>
               </View>
             </View>
           )}
+
+          {statsSnap.studyDays >= 7 && streakNoteOpen ? (
+            <Pressable
+              onPressIn={() => { blockStatsNavRef.current = true; }}
+              onPressOut={() => {
+                requestAnimationFrame(() => { blockStatsNavRef.current = false; });
+              }}
+            >
+              <Text style={styles.streakNote}>
+                Practicing too many days in a row can actually hurt learning outcomes — consider taking a few days off.
+              </Text>
+            </Pressable>
+          ) : null}
 
           <View style={styles.detailsBtn}>
             <Text style={styles.detailsBtnText}>View Details</Text>
@@ -1068,7 +1132,7 @@ const styles = StyleSheet.create({
     ...shadow12,
   },
   statsCard: {
-    height: 275,
+    minHeight: 319,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(210,232,215,0.8)',
@@ -1104,7 +1168,7 @@ const styles = StyleSheet.create({
   },
   statsSpinner: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   statsBody: {
-    height: 110,
+    height: 154,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 32,
@@ -1143,6 +1207,43 @@ const styles = StyleSheet.create({
     fontSize: 24,
     lineHeight: 24,
     color: '#38A19A',
+  },
+  streakValue: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  cautionWrap: {
+    width: 16,
+    height: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cautionTriangle: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 8,
+    borderRightWidth: 8,
+    borderBottomWidth: 14,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: '#FFB200',
+  },
+  cautionBang: {
+    position: 'absolute',
+    top: 3,
+    fontFamily: HomeFonts.jakartaSemiBold,
+    fontWeight: 'normal',
+    fontSize: 9,
+    lineHeight: 10,
+    color: '#25262B',
+  },
+  streakNote: {
+    fontFamily: HomeFonts.jakartaRegular,
+    fontWeight: 'normal',
+    fontSize: 14.5,
+    lineHeight: 18,
+    color: 'rgba(0,0,0,0.6)',
   },
   detailsBtn: {
     height: 48,

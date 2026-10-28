@@ -56,6 +56,37 @@ export function getTodayCardCount(dailyCounts: DailyCardCounts): number {
   return dailyCounts[formatDateKey()] ?? 0;
 }
 
+/** A calendar day counts toward the study streak once this many cards are answered. */
+export const STUDY_DAY_CARD_MINIMUM = 5;
+
+function dateKeyDaysFrom(now: Date, deltaDays: number): string {
+  return formatDateKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() + deltaDays));
+}
+
+/**
+ * Consecutive local calendar days with at least STUDY_DAY_CARD_MINIMUM answered cards.
+ * Matching, Relationship, and Noun Production all count. Each card counts once.
+ * Today still in progress does not break the streak. A finished day under the minimum resets it.
+ */
+export function consecutiveStudyDayStreak(
+  dailyCounts: DailyCardCounts,
+  now: Date = new Date(),
+): number {
+  const qualifies = (deltaDays: number) =>
+    (dailyCounts[dateKeyDaysFrom(now, deltaDays)] ?? 0) >= STUDY_DAY_CARD_MINIMUM;
+
+  let delta = qualifies(0) ? 0 : -1;
+  if (delta === -1 && !qualifies(-1)) return 0;
+
+  let streak = 0;
+  while (qualifies(delta)) {
+    streak += 1;
+    delta -= 1;
+    if (streak > 20000) break;
+  }
+  return streak;
+}
+
 export interface CompetencyCounts {
   mastered: number;
   strong: number;

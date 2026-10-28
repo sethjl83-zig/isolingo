@@ -65,7 +65,8 @@ Welcome banner: "Welcome, [Name]!" at the top
 "What do you want to study?" label below the welcome banner
 Language selector card below the prompt (globe icon, "Select Language" caption, flag, language name, down arrow)
 Two study mode cards: General Vocabulary, Gender. The Gender card uses the three-gender symbol when German is selected, and the two-gender symbol for Spanish, French, and when no language is selected.
-Stats card below the study mode cards: heading "Your Progress" (shown in uppercase), Mastered, Accuracy (circular ring), Today, and "View Details →"
+Stats card below the study mode cards: heading "Your Progress" (shown in uppercase), Mastered, Accuracy (circular ring), Today, Streak, and "View Details →"
+Streak is consecutive local calendar days with at least 5 answered cards of any type (Matching, Relationship, or Noun Production), stored per language next to the daily stats. Each card counts once. The current day does not break the streak until it ends. The count shows from 0, and a finished day turns it green at 1–6, yellow at 7–9, and red at 10 or more. From 7 days, a yellow caution mark opens: “Practicing too many days in a row can actually hurt learning outcomes — consider taking a few days off.”
 Tapping the stats card → Stats screen
 One "My Vocabulary" button below the stats card
 Tapping My Vocabulary → My Lists screen
@@ -80,6 +81,7 @@ Settings Screen
 
 Header: "Settings"
 Sound Effects toggle, stored at @isolingo/sound_enabled, on by default. When on, a correct answer plays Correct.wav and an incorrect answer plays Incorrect.wav. Flip does not play a sound.
+Card Frequency: Matching, Relationship, and Noun Production. Percents always sum to 100. Defaults are Matching 10%, Relationship 20%, Noun Production 70%. Stored at @isolingo/card_frequency. A study session uses this mix. Matching still appears only in Gender mode, and Relationship only in mixed direction. A type that cannot appear gives its share to the types that can.
 Privacy Policy opens akuity.app/privacy in the device browser
 Contact Support opens mailto:support@akuity.app
 Request a Feature opens mailto:support@akuity.app?subject=Feature%20Request
@@ -172,7 +174,7 @@ When a session starts, that deck’s word ids are saved for the pool combination
 Resume reuses those ids and does not draw a new subset. Start Fresh clears them first
 Words that are gone or paused are left out. If none of the saved words remain, there is no resume prompt
 Card types for V0: Card 1001 (Matching), Card 1002 (Relationship Judgment), Card 1006 (Noun Production)
-Card distribution: 1006 dominant (40-50% General Vocab, 60-75% Gender), 1002 and 1001 support
+Card distribution: set in Settings under Card Frequency. Default is Noun Production 70%, Relationship 20%, Matching 10%. Matching is still Gender mode only, and Relationship is still mixed direction only. When a type cannot appear, the session splits its share across the types that can.
 Card 1001 eligible in mixed mode only, Gender mode only
 Card 1002 eligible in mixed mode only
 Direction mode controls prompt/answer direction
