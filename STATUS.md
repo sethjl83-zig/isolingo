@@ -47,6 +47,7 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-10-29: Card Frequency uses separate steppers. Save stays off until the three percentages total 100%. The card names in Settings are Gender Matching, Word Relationships, and Production.
 - 2026-10-27: Settings has Card Frequency sliders for Matching, Relationship, and Noun Production. They always total 100%, and a session uses that mix.
 - 2026-10-27: A study day counts any 5 answered cards, including Matching and Relationship, not only Noun Production.
 - 2026-10-27: Home progress card shows a consecutive study-day streak. A day counts after 5 Noun Production answers. From 7 days, a caution mark explains that a long run can hurt learning.

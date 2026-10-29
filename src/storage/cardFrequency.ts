@@ -1,5 +1,5 @@
 /**
- * Relative mix of Matching, Relationship, and Noun Production.
+ * Relative mix of Gender Matching, Word Relationships, and Production.
  * Percents are integers and always sum to 100.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -56,52 +56,6 @@ export function normalizeCardFrequency(raw: unknown): CardFrequency {
     CARD_1002: clampPercent(record.CARD_1002),
     CARD_1006: clampPercent(record.CARD_1006),
   });
-}
-
-/**
- * Set one card type to `next` percent and scale the other two so the total stays 100.
- * Their ratio to each other is kept. If both are 0, the remainder is split evenly.
- */
-export function adjustCardFrequency(
-  current: CardFrequency,
-  type: CardType,
-  next: number,
-): CardFrequency {
-  const value = clampPercent(next);
-  const others = CARD_TYPES.filter(item => item !== type);
-  const remaining = 100 - value;
-  const otherSum = others.reduce((total, item) => total + current[item], 0);
-  const nextFreq: CardFrequency = {
-    CARD_1001: 0,
-    CARD_1002: 0,
-    CARD_1006: 0,
-  };
-  nextFreq[type] = value;
-
-  if (otherSum <= 0) {
-    const base = Math.floor(remaining / others.length);
-    let leftover = remaining - base * others.length;
-    for (const item of others) {
-      nextFreq[item] = base + (leftover > 0 ? 1 : 0);
-      if (leftover > 0) leftover -= 1;
-    }
-    return nextFreq;
-  }
-
-  const raw = others.map(item => (current[item] / otherSum) * remaining);
-  const floored = raw.map(item => Math.floor(item));
-  let leftover = remaining - floored.reduce((total, item) => total + item, 0);
-  const order = raw
-    .map((item, index) => ({ index, frac: item - floored[index] }))
-    .sort((a, b) => b.frac - a.frac);
-  const assigned = [...floored];
-  for (let i = 0; i < leftover; i += 1) {
-    assigned[order[i].index] += 1;
-  }
-  others.forEach((item, index) => {
-    nextFreq[item] = assigned[index];
-  });
-  return nextFreq;
 }
 
 export function getCardFrequencySync(): CardFrequency {

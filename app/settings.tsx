@@ -2,7 +2,7 @@
  * SCREEN — SETTINGS
  * Sound preference, card frequency, links, and Start Over. Opened from the Home gear.
  */
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -14,8 +14,6 @@ import {
   Linking,
   Platform,
   ScrollView,
-  type GestureResponderEvent,
-  type LayoutChangeEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -25,7 +23,6 @@ import { HomeFonts } from '@/constants/homeFonts';
 import { useAppContext } from '@/src/context/AppContext';
 import { getSoundEnabled, setSoundEnabled } from '@/src/storage/soundPref';
 import {
-  adjustCardFrequency,
   loadCardFrequency,
   saveCardFrequency,
   DEFAULT_CARD_FREQUENCY,
@@ -46,72 +43,48 @@ const FEATURE_MAIL = 'mailto:support@akuity.app?subject=Feature%20Request';
 const RATE_URL = 'https://apps.apple.com/app/id6792583710';
 
 const FREQUENCY_ROWS: { type: CardType; label: string }[] = [
-  { type: 'CARD_1001', label: 'Matching' },
-  { type: 'CARD_1002', label: 'Relationship' },
-  { type: 'CARD_1006', label: 'Noun Production' },
+  { type: 'CARD_1001', label: 'Gender Matching' },
+  { type: 'CARD_1002', label: 'Word Relationships' },
+  { type: 'CARD_1006', label: 'Production' },
 ];
 
-const THUMB_SIZE = 22;
+function stepFrequency(current: CardFrequency, type: CardType, delta: number): CardFrequency {
+  const next = Math.max(0, Math.min(100, current[type] + delta));
+  return { ...current, [type]: next };
+}
 
-function PercentSlider({
+function PercentStepper({
   label,
   value,
-  onChange,
-  onSlidingEnd,
+  onStep,
 }: {
   label: string;
   value: number;
-  onChange: (next: number) => void;
-  onSlidingEnd: () => void;
+  onStep: (delta: number) => void;
 }) {
-  const widthRef = useRef(0);
-  const [trackWidth, setTrackWidth] = useState(0);
-
-  const emit = (x: number) => {
-    const width = widthRef.current;
-    if (width <= THUMB_SIZE) return;
-    const span = width - THUMB_SIZE;
-    const ratio = Math.min(1, Math.max(0, (x - THUMB_SIZE / 2) / span));
-    onChange(Math.round(ratio * 100));
-  };
-
-  const onTrackLayout = (event: LayoutChangeEvent) => {
-    const width = event.nativeEvent.layout.width;
-    widthRef.current = width;
-    setTrackWidth(width);
-  };
-
-  const onGrant = (event: GestureResponderEvent) => {
-    emit(event.nativeEvent.locationX);
-  };
-
-  const thumbLeft = trackWidth > 0
-    ? (value / 100) * Math.max(0, trackWidth - THUMB_SIZE)
-    : 0;
-  const fillWidth = thumbLeft + THUMB_SIZE / 2;
-
   return (
-    <View style={styles.sliderBlock}>
-      <View style={styles.sliderHead}>
-        <Text style={styles.rowLabel}>{label}</Text>
-        <Text style={styles.percentValue}>{value}%</Text>
-      </View>
-      <View
-        style={styles.sliderTouch}
-        onLayout={onTrackLayout}
-        onStartShouldSetResponder={() => true}
-        onMoveShouldSetResponder={() => true}
-        onResponderGrant={onGrant}
-        onResponderMove={onGrant}
-        onResponderRelease={onSlidingEnd}
-        accessibilityRole="adjustable"
-        accessibilityLabel={label}
-        accessibilityValue={{ min: 0, max: 100, now: value, text: `${value}%` }}
-      >
-        <View style={styles.sliderTrack}>
-          {trackWidth > 0 ? <View style={[styles.sliderFill, { width: fillWidth }]} /> : null}
-        </View>
-        {trackWidth > 0 ? <View style={[styles.sliderThumb, { left: thumbLeft }]} /> : null}
+    <View style={styles.stepperRow}>
+      <Text style={styles.stepperLabel}>{label}</Text>
+      <View style={styles.stepper}>
+        <TouchableOpacity
+          style={[styles.stepBtn, value <= 0 && styles.stepBtnDisabled]}
+          onPress={() => onStep(-1)}
+          disabled={value <= 0}
+          accessibilityRole="button"
+          accessibilityLabel={`Decrease ${label}`}
+        >
+          <Text style={styles.stepBtnLabel}>−</Text>
+        </TouchableOpacity>
+        <Text style={styles.stepValue}>{value}%</Text>
+        <TouchableOpacity
+          style={[styles.stepBtn, value >= 100 && styles.stepBtnDisabled]}
+          onPress={() => onStep(1)}
+          disabled={value >= 100}
+          accessibilityRole="button"
+          accessibilityLabel={`Increase ${label}`}
+        >
+          <Text style={styles.stepBtnLabel}>+</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -132,7 +105,8 @@ export default function SettingsScreen() {
   const [soundOn, setSoundOn] = useState(true);
   const [wiping, setWiping] = useState(false);
   const [frequency, setFrequency] = useState<CardFrequency>(DEFAULT_CARD_FREQUENCY);
-  const frequencyRef = useRef(frequency);
+  const frequencyTotal = frequency.CARD_1001 + frequency.CARD_1002 + frequency.CARD_1006;
+  const frequencyValid = frequencyTotal === 100;
 
   useEffect(() => {
     let cancelled = false;
@@ -140,9 +114,7 @@ export default function SettingsScreen() {
       if (!cancelled) setSoundOn(enabled);
     });
     loadCardFrequency().then(saved => {
-      if (cancelled) return;
-      frequencyRef.current = saved;
-      setFrequency(saved);
+      if (!cancelled) setFrequency(saved);
     });
     return () => {
       cancelled = true;
@@ -166,16 +138,17 @@ export default function SettingsScreen() {
     void setSoundEnabled(enabled);
   };
 
-  const handleFrequency = (type: CardType, next: number) => {
-    setFrequency(current => {
-      const adjusted = adjustCardFrequency(current, type, next);
-      frequencyRef.current = adjusted;
-      return adjusted;
-    });
+  const handleFrequencyStep = (type: CardType, delta: number) => {
+    setFrequency(current => stepFrequency(current, type, delta));
   };
 
-  const saveFrequency = () => {
-    void saveCardFrequency(frequencyRef.current);
+  const handleResetFrequency = () => {
+    setFrequency({ ...DEFAULT_CARD_FREQUENCY });
+  };
+
+  const handleSaveFrequency = () => {
+    if (frequency.CARD_1001 + frequency.CARD_1002 + frequency.CARD_1006 !== 100) return;
+    void saveCardFrequency(frequency);
   };
 
   const handleStartOver = () => {
@@ -235,7 +208,7 @@ export default function SettingsScreen() {
         showsVerticalScrollIndicator={false}
       >
       <View style={styles.card}>
-        <View style={styles.row}>
+        <View style={[styles.row, styles.rowLast]}>
           <Text style={styles.rowLabel}>Sound Effects</Text>
           <Switch
             value={soundOn}
@@ -246,6 +219,60 @@ export default function SettingsScreen() {
             accessibilityLabel="Sound Effects"
           />
         </View>
+      </View>
+
+      <View style={[styles.card, styles.freqCard]}>
+        <Text style={styles.sectionTitle}>Card Frequency</Text>
+        {FREQUENCY_ROWS.map(row => (
+          <PercentStepper
+            key={row.type}
+            label={row.label}
+            value={frequency[row.type]}
+            onStep={delta => handleFrequencyStep(row.type, delta)}
+          />
+        ))}
+        <View style={styles.totalRow}>
+          <Text style={styles.stepperLabel}>Total</Text>
+          <Text style={[styles.totalValue, frequencyValid ? styles.totalValid : styles.totalInvalid]}>
+            {frequencyTotal}%
+          </Text>
+        </View>
+        {frequencyValid ? null : (
+          <Text style={styles.totalWarning}>Percentages must add up to 100%</Text>
+        )}
+        <TouchableOpacity
+          style={styles.resetBtn}
+          onPress={handleResetFrequency}
+          activeOpacity={0.75}
+          accessibilityRole="button"
+          accessibilityLabel="Reset to Recommended"
+        >
+          <Text style={styles.resetLabel}>Reset to Recommended</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.saveBtn, !frequencyValid && styles.saveBtnDisabled]}
+          onPress={handleSaveFrequency}
+          disabled={!frequencyValid}
+          activeOpacity={0.75}
+          accessibilityRole="button"
+          accessibilityLabel="Save"
+          accessibilityState={{ disabled: !frequencyValid }}
+        >
+          <Text style={[styles.saveLabel, !frequencyValid && styles.saveLabelDisabled]}>Save</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.card}>
+        <TouchableOpacity
+          style={styles.row}
+          onPress={handleStartOver}
+          activeOpacity={0.7}
+          disabled={wiping}
+          accessibilityRole="button"
+          accessibilityLabel="Start Over"
+        >
+          <Text style={styles.destructiveLabel}>Start Over</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.row}
@@ -293,34 +320,10 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         ) : null}
 
-        <TouchableOpacity
-          style={styles.row}
-          onPress={handleStartOver}
-          activeOpacity={0.7}
-          disabled={wiping}
-          accessibilityRole="button"
-          accessibilityLabel="Start Over"
-        >
-          <Text style={styles.destructiveLabel}>Start Over</Text>
-        </TouchableOpacity>
-
         <View style={[styles.row, styles.rowLast]}>
           <Text style={styles.rowLabel}>Version</Text>
           <Text style={styles.versionValue}>{APP_VERSION}</Text>
         </View>
-      </View>
-
-      <View style={[styles.card, styles.freqCard]}>
-        <Text style={styles.sectionTitle}>Card Frequency</Text>
-        {FREQUENCY_ROWS.map(row => (
-          <PercentSlider
-            key={row.type}
-            label={row.label}
-            value={frequency[row.type]}
-            onChange={next => handleFrequency(row.type, next)}
-            onSlidingEnd={saveFrequency}
-          />
-        ))}
       </View>
       </ScrollView>
     </SafeAreaView>
@@ -416,7 +419,7 @@ const styles = StyleSheet.create({
   },
   freqCard: {
     padding: 16,
-    gap: 18,
+    gap: 16,
   },
   sectionTitle: {
     fontFamily: HomeFonts.interSemiBold,
@@ -425,45 +428,104 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     color: '#25262B',
   },
-  sliderBlock: { gap: 8 },
-  sliderHead: {
+  stepperRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
   },
-  percentValue: {
+  stepperLabel: {
+    flex: 1,
+    fontFamily: HomeFonts.interMedium,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#25262B',
+  },
+  stepper: {
+    flexShrink: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  stepBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#5E51A4',
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepBtnDisabled: { opacity: 0.4 },
+  stepBtnLabel: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 20,
+    lineHeight: 24,
+    color: '#5E51A4',
+  },
+  stepValue: {
+    minWidth: 52,
+    textAlign: 'center',
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#25262B',
+  },
+  totalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  totalValue: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  totalValid: { color: '#38A19A' },
+  totalInvalid: { color: '#F74856' },
+  totalWarning: {
+    fontFamily: HomeFonts.interRegular,
+    fontWeight: 'normal',
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#F74856',
+  },
+  resetBtn: {
+    height: 48,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#5E51A4',
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  resetLabel: {
     fontFamily: HomeFonts.interSemiBold,
     fontWeight: 'normal',
     fontSize: 16,
     lineHeight: 24,
     color: '#5E51A4',
-    minWidth: 48,
-    textAlign: 'right',
   },
-  sliderTouch: {
-    height: 32,
+  saveBtn: {
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: '#5E51A4',
+    alignItems: 'center',
     justifyContent: 'center',
   },
-  sliderTrack: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#E0DCF0',
-    overflow: 'hidden',
+  saveBtnDisabled: { backgroundColor: 'rgba(94,81,164,0.4)' },
+  saveLabel: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#FFFFFF',
   },
-  sliderFill: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#5E51A4',
-  },
-  sliderThumb: {
-    position: 'absolute',
-    top: 5,
-    width: THUMB_SIZE,
-    height: THUMB_SIZE,
-    borderRadius: THUMB_SIZE / 2,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 2,
-    borderColor: '#5E51A4',
-  },
+  saveLabelDisabled: { color: '#636265' },
 });
