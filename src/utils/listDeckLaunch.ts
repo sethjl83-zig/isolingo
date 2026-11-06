@@ -1,9 +1,9 @@
 /**
  * Decides how to open one list in one study mode.
- * A saved per-list deck is reused. Otherwise a short list becomes the deck,
- * and a longer list goes to Deck Size before a deck is drawn.
+ * A saved per-list deck is reused. Otherwise a short list becomes the deck.
+ * A longer list uses its chosen deck size, or Deck Size when an older list has none.
  */
-import type { Pool } from '../types/pool';
+import { snapToDeckSize, type Pool } from '../types/pool';
 import type { StudyType, WordFrequencySetting } from '../types/state';
 import type { Language, VocabItem } from '../types/vocab';
 import { getListDeck, saveListDeck } from '../storage/listDecks';
@@ -71,6 +71,12 @@ export async function loadContinuableDeck(
 
 const DECK_SIZE_STEPS = [10, 15, 20, 25] as const;
 
+/** Size stored on a new list. Ten or fewer words keeps the count. Larger lists use the biggest step that fits. */
+export function deckSizeForNewList(wordCount: number): number {
+  if (wordCount <= 10) return Math.max(0, wordCount);
+  return snapToDeckSize(wordCount);
+}
+
 /**
  * How many words a new deck should draw.
  * Ten or fewer eligible words uses all of them.
@@ -114,11 +120,28 @@ export async function resolveSingleListLaunch(
   }
 
   const eligible = eligibleStudyWords(pool, studyType);
-  if (eligible.length > 10) {
+  if (eligible.length > 10 && !(pool.deckSizeChosen && pool.deckSize > 0)) {
     return {
       screen: 'deck-size',
       poolIds,
       totalCount: String(eligible.length),
+    };
+  }
+
+  if (eligible.length > 10) {
+    const deckIds = drawSizedListDeck(
+      pool,
+      studyType,
+      resolveRedrawCount(pool.deckSize, eligible.length),
+    );
+    if (deckIds.length > 0) {
+      await saveListDeck(language, studyType, pool.id, deckIds);
+    }
+    return {
+      screen: 'direction',
+      poolIds,
+      deckSize: String(deckIds.length),
+      deckIds: JSON.stringify(deckIds),
     };
   }
 

@@ -47,6 +47,7 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-11-06: Deck size is chosen when a single list is created, if it has more than 10 words. Several curated lists each take the largest size that fits. The first open uses that size. Older lists still ask once. Change Size updates the list.
 - 2026-11-05: A one-list deck that drops to 1–4 words warns once. At 0 words, study stops on “Your Deck Is Empty” until the user starts a new deck or exits. New Deck redraws from the list at the saved size.
 - 2026-11-05: In a one-list session, Remove, Replace, and Pause edit the saved deck as well as the live session. Remove and Pause make the deck smaller. Replace keeps the size, or says no other word is available and changes nothing. Reopening the list shows the edited count.
 - 2026-11-05: Opening a list continues its saved deck for that study mode. A session is one list. The resume prompt is gone. Deck Size appears only when that list has no saved deck and more than 10 eligible words. Direction shows the list, the word count, Change Size, and New Deck.

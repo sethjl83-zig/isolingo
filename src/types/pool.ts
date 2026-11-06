@@ -34,10 +34,16 @@ export interface Pool {
   /** Words in the pool, each carrying its own frequency setting. */
   words: PoolWord[];
   /**
-   * Saved default number of words drawn per study session from this pool.
-   * UI offers 10 / 15 / 20 / 25.
+   * How many words the first deck for this list should draw.
+   * 10, 15, 20, or 25 when the list is larger. The word count when it has 10 or fewer.
+   * Older lists store a snapped size that was not chosen here.
    */
-  deckSize: PoolDeckSize;
+  deckSize: number;
+  /**
+   * True once creation or Change Size set deckSize.
+   * Absent on lists made before that, which still ask for a size on first open.
+   */
+  deckSizeChosen?: boolean;
   /** How the pool was originally created (reference only, not user-facing). */
   createdVia: PoolCreatedVia;
   /** IDs of words the user has temporarily paused from appearing in sessions. */

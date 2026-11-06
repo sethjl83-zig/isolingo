@@ -18,7 +18,8 @@ import { useAppContext } from '@/src/context/AppContext';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 import { getMasterDataset } from '@/src/data';
 import type { Pool } from '@/src/types/pool';
-import { generatePoolId, snapToDeckSize } from '@/src/types/pool';
+import { generatePoolId } from '@/src/types/pool';
+import { deckSizeForNewList } from '@/src/utils/listDeckLaunch';
 import type { VocabItem } from '@/src/types/vocab';
 import StudyButton from '@/src/components/ui/StudyButton';
 
@@ -131,14 +132,16 @@ export default function RandomListScreen() {
     if (!language || pickedWords.length === 0) return;
 
     const trimmed = listName.trim() || nextListName(getLanguagePools(language));
-    const deckSize = snapToDeckSize(Math.min(pickedWords.length, 25));
+    const wordCount = pickedWords.length;
+    const needsSize = wordCount > 10;
 
     const pool: Pool = {
       id: generatePoolId(),
       name: trimmed,
       language,
       words: pickedWords.map(item => ({ item, frequency: 'normal' })),
-      deckSize,
+      deckSize: deckSizeForNewList(wordCount),
+      deckSizeChosen: !needsSize,
       createdVia: 'random',
       pausedWordIds: [],
     };
@@ -146,6 +149,18 @@ export default function RandomListScreen() {
     createPool(pool);
 
     const { source } = getAddListLaunchSource();
+    if (needsSize) {
+      router.replace({
+        pathname: '/deck-size',
+        params: {
+          poolIds: JSON.stringify([pool.id]),
+          totalCount: String(wordCount),
+          fromCreate: '1',
+          afterCreate: source === 'study_mode' ? 'study' : 'lists',
+        },
+      } as never);
+      return;
+    }
     if (source === 'study_mode') {
       // Replace this screen with the list picker so the user can study the
       // newly created pool immediately (back button pops to add-list, but

@@ -16,7 +16,8 @@ import { useAppContext } from '@/src/context/AppContext';
 import { getMasterDataset } from '@/src/data';
 import type { VocabItem } from '@/src/types/vocab';
 import type { Pool } from '@/src/types/pool';
-import { generatePoolId, snapToDeckSize } from '@/src/types/pool';
+import { generatePoolId } from '@/src/types/pool';
+import { deckSizeForNewList } from '@/src/utils/listDeckLaunch';
 import StudyButton from '@/src/components/ui/StudyButton';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
@@ -297,25 +298,52 @@ export default function CuratedListScreen() {
 
     const existingPools = getLanguagePools(language);
     const takenNames = new Set(existingPools.map(p => p.name));
-
+    const planned = [];
     for (const key of selectedKeys) {
       const entry = visibleEntries.find(e => e.key === key);
       if (!entry || entry.words.length === 0) continue;
+      planned.push(entry);
+    }
 
+    // One list can ask for a size. Several lists each take the largest size that fits.
+    const askOnce = planned.length === 1;
+    let sizePoolId: string | null = null;
+    let sizeCount = 0;
+
+    for (const entry of planned) {
       const poolName = uniquePoolName(entry.displayName, takenNames);
       takenNames.add(poolName);
-
+      const wordCount = entry.words.length;
+      const needsSize = askOnce && wordCount > 10;
       const pool: Pool = {
         id: generatePoolId(),
         name: poolName,
         language,
         words: entry.words.map(item => ({ item, frequency: 'normal' })),
-        deckSize: snapToDeckSize(Math.min(entry.words.length, 25)),
+        deckSize: deckSizeForNewList(wordCount),
+        deckSizeChosen: !needsSize,
         createdVia: 'curated',
         pausedWordIds: [],
       };
-
       createPool(pool);
+      if (needsSize) {
+        sizePoolId = pool.id;
+        sizeCount = wordCount;
+      }
+    }
+
+    if (sizePoolId) {
+      const { source } = getAddListLaunchSource();
+      router.replace({
+        pathname: '/deck-size',
+        params: {
+          poolIds: JSON.stringify([sizePoolId]),
+          totalCount: String(sizeCount),
+          fromCreate: '1',
+          afterCreate: source === 'study_mode' ? 'study' : 'lists',
+        },
+      } as never);
+      return;
     }
 
     navigateAfterCreate();
@@ -327,6 +355,7 @@ export default function CuratedListScreen() {
     getLanguagePools,
     createPool,
     navigateAfterCreate,
+    router,
   ]);
 
   const startCombineFlow = useCallback(() => {
@@ -356,17 +385,33 @@ export default function CuratedListScreen() {
       trimmed || defaultCombinedListName(selectedEntries, existingPools);
     const poolName = uniquePoolName(baseName, takenNames);
 
+    const wordCount = words.length;
+    const needsSize = wordCount > 10;
     const pool: Pool = {
       id: generatePoolId(),
       name: poolName,
       language,
       words: words.map(item => ({ item, frequency: 'normal' })),
-      deckSize: snapToDeckSize(Math.min(words.length, 25)),
+      deckSize: deckSizeForNewList(wordCount),
+      deckSizeChosen: !needsSize,
       createdVia: 'curated',
       pausedWordIds: [],
     };
 
     createPool(pool);
+    if (needsSize) {
+      const { source } = getAddListLaunchSource();
+      router.replace({
+        pathname: '/deck-size',
+        params: {
+          poolIds: JSON.stringify([pool.id]),
+          totalCount: String(wordCount),
+          fromCreate: '1',
+          afterCreate: source === 'study_mode' ? 'study' : 'lists',
+        },
+      } as never);
+      return;
+    }
     navigateAfterCreate();
   }, [
     language,
@@ -377,6 +422,7 @@ export default function CuratedListScreen() {
     getLanguagePools,
     createPool,
     navigateAfterCreate,
+    router,
   ]);
 
   const handleAddPress = useCallback(() => {

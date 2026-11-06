@@ -6,8 +6,9 @@
  * Only deck sizes that fit within the combined pool word count appear as
  * selectable items; sizes that would exceed it are omitted entirely.
  *
- * On confirm, saves the size preference, draws that many words, and saves
- * the deck for this list and mode. Direction opened from here returns there.
+ * On confirm, saves the size preference. A new list only stores the size.
+ * Opening a list draws the deck. Direction opened from here returns there
+ * and stores the size on the list.
  */
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
@@ -119,15 +120,28 @@ function DeckSizeMessageScreen({
 
 function DeckSizeContent() {
   const router = useRouter();
-  const { state, getLanguagePools } = useAppContext();
-  const { poolIds: poolIdsParam, totalCount: totalCountParam, fromDirection: fromDirectionParam } =
-    useLocalSearchParams<{
-      poolIds?: string | string[];
-      totalCount?: string | string[];
-      fromDirection?: string | string[];
-    }>();
+  const { state, getLanguagePools, updatePool } = useAppContext();
+  const {
+    poolIds: poolIdsParam,
+    totalCount: totalCountParam,
+    fromDirection: fromDirectionParam,
+    fromCreate: fromCreateParam,
+    afterCreate: afterCreateParam,
+  } = useLocalSearchParams<{
+    poolIds?: string | string[];
+    totalCount?: string | string[];
+    fromDirection?: string | string[];
+    fromCreate?: string | string[];
+    afterCreate?: string | string[];
+  }>();
   const fromDirection =
     (Array.isArray(fromDirectionParam) ? fromDirectionParam[0] : fromDirectionParam) === '1';
+  const fromCreate =
+    (Array.isArray(fromCreateParam) ? fromCreateParam[0] : fromCreateParam) === '1';
+  const afterCreate =
+    (Array.isArray(afterCreateParam) ? afterCreateParam[0] : afterCreateParam) === 'study'
+      ? 'study'
+      : 'lists';
   const poolIds = useMemo(() => parsePoolIdsParam(poolIdsParam), [poolIdsParam]);
   const totalCount = useMemo(
     () => parseTotalCountParam(totalCountParam),
@@ -228,6 +242,23 @@ function DeckSizeContent() {
       setSaving(false);
     }
 
+    if (poolIds.length === 1 && (fromCreate || fromDirection)) {
+      try {
+        updatePool(poolIds[0], { deckSize: selected, deckSizeChosen: true });
+      } catch {
+        // The list keeps its previous size. Creation still finishes.
+      }
+    }
+
+    if (fromCreate) {
+      if (afterCreate === 'study') {
+        router.replace('/select-study-list' as never);
+      } else {
+        router.dismiss(2);
+      }
+      return;
+    }
+
     let drawnIds: string[] | null = null;
     if (poolIds.length === 1) {
       const pool = getLanguagePools(language).find(item => item.id === poolIds[0]);
@@ -258,7 +289,7 @@ function DeckSizeContent() {
           : {}),
       },
     } as never);
-  }, [selected, saving, language, studyType, poolIds, pickerReady, router, fromDirection, getLanguagePools]);
+  }, [selected, saving, language, studyType, poolIds, pickerReady, router, fromDirection, fromCreate, afterCreate, getLanguagePools, updatePool]);
 
   if (hasInvalidSetup) {
     return (
