@@ -19,6 +19,7 @@ import {
   findGenderedCounterpart,
   isAmbiguousEnglishPair,
   mergeCounterpartEnglishAccepted,
+  stripEnglishGenderPrefix,
 } from './genderedCounterpartHelper';
 import { selectWord } from './repetitionEngine';
 import type { StudyType } from '../types/state';
@@ -54,6 +55,7 @@ function normalizeForComparison(s: string): string {
  *   - Case              : Hotel → hotel  ✓
  *   - Diacritics        : hôtel → hotel, café → cafe  ✓
  *   - Punctuation       : T-Shirt → t-shirt  ✓
+ *   - Gender prefix     : "male cousin" → cousin  ✓
  *
  * All comma-separated English glosses are checked (not just the first) so a
  * word with a secondary gloss that matches the lemma is also caught.
@@ -66,7 +68,7 @@ export function isIdenticalToEnglish(item: VocabItem): boolean {
   const lemmaKey = normalizeForComparison(item.lemma);
   return item.english
     .split(',')
-    .some(gloss => normalizeForComparison(gloss.trim()) === lemmaKey);
+    .some(gloss => normalizeForComparison(stripEnglishGenderPrefix(gloss)) === lemmaKey);
 }
 
 // ── Card 1001 — Matching (Gender Anchoring) ───────────────────────────────────
