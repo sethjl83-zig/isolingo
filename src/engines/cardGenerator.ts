@@ -8,6 +8,7 @@ import type {
 } from '../types/cards';
 import {
   getBareLemmaDisplayForm,
+  expandTargetToNativeDeterminerAnswer,
   getDisplayForm,
   getEnglishDeterminerPrompt,
   pickRandomPossessivePerson,
@@ -291,29 +292,43 @@ function card1006TargetToNative(
 
   // When the prompt shows a determiner (FR/ES noun), the expected English
   // answer must use the matching English determiner form: "the X", "a X",
-  // or "my/your/his/her X". Without this, "ma minute" would incorrectly accept "minute".
-  const mappedValues = usedDeterminer
+  // or "my/your X". Without this, "ma minute" would incorrectly accept "minute".
+  const expanded = usedDeterminer
     ? englishValues.map(e =>
-        getEnglishDeterminerPrompt(
+        expandTargetToNativeDeterminerAnswer(
           e,
           usedDeterminer!,
           possessivePerson ?? 'first',
+          language,
         ),
       )
-    : englishValues;
+    : englishValues.map(e => ({ display: e, alternates: [] as string[] }));
 
-  const [canonical, ...rest] = mappedValues;
+  const canonical = expanded[0]?.display ?? '';
+  const seen = new Set<string>([canonical.trim().toLowerCase()]);
+  const acceptedAnswers: string[] = [];
+  const addAccepted = (value: string) => {
+    const key = value.trim().toLowerCase();
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    acceptedAnswers.push(value);
+  };
+  expanded.forEach((entry, index) => {
+    const slashJoin = entry.alternates.length > 1 && entry.display === entry.alternates.join('/');
+    if (index > 0 && !slashJoin) addAccepted(entry.display);
+    entry.alternates.forEach(addAccepted);
+  });
 
-  let acceptedAnswers = rest;
-  if (counterpart) {
-    acceptedAnswers = mergeCounterpartEnglishAccepted(
-      canonical,
-      acceptedAnswers,
-      counterpart,
-      usedDeterminer,
-      possessivePerson,
-    );
-  }
+  const accepted = counterpart
+    ? mergeCounterpartEnglishAccepted(
+        canonical,
+        acceptedAnswers,
+        counterpart,
+        usedDeterminer,
+        possessivePerson,
+        language,
+      )
+    : acceptedAnswers;
 
   return {
     type: 'CARD_1006',
@@ -323,7 +338,7 @@ function card1006TargetToNative(
     possessivePerson,
     prompt,
     canonicalAnswer: canonical,
-    acceptedAnswers,
+    acceptedAnswers: accepted,
   };
 }
 

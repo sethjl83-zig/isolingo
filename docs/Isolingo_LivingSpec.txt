@@ -267,6 +267,9 @@ Native to Target (German): English prompt, user types bare German noun, selects 
 Native to Target (French/Spanish): English determiner + noun prompt (definite, indefinite, or possessive), user types determiner + noun; no gender tile; determiners only shown for nouns
 Target to Native: target language prompt, user types English translation; no gender tile required; article/determiner color not applied; only noun color-coded
 Target to Native validation accepts both bare noun and article+noun as correct English answer for French/Spanish
+Target to Native, indefinite article (French un/une, Spanish un/una): shown answer stays "a/an [noun]"; "one [noun]" is also accepted. Typing "one [noun]" lists the a/an form as also accepted
+Target to Native, French son/sa: "his [noun]" and "her [noun]" are both accepted. The shown answer is "his [noun]/her [noun]". Typing one lists the other as also accepted. English-to-target prompts still say "his/her"
+Target to Native, French votre: the English answer is "your [noun]". "(formal)" stays on the English-to-target prompt only
 Max 2 attempts; Flip available at all times
 Input clears between cards; Flip state resets between cards
 Gender tile color updates immediately on each tile tap including re-selection after wrong answer

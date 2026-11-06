@@ -131,6 +131,51 @@ export function splitDisplayForm(
   return { article, separator: ' ', noun: lemma };
 }
 
+export interface TargetToNativeDeterminerAnswer {
+  /** Shown as the correct answer. */
+  display: string;
+  /** Extra typed forms. Does not repeat display. */
+  alternates: string[];
+}
+
+/**
+ * English answers for a target-to-native noun whose prompt shows a determiner.
+ * Indefinite prompts also accept "one". French son/sa accepts his and her, and
+ * the shown answer joins them with a slash. French votre is "your", with no
+ * "(formal)". Definite articles and other possessives are unchanged.
+ */
+export function expandTargetToNativeDeterminerAnswer(
+  englishNoun: string,
+  determinerType: DeterminerType,
+  possessivePerson: PossessivePerson = 'first',
+  language?: Language,
+): TargetToNativeDeterminerAnswer {
+  switch (determinerType) {
+    case 'definite':
+      return { display: `the ${englishNoun}`, alternates: [] };
+    case 'indefinite': {
+      const startsWithVowel = /^[aeiou]/i.test(englishNoun);
+      const display = `${startsWithVowel ? 'an' : 'a'} ${englishNoun}`;
+      return { display, alternates: [`one ${englishNoun}`] };
+    }
+    case 'possessive':
+      switch (possessivePerson) {
+        case 'first':
+          return { display: `my ${englishNoun}`, alternates: [] };
+        case 'second':
+        case 'formal_second':
+          return { display: `your ${englishNoun}`, alternates: [] };
+        case 'third':
+          if (language === 'fr') {
+            const his = `his ${englishNoun}`;
+            const her = `her ${englishNoun}`;
+            return { display: `${his}/${her}`, alternates: [his, her] };
+          }
+          return { display: `his/her ${englishNoun}`, alternates: [] };
+      }
+  }
+}
+
 /** Returns an English determiner+noun prompt: "the dog", "a cat", "your friend". */
 export function getEnglishDeterminerPrompt(
   englishNoun: string,

@@ -150,8 +150,17 @@ export function validateAnswer(
       a => stripToPrefix(normalizeInput(a)).toLowerCase() === userKey,
     );
     if (matched) {
+      const slashParts = canonicalAnswer.includes('/')
+        ? canonicalAnswer.split('/').map(part => stripToPrefix(normalizeInput(part)).toLowerCase())
+        : [];
+      const typedSlashPart = slashParts.includes(userKey);
       const others = allAccepted
         .filter(a => stripToPrefix(normalizeInput(a)).toLowerCase() !== userKey)
+        .filter(a => {
+          if (!typedSlashPart) return true;
+          return stripToPrefix(normalizeInput(a)).toLowerCase() !==
+            stripToPrefix(normalizeInput(canonicalAnswer)).toLowerCase();
+        })
         .map(a => normalizeInput(a));
       return { correct: true, alsoCorrect: others };
     }

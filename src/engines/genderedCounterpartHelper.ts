@@ -1,6 +1,6 @@
-import type { VocabItem, Gender } from '../types/vocab';
+import type { VocabItem, Gender, Language } from '../types/vocab';
 import type { DeterminerType, PossessivePerson } from '../types/cards';
-import { getEnglishDeterminerPrompt } from './articleHelper';
+import { expandTargetToNativeDeterminerAnswer } from './articleHelper';
 
 const ENGLISH_GENDER_PREFIX_RE = /^(male|female)\s+/i;
 
@@ -133,11 +133,21 @@ function mapEnglishGlosses(
   glosses: string[],
   usedDeterminer: DeterminerType | null,
   possessivePerson: PossessivePerson | null = null,
+  language?: Language,
 ): string[] {
   if (!usedDeterminer) return glosses;
-  return glosses.map(g =>
-    getEnglishDeterminerPrompt(g, usedDeterminer, possessivePerson ?? 'first'),
-  );
+  return glosses.flatMap(g => {
+    const expanded = expandTargetToNativeDeterminerAnswer(
+      g,
+      usedDeterminer,
+      possessivePerson ?? 'first',
+      language,
+    );
+    const slashJoin =
+      expanded.alternates.length > 1 &&
+      expanded.display === expanded.alternates.join('/');
+    return slashJoin ? expanded.alternates : [expanded.display, ...expanded.alternates];
+  });
 }
 
 /**
@@ -149,12 +159,13 @@ export function collectCounterpartEnglishAnswers(
   counterpart: VocabItem,
   usedDeterminer: DeterminerType | null,
   possessivePerson: PossessivePerson | null = null,
+  language?: Language,
 ): string[] {
   const glosses = dedupeEnglishAnswers([
     ...getEnglishGlosses(counterpart),
     ...(counterpart.secondaryGlosses ?? []).map(g => g.trim()).filter(Boolean),
   ].map(stripEnglishGenderPrefix));
-  return mapEnglishGlosses(glosses, usedDeterminer, possessivePerson);
+  return mapEnglishGlosses(glosses, usedDeterminer, possessivePerson, language);
 }
 
 /**
@@ -167,6 +178,7 @@ export function mergeCounterpartEnglishAccepted(
   counterpart: VocabItem,
   usedDeterminer: DeterminerType | null,
   possessivePerson: PossessivePerson | null = null,
+  language?: Language,
 ): string[] {
   const seen = new Set(
     [canonicalAnswer, ...acceptedAnswers].map(englishAnswerKey),
@@ -176,6 +188,7 @@ export function mergeCounterpartEnglishAccepted(
     counterpart,
     usedDeterminer,
     possessivePerson,
+    language,
   )) {
     const key = englishAnswerKey(answer);
     if (!seen.has(key)) {
