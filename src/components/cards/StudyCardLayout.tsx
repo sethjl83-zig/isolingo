@@ -1,8 +1,9 @@
 /**
  * Shared study-card shell: KeyboardAvoidingView + action bar + word-management strip.
  *
- * WordMgmtStrip sits outside the KeyboardAvoidingView so the avoiding view only
- * needs to lift the Submit bar above the keyboard, not the management strip too.
+ * Flip, Submit/Next, and WordMgmtStrip sit inside the KeyboardAvoidingView so
+ * they lift together and stay visible above the keyboard. The card body scrolls
+ * in the space above them.
  */
 import React from 'react';
 import {
@@ -40,9 +41,9 @@ export default function StudyCardLayout({ words, bottomBar, children, style }: P
         <View style={styles.inner}>
           {children}
           {bottomBar}
+          <WordMgmtStrip words={words} />
         </View>
       </KeyboardAvoidingView>
-      <WordMgmtStrip words={words} />
     </View>
   );
 }
