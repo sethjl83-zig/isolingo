@@ -278,7 +278,7 @@ export default function AddWordScreen() {
         >
           <Image source={backChevron} style={styles.backIcon} accessibilityIgnoresInvertColors />
         </TouchableOpacity>
-        <Text style={styles.screenTitle} pointerEvents="none">New Word</Text>
+        <Text style={styles.screenTitle} pointerEvents="none">Add Missing Word</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
@@ -430,7 +430,7 @@ export default function AddWordScreen() {
         ) : (
           <View style={styles.noPoolsBox}>
             <Text style={styles.noPoolsText}>
-              You need at least one list before adding a new word. Create one in My Vocabulary first.
+              You need at least one list before adding a missing word. Create one in My Vocabulary first.
             </Text>
           </View>
         )}

@@ -365,7 +365,7 @@ export default function VocabBankScreen() {
           disabled={loadingWords}
         />
         <StudyButton
-          label="Create New Word"
+          label="Add Missing Word"
           variant="primary"
           size="medium"
           onPress={() => router.push('/add-word')}

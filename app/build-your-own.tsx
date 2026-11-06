@@ -471,7 +471,7 @@ export default function BuildYourOwnScreen() {
           textStyle={styles.primaryLabel}
         />
         <StudyButton
-          label="Create New Word"
+          label="Add Missing Word"
           variant="secondary"
           size="medium"
           onPress={() => router.push({ pathname: '/add-word', params: { fromBuild: '1' } } as never)}
