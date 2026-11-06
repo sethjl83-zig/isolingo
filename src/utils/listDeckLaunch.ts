@@ -69,6 +69,24 @@ export async function loadContinuableDeck(
   }
 }
 
+const DECK_SIZE_STEPS = [10, 15, 20, 25] as const;
+
+/**
+ * How many words a new deck should draw.
+ * Ten or fewer eligible words uses all of them.
+ * A requested size the list can no longer hold drops to the largest step that fits.
+ */
+export function resolveRedrawCount(requested: number, eligibleCount: number): number {
+  if (eligibleCount <= 0) return 0;
+  if (eligibleCount <= 10) return eligibleCount;
+  const valid = DECK_SIZE_STEPS.filter(size => size <= eligibleCount);
+  if (valid.length === 0) return eligibleCount;
+  if ((valid as readonly number[]).includes(requested)) return requested;
+  if (requested > valid[valid.length - 1]) return valid[valid.length - 1];
+  const smaller = valid.filter(size => size <= requested);
+  return smaller.length > 0 ? smaller[smaller.length - 1] : valid[valid.length - 1];
+}
+
 export function drawSizedListDeck(
   pool: Pool,
   studyType: StudyType,

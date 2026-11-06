@@ -3,7 +3,7 @@
  * Infinite study loop: generates cards, delivers them, updates repetition state.
  */
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Dimensions, Modal, Pressable, ScrollView, TouchableOpacity } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import Animated, {
@@ -43,11 +43,88 @@ import { enrichVocabItemsFromMaster } from '@/src/data';
 import { parsePoolIdsParam } from '@/src/utils/studyLaunch';
 import { saveSavedDeck } from '@/src/storage/savedDecks';
 import { saveListDeck } from '@/src/storage/listDecks';
+import { getDeckSizePref } from '@/src/storage/deckSizePrefs';
+import { drawSizedListDeck, eligibleStudyWords, resolveRedrawCount } from '@/src/utils/listDeckLaunch';
 import { loadCardFrequency } from '@/src/storage/cardFrequency';
 import { updateWordStats } from '@/src/types/stats';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
+
+type DeckNotice = 'small' | 'empty' | 'no-words';
+
+function DeckNoticeDialog({
+  notice,
+  wordCount,
+  onKeep,
+  onNewDeck,
+  onExit,
+}: {
+  notice: DeckNotice;
+  wordCount: number;
+  onKeep: () => void;
+  onNewDeck: () => void;
+  onExit: () => void;
+}) {
+  const blocking = notice !== 'small';
+  const wordLabel = wordCount === 1 ? 'word' : 'words';
+  return (
+    <Modal
+      visible
+      transparent
+      animationType="fade"
+      onRequestClose={blocking ? () => {} : onKeep}
+    >
+      <ScrollView style={styles.dialogScroll} contentContainerStyle={styles.dialogOverlay}>
+        <Pressable
+          style={styles.dialogBackdrop}
+          onPress={blocking ? () => {} : onKeep}
+        >
+          <Pressable style={styles.dialogSheet} onPress={() => {}}>
+            {notice === 'no-words' ? (
+              <Text style={styles.dialogMessage}>
+                This list has no words available. Add words in My Lists.
+              </Text>
+            ) : (
+              <View style={styles.dialogCopy}>
+                <Text style={styles.dialogTitle}>
+                  {notice === 'small' ? 'Your Deck Is Small' : 'Your Deck Is Empty'}
+                </Text>
+                <Text style={styles.dialogMessage}>
+                  {notice === 'small'
+                    ? `Your deck has only ${wordCount} ${wordLabel}, so words will repeat often. Add words or start a new deck.`
+                    : "You've removed every word from this deck. Start a new deck to keep studying."}
+                </Text>
+              </View>
+            )}
+            <View style={styles.dialogActions}>
+              {notice === 'small' ? (
+                <TouchableOpacity style={styles.dialogOutline} onPress={onKeep} activeOpacity={0.75}>
+                  <Text style={styles.dialogOutlineLabel}>Keep Studying</Text>
+                </TouchableOpacity>
+              ) : null}
+              {notice !== 'no-words' ? (
+                <TouchableOpacity style={styles.dialogFilled} onPress={onNewDeck} activeOpacity={0.75}>
+                  <Text style={styles.dialogFilledLabel}>New Deck</Text>
+                </TouchableOpacity>
+              ) : null}
+              {notice === 'empty' ? (
+                <TouchableOpacity style={styles.dialogOutline} onPress={onExit} activeOpacity={0.75}>
+                  <Text style={styles.dialogOutlineLabel}>Exit Study</Text>
+                </TouchableOpacity>
+              ) : null}
+              {notice === 'no-words' ? (
+                <TouchableOpacity style={styles.dialogOutline} onPress={onExit} activeOpacity={0.75}>
+                  <Text style={styles.dialogOutlineLabel}>Exit Study</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          </Pressable>
+        </Pressable>
+      </ScrollView>
+    </Modal>
+  );
+}
 
 function getCardKey(card: CardData, index: number): string {
   switch (card.type) {
@@ -63,7 +140,7 @@ function getCardKey(card: CardData, index: number): string {
 export default function SessionScreen() {
   const router = useRouter();
   const navigation = useNavigation();
-  const { state, recordCardResult, incrementCardIndex } = useAppContext();
+  const { state, recordCardResult, incrementCardIndex, getLanguagePools } = useAppContext();
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
 
@@ -80,6 +157,8 @@ export default function SessionScreen() {
   const [currentCard, setCurrentCard] = useState<CardData | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
+  const [deckNotice, setDeckNotice] = useState<DeckNotice | null>(null);
+  const [smallDeckCount, setSmallDeckCount] = useState(0);
 
   const language = state.languageSelected;
 
@@ -145,6 +224,10 @@ export default function SessionScreen() {
   }, [language, poolIds, state.languagePools, deckSizeParam, deckIdsParam, explicitDeckIds]);
 
   const deckSavedRef = useRef(false);
+  const replacementDeckRef = useRef<SessionVocabContext | null>(null);
+  const smallWarnedRef = useRef(false);
+  const blockingNoticeRef = useRef(false);
+  const smallNoticeRef = useRef(false);
   useEffect(() => {
     if (!language || !baseSessionVocab || deckSavedRef.current) return;
     deckSavedRef.current = true;
@@ -157,13 +240,14 @@ export default function SessionScreen() {
   }, [language, baseSessionVocab, poolIds, state.studyTypeSelected]);
 
   const getSessionVocab = useCallback((): SessionVocabContext | null => {
-    if (!baseSessionVocab) return null;
+    const source = replacementDeckRef.current ?? baseSessionVocab;
+    if (!source) return null;
 
-    let vocabBank = baseSessionVocab.vocabBank.filter(
+    let vocabBank = source.vocabBank.filter(
       w => !sessionRemovedIdsRef.current.has(w.id),
     );
     let wordFrequencySettings = Object.fromEntries(
-      Object.entries(baseSessionVocab.wordFrequencySettings).filter(
+      Object.entries(source.wordFrequencySettings).filter(
         ([id]) => !sessionRemovedIdsRef.current.has(id),
       ),
     ) as Record<string, WordFrequencySetting>;
@@ -286,6 +370,7 @@ export default function SessionScreen() {
 
   const handleWordRemoved = useCallback(
     (vocabId: string) => {
+      const before = getSessionDeckIds().size;
       sessionRemovedIdsRef.current.add(vocabId);
       sessionRef.current = {
         ...sessionRef.current,
@@ -293,9 +378,22 @@ export default function SessionScreen() {
         deckBankHash: '',
       };
       persistSingleListDeck();
+      const after = getSessionDeckIds().size;
+      if (poolIds.length === 1 && after !== before) {
+        if (after >= 5) {
+          smallWarnedRef.current = false;
+        } else if (after === 0) {
+          setDeckNotice('empty');
+          return;
+        } else if (before >= 5 && !smallWarnedRef.current) {
+          smallWarnedRef.current = true;
+          setSmallDeckCount(after);
+          setDeckNotice('small');
+        }
+      }
       handleNext();
     },
-    [handleNext, persistSingleListDeck],
+    [handleNext, persistSingleListDeck, getSessionDeckIds, poolIds.length],
   );
 
   const handleWordReplaced = useCallback(
@@ -379,6 +477,55 @@ export default function SessionScreen() {
     [recordCardResult, language],
   );
 
+  const handleRedrawDeck = useCallback(async () => {
+    if (!language || poolIds.length !== 1) {
+      setDeckNotice('no-words');
+      return;
+    }
+    const studyType = state.studyTypeSelected ?? 'general_vocab';
+    const pool = getLanguagePools(language).find(item => item.id === poolIds[0]);
+    if (!pool) {
+      setDeckNotice('no-words');
+      return;
+    }
+    let requested = pool.deckSize;
+    try {
+      const saved = await getDeckSizePref(language, studyType, [pool.id]);
+      if (saved !== null) requested = saved;
+    } catch {
+      // Keep the size stored on the list.
+    }
+    const eligible = eligibleStudyWords(pool, studyType);
+    const count = resolveRedrawCount(requested, eligible.length);
+    const ids = count > 0 ? drawSizedListDeck(pool, studyType, count) : [];
+    const byId = new Map(pool.words.map(pw => [pw.item.id, pw]));
+    const items = ids.flatMap(id => {
+      const word = byId.get(id);
+      return word ? [word.item] : [];
+    });
+    if (items.length === 0) {
+      setDeckNotice('no-words');
+      return;
+    }
+    const enriched = enrichVocabItemsFromMaster(items, language);
+    const settings: Record<string, WordFrequencySetting> = {};
+    for (const item of enriched) {
+      const word = byId.get(item.id);
+      if (word) settings[item.id] = word.frequency;
+    }
+    replacementDeckRef.current = {
+      vocabBank: enriched,
+      wordFrequencySettings: settings,
+    };
+    sessionRemovedIdsRef.current = new Set();
+    sessionAddedWordsRef.current = new Map();
+    sessionRef.current = makeSessionState();
+    if (enriched.length >= 5) smallWarnedRef.current = false;
+    void saveListDeck(language, studyType, pool.id, enriched.map(word => word.id));
+    setDeckNotice(null);
+    loadCard();
+  }, [language, poolIds, state.studyTypeSelected, getLanguagePools, loadCard]);
+
   const handleExit = useCallback(() => {
     const exitTarget = {
       pathname: '/select-study-list' as const,
@@ -416,6 +563,11 @@ export default function SessionScreen() {
 
   useAndroidBackHandler(
     useCallback(() => {
+      if (blockingNoticeRef.current) return true;
+      if (smallNoticeRef.current) {
+        setDeckNotice(null);
+        return true;
+      }
       handleExit();
       return true;
     }, [handleExit]),
@@ -447,7 +599,34 @@ export default function SessionScreen() {
   }
 
   const sessionVocab = getSessionVocab();
-  if (!state.studyTypeSelected || !sessionVocab || sessionVocab.vocabBank.length === 0) {
+  const singleList = poolIds.length === 1;
+  const liveCount = sessionVocab?.vocabBank.length ?? 0;
+  const listPool = language && singleList
+    ? (state.languagePools[language] ?? []).find(pool => pool.id === poolIds[0])
+    : undefined;
+  const noEligibleWords =
+    !listPool ||
+    !state.studyTypeSelected ||
+    eligibleStudyWords(listPool, state.studyTypeSelected).length === 0;
+  const showEmptyDeck = singleList && !!state.studyTypeSelected && liveCount === 0;
+  blockingNoticeRef.current = showEmptyDeck || deckNotice === 'no-words';
+  smallNoticeRef.current = deckNotice === 'small';
+
+  if (showEmptyDeck) {
+    return (
+      <SafeAreaView style={styles.messageScreen}>
+        <DeckNoticeDialog
+          notice={deckNotice === 'no-words' || noEligibleWords ? 'no-words' : 'empty'}
+          wordCount={0}
+          onKeep={() => setDeckNotice(null)}
+          onNewDeck={handleRedrawDeck}
+          onExit={handleExit}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  if (!state.studyTypeSelected || !sessionVocab || liveCount === 0) {
     return (
       <SafeAreaView style={styles.messageScreen}>
         <View style={styles.messageBox}>
@@ -607,6 +786,15 @@ export default function SessionScreen() {
         </ErrorBoundary>
         </Animated.View>
       </SessionWordMgmtProvider>
+      {deckNotice === 'small' || deckNotice === 'no-words' ? (
+        <DeckNoticeDialog
+          notice={deckNotice}
+          wordCount={smallDeckCount}
+          onKeep={() => setDeckNotice(null)}
+          onNewDeck={handleRedrawDeck}
+          onExit={handleExit}
+        />
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -671,6 +859,79 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   outlineLabel: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#5E51A4',
+  },
+
+  dialogScroll: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
+  dialogOverlay: { flexGrow: 1 },
+  dialogBackdrop: {
+    flexGrow: 1,
+    width: '100%',
+    alignItems: 'center',
+    paddingTop: 243,
+    paddingBottom: 24,
+  },
+  dialogSheet: {
+    width: 313,
+    maxWidth: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    padding: 20,
+    alignItems: 'center',
+    gap: 20,
+  },
+  dialogCopy: { gap: 10, alignItems: 'center', alignSelf: 'stretch' },
+  dialogTitle: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 22,
+    color: '#25262B',
+    textAlign: 'center',
+  },
+  dialogMessage: {
+    fontFamily: HomeFonts.interRegular,
+    fontWeight: 'normal',
+    fontSize: 14.8,
+    lineHeight: 20,
+    textAlign: 'center',
+    color: 'rgba(0,0,0,0.6)',
+  },
+  dialogActions: { gap: 10, alignItems: 'center', alignSelf: 'stretch' },
+  dialogFilled: {
+    width: 220,
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#5E51A4',
+  },
+  dialogFilledLabel: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#FFFFFF',
+  },
+  dialogOutline: {
+    width: 220,
+    height: 48,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#5E51A4',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  dialogOutlineLabel: {
     fontFamily: HomeFonts.interSemiBold,
     fontWeight: 'normal',
     fontSize: 16,
