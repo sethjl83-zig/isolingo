@@ -35,8 +35,7 @@ import {
 } from '@/src/utils/statsHelpers';
 import { USER_NAME_KEY, CELEBRATION_PENDING_KEY, takePendingCelebration } from './welcome';
 import { setAddListLaunchSource } from './add-list';
-import { countStudyWords, getDeckSizeLaunchDecision } from '@/src/utils/studyLaunch';
-import { clearSavedDeck, getSavedDeck } from '@/src/storage/savedDecks';
+import { resolveSingleListLaunch } from '@/src/utils/listDeckLaunch';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
 const FLAG_IMAGES: Record<Language, number> = {
@@ -45,14 +44,6 @@ const FLAG_IMAGES: Record<Language, number> = {
   de: require('@/assets/images/home/flag-de.png'),
 };
 const gearIcon = require('@/assets/images/study/gear.png');
-
-type ResumePrompt = {
-  studyType: StudyType;
-  poolIds: string[];
-  poolIdsStr: string;
-  deckIds: string[];
-  totalCount: number;
-};
 
 const LANGUAGES: { id: Language; label: string }[] = [
   { id: 'es', label: 'Spanish' },
@@ -391,7 +382,6 @@ export default function DashboardScreen() {
   const language = state.languageSelected;
 
   const [langModalVisible,  setLangModalVisible]  = useState(false);
-  const [resumePrompt,      setResumePrompt]      = useState<ResumePrompt | null>(null);
   const [statsSnap,         setStatsSnap]         = useState<StatsSnapshot>({ mastered: 0, accuracy: -1, today: 0, studyDays: 0 });
   const [streakNoteOpen,    setStreakNoteOpen]    = useState(false);
   const [statsLoading,      setStatsLoading]      = useState(false);
@@ -466,16 +456,12 @@ export default function DashboardScreen() {
 
   useAndroidBackHandler(
     useCallback(() => {
-      if (resumePrompt) {
-        setResumePrompt(null);
-        return true;
-      }
       Alert.alert('Exit app?', undefined, [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Exit', style: 'destructive', onPress: () => BackHandler.exitApp() },
       ]);
       return true;
-    }, [resumePrompt]),
+    }, []),
   );
 
   if (!isReady) return null;
@@ -505,85 +491,36 @@ export default function DashboardScreen() {
       return;
     }
 
-    // Check for a saved default pool selection for this study type + language.
+    // One saved default continues straight into that list. More than one
+    // stored id is old multi-list data: leave it stored and let the user pick.
+    const storedDefaultIds = state.defaultPoolIds[studyType]?.[language] ?? [];
+    if (storedDefaultIds.length > 1) {
+      router.push('/select-study-list' as never);
+      return;
+    }
+
     const defaultPools = getDefaultPools(studyType, language);
-    if (defaultPools.length > 0) {
-      // A default exists — skip the list picker entirely.
-      const poolIds = defaultPools.map(p => p.id);
-      const poolIdsStr = JSON.stringify(poolIds);
-      const totalCount = countStudyWords(defaultPools, studyType);
-      const liveIds = new Set<string>();
-      for (const pool of defaultPools) {
-        const paused = new Set(pool.pausedWordIds ?? []);
-        for (const pw of pool.words) {
-          if (!paused.has(pw.item.id)) liveIds.add(pw.item.id);
-        }
-      }
-      const savedIds = await getSavedDeck(language, studyType, poolIds);
-      const deckIds = savedIds.filter(id => liveIds.has(id));
-      if (deckIds.length > 0) {
-        setResumePrompt({ studyType, poolIds, poolIdsStr, deckIds, totalCount });
-        return;
-      }
-
-      const { showDeckSizePicker, deckSize } = await getDeckSizeLaunchDecision(
-        language,
-        studyType,
-        poolIds,
-        totalCount,
-      );
-
-      if (showDeckSizePicker) {
+    if (defaultPools.length === 1) {
+      const launch = await resolveSingleListLaunch(defaultPools[0], language, studyType);
+      if (launch.screen === 'deck-size') {
         router.push({
           pathname: '/deck-size',
-          params: { poolIds: poolIdsStr, totalCount: String(totalCount) },
+          params: { poolIds: launch.poolIds, totalCount: launch.totalCount },
         } as never);
       } else {
         router.push({
           pathname: '/direction',
           params: {
-            poolIds: poolIdsStr,
-            deckSize: deckSize !== null ? String(deckSize) : '',
+            poolIds: launch.poolIds,
+            deckSize: launch.deckSize,
+            deckIds: launch.deckIds,
           },
         } as never);
       }
       return;
     }
 
-    // No default set — show the multi-select list picker.
     router.push('/select-study-list' as never);
-  };
-
-  const handleResumeDeck = () => {
-    const prompt = resumePrompt;
-    if (!prompt) return;
-    setResumePrompt(null);
-    router.push({
-      pathname: '/direction',
-      params: {
-        poolIds: prompt.poolIdsStr,
-        deckSize: String(prompt.deckIds.length),
-        deckIds: JSON.stringify(prompt.deckIds),
-      },
-    } as never);
-  };
-
-  const handleStartFresh = async () => {
-    const prompt = resumePrompt;
-    if (!prompt || !language) return;
-    setResumePrompt(null);
-    await clearSavedDeck(language, prompt.studyType, prompt.poolIds);
-    if (prompt.totalCount < 10) {
-      router.push({
-        pathname: '/direction',
-        params: { poolIds: prompt.poolIdsStr, deckSize: '' },
-      } as never);
-      return;
-    }
-    router.push({
-      pathname: '/deck-size',
-      params: { poolIds: prompt.poolIdsStr, totalCount: String(prompt.totalCount) },
-    } as never);
   };
 
   return (
@@ -867,41 +804,6 @@ export default function DashboardScreen() {
             ))}
           </Pressable>
         </Pressable>
-      </Modal>
-
-      <Modal
-        visible={resumePrompt !== null}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setResumePrompt(null)}
-      >
-        <ScrollView style={styles.dialogScroll} contentContainerStyle={styles.dialogOverlay}>
-          <Pressable style={styles.dialogBackdrop} onPress={() => setResumePrompt(null)}>
-            <Pressable style={styles.dialogSheet} onPress={() => {}}>
-              <Text style={styles.dialogTitle}>Pick up where you left off?</Text>
-              <View style={styles.dialogActions}>
-                <TouchableOpacity
-                  style={styles.dialogResume}
-                  onPress={handleResumeDeck}
-                  activeOpacity={0.75}
-                  accessibilityRole="button"
-                  accessibilityLabel="Resume"
-                >
-                  <Text style={styles.dialogResumeLabel}>Resume</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.dialogFresh}
-                  onPress={handleStartFresh}
-                  activeOpacity={0.75}
-                  accessibilityRole="button"
-                  accessibilityLabel="Start Fresh"
-                >
-                  <Text style={styles.dialogFreshLabel}>Start Fresh</Text>
-                </TouchableOpacity>
-              </View>
-            </Pressable>
-          </Pressable>
-        </ScrollView>
       </Modal>
 
       {/* ── Celebration overlay (new-user first launch) ──────────────────────── */}
@@ -1292,70 +1194,6 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   langOptionFlag: { width: 32, height: 32, borderRadius: 16 },
-  dialogScroll: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
-  dialogOverlay: { flexGrow: 1 },
-  dialogBackdrop: {
-    flexGrow: 1,
-    width: '100%',
-    alignItems: 'center',
-    paddingTop: 243,
-    paddingBottom: 24,
-  },
-  dialogSheet: {
-    width: 313,
-    maxWidth: '100%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 15,
-    padding: 20,
-    alignItems: 'center',
-    gap: 20,
-  },
-  dialogTitle: {
-    fontFamily: HomeFonts.interSemiBold,
-    fontWeight: 'normal',
-    fontSize: 22,
-    lineHeight: 28,
-    color: '#25262B',
-    textAlign: 'center',
-  },
-  dialogActions: { gap: 10, alignItems: 'center', alignSelf: 'stretch' },
-  dialogResume: {
-    width: 220,
-    height: 48,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#5E51A4',
-  },
-  dialogResumeLabel: {
-    fontFamily: HomeFonts.interSemiBold,
-    fontWeight: 'normal',
-    fontSize: 16,
-    lineHeight: 24,
-    color: '#FFFFFF',
-  },
-  dialogFresh: {
-    width: 220,
-    height: 48,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#5E51A4',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-  },
-  dialogFreshLabel: {
-    fontFamily: HomeFonts.interSemiBold,
-    fontWeight: 'normal',
-    fontSize: 16,
-    lineHeight: 24,
-    color: '#5E51A4',
-  },
   langOptionLabel: {
     flex: 1,
     fontFamily: HomeFonts.interMedium,

@@ -4,15 +4,23 @@
  * Reads studyTypeSelected from global state (set by dashboard before navigating here).
  * Lets the user pick a study direction, then starts the session.
  */
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { HomeFonts } from '@/constants/homeFonts';
 import { useAppContext } from '@/src/context/AppContext';
 import type { StudyType, DirectionMode } from '@/src/types/state';
 import type { Language } from '@/src/types/vocab';
+import { parsePoolIdsParam } from '@/src/utils/studyLaunch';
+import { saveListDeck } from '@/src/storage/listDecks';
+import {
+  drawSizedListDeck,
+  eligibleStudyWords,
+  loadContinuableDeck,
+} from '@/src/utils/listDeckLaunch';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
 const backChevron = require('@/assets/images/lists/back-chevron.png');
@@ -59,9 +67,9 @@ const MODE_LABELS: Record<StudyType, string> = {
 
 export default function DirectionScreen() {
   const router = useRouter();
-  const { state, setDirectionMode } = useAppContext();
-  // Pool IDs and deck size are forwarded from select-study-list / deck-size to session.
-  const { poolIds, deckSize, deckIds } = useLocalSearchParams<{
+  const { state, setDirectionMode, getLanguagePools } = useAppContext();
+  // Pool IDs and the current deck are forwarded from list launch / deck-size to the session.
+  const { poolIds, deckIds } = useLocalSearchParams<{
     poolIds?: string;
     deckSize?: string;
     deckIds?: string;
@@ -70,19 +78,68 @@ export default function DirectionScreen() {
   // studyTypeSelected is set by the dashboard before navigating here.
   const studyType: StudyType = state.studyTypeSelected ?? 'general_vocab';
   const directionMode = state.directionMode;
+  const listId = useMemo(() => parsePoolIdsParam(poolIds)[0] ?? '', [poolIds]);
+  const routeDeckIds = useMemo(() => parsePoolIdsParam(deckIds), [deckIds]);
+  const [activeDeckIds, setActiveDeckIds] = useState<string[]>(routeDeckIds);
+  const deckRevision = useRef(0);
+
+  const pool = useMemo(() => {
+    if (!state.languageSelected || !listId) return null;
+    return getLanguagePools(state.languageSelected).find(item => item.id === listId) ?? null;
+  }, [state.languageSelected, listId, getLanguagePools]);
+
+  const eligibleCount = pool ? eligibleStudyWords(pool, studyType).length : 0;
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!pool || !state.languageSelected) return undefined;
+      let cancelled = false;
+      const revision = deckRevision.current;
+      loadContinuableDeck(pool, state.languageSelected, studyType).then(kept => {
+        if (!cancelled && deckRevision.current === revision && kept.length > 0) {
+          setActiveDeckIds(kept);
+        }
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, [pool, state.languageSelected, studyType]),
+  );
 
   const langName = state.languageSelected
     ? (LANGUAGE_NAMES[state.languageSelected] ?? 'Target')
     : 'Target';
   const directionOptions = getDirectionOptions(langName);
+  const wordLabel = activeDeckIds.length === 1 ? 'word' : 'words';
+
+  const handleChangeSize = () => {
+    if (!pool || eligibleCount <= 10) return;
+    router.push({
+      pathname: '/deck-size',
+      params: {
+        poolIds: JSON.stringify([pool.id]),
+        totalCount: String(eligibleCount),
+        fromDirection: '1',
+      },
+    } as never);
+  };
+
+  const handleNewDeck = () => {
+    if (!pool || !state.languageSelected || activeDeckIds.length === 0) return;
+    const next = drawSizedListDeck(pool, studyType, activeDeckIds.length);
+    if (next.length === 0) return;
+    deckRevision.current += 1;
+    setActiveDeckIds(next);
+    void saveListDeck(state.languageSelected, studyType, pool.id, next);
+  };
 
   const handleStart = () => {
     router.replace({
       pathname: '/session',
       params: {
         poolIds: poolIds ?? '',
-        deckSize: deckSize ?? '',
-        deckIds: deckIds ?? '',
+        deckSize: String(activeDeckIds.length),
+        deckIds: JSON.stringify(activeDeckIds),
       },
     } as never);
   };
@@ -112,6 +169,21 @@ export default function DirectionScreen() {
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.directionBlock}>
+          <View style={styles.deckBlock}>
+            <Text style={styles.subheading}>
+              {pool ? `${pool.name} · ${activeDeckIds.length} ${wordLabel}` : `${activeDeckIds.length} ${wordLabel}`}
+            </Text>
+            <View style={styles.deckLinks}>
+              {eligibleCount > 10 ? (
+                <TouchableOpacity onPress={handleChangeSize} accessibilityRole="link">
+                  <Text style={styles.deckLink}>Change Size</Text>
+                </TouchableOpacity>
+              ) : null}
+              <TouchableOpacity onPress={handleNewDeck} accessibilityRole="link">
+                <Text style={styles.deckLink}>New Deck</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
           <View style={styles.titleBlock}>
             <Text style={styles.heading}>Study Direction</Text>
             <Text style={styles.subheading}>
@@ -203,6 +275,14 @@ const styles = StyleSheet.create({
     gap: 80,
   },
   directionBlock: { gap: 18 },
+  deckBlock: { gap: 8 },
+  deckLinks: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  deckLink: {
+    fontFamily: HomeFonts.interMedium,
+    fontWeight: 'normal',
+    fontSize: 18,
+    color: '#5E51A4',
+  },
   titleBlock: { gap: 4 },
   heading: {
     fontFamily: HomeFonts.interSemiBold,

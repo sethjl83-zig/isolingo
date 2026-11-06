@@ -6,8 +6,8 @@
  * Only deck sizes that fit within the combined pool word count appear as
  * selectable items; sizes that would exceed it are omitted entirely.
  *
- * On confirm, saves the choice as the remembered preference for this exact
- * pool combination, then proceeds to the direction-select screen.
+ * On confirm, saves the size preference, draws that many words, and saves
+ * the deck for this list and mode. Direction opened from here returns there.
  */
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
@@ -17,7 +17,9 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { HomeFonts } from '@/constants/homeFonts';
 import type { PoolDeckSize } from '@/src/types/pool';
 import { getDeckSizePref, saveDeckSizePref } from '@/src/storage/deckSizePrefs';
+import { saveListDeck } from '@/src/storage/listDecks';
 import { parsePoolIdsParam } from '@/src/utils/studyLaunch';
+import { drawSizedListDeck } from '@/src/utils/listDeckLaunch';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 import { useAppContext } from '@/src/context/AppContext';
 import ErrorBoundary from '@/src/components/ErrorBoundary';
@@ -117,9 +119,15 @@ function DeckSizeMessageScreen({
 
 function DeckSizeContent() {
   const router = useRouter();
-  const { state } = useAppContext();
-  const { poolIds: poolIdsParam, totalCount: totalCountParam } =
-    useLocalSearchParams<{ poolIds?: string | string[]; totalCount?: string | string[] }>();
+  const { state, getLanguagePools } = useAppContext();
+  const { poolIds: poolIdsParam, totalCount: totalCountParam, fromDirection: fromDirectionParam } =
+    useLocalSearchParams<{
+      poolIds?: string | string[];
+      totalCount?: string | string[];
+      fromDirection?: string | string[];
+    }>();
+  const fromDirection =
+    (Array.isArray(fromDirectionParam) ? fromDirectionParam[0] : fromDirectionParam) === '1';
   const poolIds = useMemo(() => parsePoolIdsParam(poolIdsParam), [poolIdsParam]);
   const totalCount = useMemo(
     () => parseTotalCountParam(totalCountParam),
@@ -220,14 +228,37 @@ function DeckSizeContent() {
       setSaving(false);
     }
 
+    let drawnIds: string[] | null = null;
+    if (poolIds.length === 1) {
+      const pool = getLanguagePools(language).find(item => item.id === poolIds[0]);
+      if (pool) {
+        try {
+          drawnIds = drawSizedListDeck(pool, studyType, selected);
+          if (drawnIds.length > 0) {
+            await saveListDeck(language, studyType, pool.id, drawnIds);
+          }
+        } catch {
+          drawnIds = null;
+        }
+      }
+    }
+
+    if (fromDirection) {
+      router.back();
+      return;
+    }
+
     router.push({
       pathname: '/direction',
       params: {
         poolIds: JSON.stringify(poolIds),
-        deckSize: String(selected),
+        deckSize: String(drawnIds?.length ?? selected),
+        ...(drawnIds && drawnIds.length > 0
+          ? { deckIds: JSON.stringify(drawnIds) }
+          : {}),
       },
     } as never);
-  }, [selected, saving, language, studyType, poolIds, pickerReady, router]);
+  }, [selected, saving, language, studyType, poolIds, pickerReady, router, fromDirection, getLanguagePools]);
 
   if (hasInvalidSetup) {
     return (

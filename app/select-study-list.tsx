@@ -1,9 +1,8 @@
 /**
  * SCREEN — SELECT STUDY LIST
  * Shown after tapping a study-mode button on the Dashboard when pools already
- * exist. The user multi-selects which pool(s) to include in the upcoming
- * session, sees a live running total, then taps Continue → deck-size (first time)
- * or direction screen (when a deck size is already saved for this context).
+ * exist. Tapping one list continues that list's saved deck, or opens
+ * Deck Size when the list has no saved deck and more than 10 eligible words.
  *
  * Back always returns to the Dashboard (not to intermediate creation screens).
  */
@@ -18,12 +17,10 @@ import { HomeFonts } from '@/constants/homeFonts';
 import { useAppContext } from '@/src/context/AppContext';
 import type { StudyType } from '@/src/types/state';
 import type { Pool } from '@/src/types/pool';
-import StudyButton from '@/src/components/ui/StudyButton';
-import { countStudyWords, getDeckSizeLaunchDecision } from '@/src/utils/studyLaunch';
+import { resolveSingleListLaunch } from '@/src/utils/listDeckLaunch';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
 const backChevron = require('@/assets/images/lists/back-chevron.png');
-const checkIcon = require('@/assets/images/lists/check-white.png');
 
 function hexAlpha(hex: string, alpha: number) {
   const h = hex.replace('#', '');
@@ -70,70 +67,33 @@ export default function SelectStudyListScreen() {
     [pools, isGender],
   );
 
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isNavigating, setIsNavigating] = useState(false);
-
-  const togglePool = (poolId: string) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(poolId)) {
-        next.delete(poolId);
-      } else {
-        next.add(poolId);
-      }
-      return next;
-    });
-  };
-
-  const totalCount = useMemo(
-    () =>
-      Array.from(selectedIds).reduce(
-        (sum, id) => sum + (poolCounts[id] ?? 0),
-        0,
-      ),
-    [selectedIds, poolCounts],
-  );
-
-  const canContinue = selectedIds.size > 0;
   const countLabel = isGender ? 'nouns' : 'words';
 
-  const handleContinue = useCallback(async () => {
-    if (!canContinue || isNavigating || !language) return;
+  const openList = useCallback(async (pool: Pool) => {
+    if (isNavigating || !language) return;
     setIsNavigating(true);
-
-    const ids = Array.from(selectedIds);
-    const poolIdsStr = JSON.stringify(ids);
-    const selectedPools = pools.filter(p => selectedIds.has(p.id));
-
     try {
-      const { showDeckSizePicker, deckSize } = await getDeckSizeLaunchDecision(
-        language,
-        studyType,
-        ids,
-        countStudyWords(selectedPools, studyType),
-      );
-
-      if (showDeckSizePicker) {
+      const launch = await resolveSingleListLaunch(pool, language, studyType);
+      if (launch.screen === 'deck-size') {
         router.push({
           pathname: '/deck-size',
-          params: {
-            poolIds: poolIdsStr,
-            totalCount: String(totalCount),
-          },
+          params: { poolIds: launch.poolIds, totalCount: launch.totalCount },
         } as never);
       } else {
         router.push({
           pathname: '/direction',
           params: {
-            poolIds: poolIdsStr,
-            deckSize: deckSize !== null ? String(deckSize) : '',
+            poolIds: launch.poolIds,
+            deckSize: launch.deckSize,
+            deckIds: launch.deckIds,
           },
         } as never);
       }
     } finally {
       setIsNavigating(false);
     }
-  }, [canContinue, isNavigating, language, studyType, selectedIds, pools, totalCount, router]);
+  }, [isNavigating, language, studyType, router]);
 
   const handleBack = useCallback(() => {
     // Navigate to dashboard, popping any intermediate creation screens from
@@ -173,12 +133,6 @@ export default function SelectStudyListScreen() {
         </Text>
       </View>
 
-      <Text style={styles.totalText}>
-        {canContinue
-          ? `${totalCount} ${countLabel} selected`
-          : `Select at least one list to continue`}
-      </Text>
-
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.listContent}
@@ -192,14 +146,14 @@ export default function SelectStudyListScreen() {
           pools.map(pool => {
             const count = poolCounts[pool.id] ?? 0;
             const disabled = isGender && count === 0;
-            const selected = selectedIds.has(pool.id);
 
             return (
               <TouchableOpacity
                 key={pool.id}
                 style={[styles.cardShadow, disabled && styles.rowDisabled]}
-                onPress={() => !disabled && togglePool(pool.id)}
+                onPress={() => !disabled && openList(pool)}
                 activeOpacity={disabled ? 1 : 0.75}
+                disabled={disabled || isNavigating}
               >
                 <View style={[styles.card, { borderColor: palette.listCardBorder }]}>
                   <View style={styles.poolInfo}>
@@ -214,40 +168,12 @@ export default function SelectStudyListScreen() {
                       {disabled ? ' — no nouns for Gender mode' : ''}
                     </Text>
                   </View>
-                  <View
-                    style={[
-                      styles.checkbox,
-                      selected
-                        ? { backgroundColor: palette.teal, borderColor: palette.teal }
-                        : { backgroundColor: 'transparent', borderColor: 'rgba(0,0,0,0.2)' },
-                    ]}
-                  >
-                    {selected && (
-                      <Image
-                        source={checkIcon}
-                        style={styles.checkIcon}
-                        accessibilityIgnoresInvertColors
-                      />
-                    )}
-                  </View>
                 </View>
               </TouchableOpacity>
             );
           })
         )}
       </ScrollView>
-
-      <View style={styles.bottomBar}>
-        <StudyButton
-          label={isNavigating ? 'Loading…' : 'Continue'}
-          variant="primary"
-          size="medium"
-          onPress={handleContinue}
-          disabled={!canContinue || isNavigating}
-          style={styles.continueBtn}
-          textStyle={styles.continueLabel}
-        />
-      </View>
     </SafeAreaView>
   );
 }
@@ -300,16 +226,7 @@ const styles = StyleSheet.create({
     color: '#25262B',
   },
 
-  totalText: {
-    marginTop: 25,
-    marginHorizontal: 16,
-    fontFamily: HomeFonts.jakartaRegular,
-    fontSize: 14,
-    lineHeight: 18,
-    color: 'rgba(0,0,0,0.6)',
-  },
-
-  scroll: { flex: 1 },
+  scroll: { flex: 1, marginTop: 25 },
   listContent: {
     paddingHorizontal: 16,
     paddingTop: 18,
@@ -354,42 +271,5 @@ const styles = StyleSheet.create({
     fontSize: 13.5,
     lineHeight: 16,
     color: 'rgba(0,0,0,0.6)',
-  },
-  checkbox: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkIcon: { width: 18, height: 18 },
-
-  bottomBar: {
-    alignItems: 'center',
-    paddingTop: 15,
-    paddingBottom: 29,
-    paddingHorizontal: 29,
-    backgroundColor: '#F7F5FD',
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: -2 },
-    elevation: 8,
-  },
-  continueBtn: {
-    alignSelf: 'stretch',
-    height: 48,
-    minWidth: 0,
-    paddingVertical: 0,
-    borderRadius: 12,
-  },
-  continueLabel: {
-    fontFamily: HomeFonts.interSemiBold,
-    fontWeight: 'normal',
-    fontSize: 16,
-    lineHeight: 24,
   },
 });

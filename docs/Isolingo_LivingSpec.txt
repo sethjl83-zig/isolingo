@@ -32,19 +32,20 @@ SCREEN FLOW — NEW USER
 Welcome Screen (name entry, confetti animation)
 Dashboard (language dropdown defaults to "Select a language")
 Add List flow (triggered when user taps a study mode with no pools)
-Select Study List screen
-Deck Size screen (first time only for this pool combination)
+Select Study List screen (tap one list)
+Deck Size screen only when that list has no saved deck and more than 10 eligible words
 Direction Select
 Study Session
 
 SCREEN FLOW — RETURNING USER
 
 Dashboard
-Select Study List (if no default pool set, or user wants to choose)
-If a default list is set and a deck was saved for that list and study type: “Pick up where you left off?”
-Resume skips Deck Size and opens Direction Select with that deck
-Start Fresh clears the saved deck, then Deck Size, Direction Select, and a new random deck
-If a default list is set and no deck is saved: Deck Size the first time for this pool combination, skipped thereafter
+A session studies exactly one list
+One default list opens that list's saved deck on Direction Select
+A stored default with more than one list is left as-is and opens Choose What to Study
+No default list opens Choose What to Study; tapping one list continues it
+No saved deck and 10 or fewer eligible words: those words are the deck, then Direction Select
+No saved deck and more than 10 eligible words: Deck Size once, then Direction Select
 Direction Select
 Study Session
 
@@ -71,9 +72,8 @@ Tapping the stats card → Stats screen
 One "My Vocabulary" button below the stats card
 Tapping My Vocabulary → My Lists screen
 Gear icon at the top right, lined up with the welcome heading and “What do you want to study?”, above the language selector. Tapping it opens Settings.
-Tapping a study mode with pools and no default list → Select Study List screen
-Tapping a study mode with a default list and a saved deck still in those lists → “Pick up where you left off?” (Resume or Start Fresh)
-Tapping a study mode with a default list and no saved deck → Deck Size or Direction Select, same as before
+Tapping a study mode with pools and no default list, or a stored default of more than one list, → Choose What to Study. The stored default is not deleted
+Tapping a study mode with exactly one default list continues that list's deck: Direction Select when a saved deck exists or the list has 10 or fewer eligible words; Deck Size first when there is no saved deck and more than 10 eligible words
 Tapping a study mode with no pools → Add List screen (with study_mode source flag)
 If no language selected and user taps My Vocabulary or a study mode → prompt to select a language first
 
@@ -139,16 +139,13 @@ If launched from study mode tap: routes to Select Study List after creation
 
 Select Study List Screen
 
-Header: "Choose what to study"
-Shows all pools for current language as multi-select list
+Header: "Choose What to Study"
+Shows all pools for the current language. Tapping one list continues it
 General Vocab: shows total word count per pool
 Gender: shows noun count per pool; pools with zero nouns are greyed out and disabled
-Running total of combined word/noun count across selected pools
-"Continue" button active once at least one pool selected
-On continue: checks if deck size has been saved for this pool combination
-
-If yes: skip to Direction Select using remembered deck size
-If no: go to Deck Size screen
+A saved deck for that list and mode is loaded, dropping words that are gone or paused. If none remain, there is no saved deck
+No saved deck and 10 or fewer eligible words: every eligible word is saved as the deck and Direction Select opens with no size choice
+No saved deck and more than 10 eligible words: Deck Size, then the chosen size is drawn once and saved
 
 
 
@@ -156,24 +153,26 @@ Deck Size Screen
 
 Header: "Select deck size"
 Wheel picker showing valid options: 10, 15, 20, 25
-Options exceeding combined word count of selected pools are disabled
-Largest valid option pre-selected by default
-Saves chosen size as remembered preference for this pool combination
-On continue: navigates to Direction Select
+Sizes larger than the list's eligible word count are omitted
+A previously saved size is pre-selected when it still fits. It does not skip this screen when the list has no saved deck and more than 10 eligible words
+Saves chosen size as remembered preference for this list
+On continue: draws that many eligible words, saves them as this list's deck, then opens Direction Select. Opened from Direction Select, it returns there with the new count
 
 Direction Select Screen
 
+Near the top: "List name · N words", then "Change Size" and "New Deck"
+Change Size is hidden when the list has 10 or fewer eligible words. It redraws and saves the deck at the new size
+New Deck redraws the deck at the current size and replaces the saved words. No confirmation
 Shows actual language names: "[Language] to English", "English to [Language]", "Mixed"
-User selects direction and confirms to start session
+User selects direction and confirms to start session. The saved deck ids are passed into the session
 
 Study Session
 
 Infinite loop of flashcards
 Card pool drawn from selected pools combined, subset to deck size, using existing repetition/frequency logic
-When a session starts, that deck’s word ids are saved for the pool combination and study type
-A single-list session also writes those ids to a separate per-list, per-mode store. That store is not read yet. Multi-list decks stay only in the combination store. Start Over clears both stores
-Resume reuses the combination-store ids and does not draw a new subset. Start Fresh clears them first
-Words that are gone or paused are left out. If none of the saved words remain, there is no resume prompt
+A session studies one list. Opening that list loads its per-list, per-mode deck. There is no resume prompt
+When a session starts, that deck’s word ids are still written to the older combination store. Nothing reads that store for launch. Start Over clears both stores
+Words that are gone or paused are left out of a loaded deck. If none remain, the list is treated as having no saved deck
 Card types for V0: Card 1001 (Gender Matching), Card 1002 (Word Relationships), Card 1006 (Production)
 Card distribution: set in Settings under Card Frequency. Recommended is Production 70%, Word Relationships 20%, Gender Matching 10%. The three percentages are chosen independently and saved only when they total 100%. Gender Matching is still Gender mode and mixed direction only. Word Relationships is still mixed direction only. When a type cannot appear, the session splits its share across the types that can.
 Card 1001 eligible in mixed mode only, Gender mode only

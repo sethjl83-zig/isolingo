@@ -1,6 +1,6 @@
 /**
  * Saved deck for one list and one study mode.
- * Written for later resume. Nothing in the app reads this store yet.
+ * Launch reads this store. The older combination store is still written, not read.
  *
  * AsyncStorage key: @isolingo_list_decks
  * Entry key: `${language}:${listId}:${studyType}` — one list id, never a combination.
@@ -85,6 +85,21 @@ async function loadAll(): Promise<ListDecks> {
   }
 }
 
+/** Saved word ids for this list and mode, or an empty list when none are stored. */
+export async function getListDeck(
+  language: Language,
+  studyType: StudyType,
+  listId: string,
+): Promise<string[]> {
+  if (!listId) return [];
+  try {
+    const decks = await loadAll();
+    return decks[listDeckKey(language, studyType, listId)] ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export async function saveListDeck(
   language: Language,
   studyType: StudyType,
@@ -99,7 +114,7 @@ export async function saveListDeck(
     );
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(decks));
   } catch {
-    // Best-effort. The session still runs from the existing saved-deck store.
+    // Best-effort. A failed read or save is treated as no saved deck.
   }
 }
 
