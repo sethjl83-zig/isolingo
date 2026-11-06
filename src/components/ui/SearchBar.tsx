@@ -52,7 +52,6 @@ export default function SearchBar({
 
 const styles = StyleSheet.create({
   wrap: {
-    flex: 1,
     height: 45,
     borderWidth: 1,
     borderRadius: 12,

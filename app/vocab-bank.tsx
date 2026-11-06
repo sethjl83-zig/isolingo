@@ -309,6 +309,7 @@ export default function VocabBankScreen() {
           value={searchQuery}
           onChangeText={setSearchQuery}
           icon={searchIcon}
+          containerStyle={{ flex: 1 }}
         />
         <View style={styles.countPill}>
           <Text style={styles.counter}>
