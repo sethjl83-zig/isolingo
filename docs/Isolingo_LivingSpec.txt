@@ -172,7 +172,8 @@ Infinite loop of flashcards
 Card pool drawn from selected pools combined, subset to deck size, using existing repetition/frequency logic
 A session studies one list. Opening that list loads its per-list, per-mode deck. There is no resume prompt
 When a session starts, that deck’s word ids are still written to the older combination store. Nothing reads that store for launch. Start Over clears both stores
-Words that are gone or paused are left out of a loaded deck. If none remain, the list is treated as having no saved deck
+Words that are gone or paused are left out of a loaded deck. If every saved id is gone or paused, the list is treated as having no saved deck. A deck emptied with Remove or Pause stays empty
+Remove, Replace, and Pause edit the saved deck when the session is one list. Remove takes the word out of the deck and the live session; it stays in the list. Replace swaps in a random eligible word from the same list that is not paused and not already in the deck, or says “No other words are available in this list.” and changes nothing. Pause still pauses the word for both modes, and also takes it out of this mode’s deck. The Direction count is that saved deck’s current size. The deck may shrink to zero, which uses the existing empty session screen
 Card types for V0: Card 1001 (Gender Matching), Card 1002 (Word Relationships), Card 1006 (Production)
 Card distribution: set in Settings under Card Frequency. Recommended is Production 70%, Word Relationships 20%, Gender Matching 10%. The three percentages are chosen independently and saved only when they total 100%. Gender Matching is still Gender mode and mixed direction only. Word Relationships is still mixed direction only. When a type cannot appear, the session splits its share across the types that can.
 Card 1001 eligible in mixed mode only, Gender mode only

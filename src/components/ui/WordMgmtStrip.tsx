@@ -25,14 +25,16 @@ interface Props {
 
 export default function WordMgmtStrip({ words }: Props) {
   const insets = useSafeAreaInsets();
-  const { removeWord, replaceWord, pauseWord } = useSessionWordMgmt();
+  const { removeWord, replaceWord, pauseWord, editsSavedDeck } = useSessionWordMgmt();
   const [frequencyVisible, setFrequencyVisible] = useState(false);
   const [pickerFlow, setPickerFlow] = useState<PickerFlow | null>(null);
 
   const showRemoveConfirm = useCallback(
     (word: WordFrequencyTarget) => {
       Alert.alert(
-        'Skip this word for the rest of this session?',
+        editsSavedDeck
+          ? 'Remove this word from your deck?'
+          : 'Skip this word for the rest of this session?',
         undefined,
         [
           { text: 'Cancel', style: 'cancel' },
@@ -44,13 +46,15 @@ export default function WordMgmtStrip({ words }: Props) {
         ],
       );
     },
-    [removeWord],
+    [removeWord, editsSavedDeck],
   );
 
   const showReplaceConfirm = useCallback(
     (word: WordFrequencyTarget) => {
       Alert.alert(
-        'Replace this word in your current session?',
+        editsSavedDeck
+          ? 'Replace this word in your deck?'
+          : 'Replace this word in your current session?',
         undefined,
         [
           { text: 'Cancel', style: 'cancel' },
@@ -60,17 +64,21 @@ export default function WordMgmtStrip({ words }: Props) {
             onPress: () => {
               const result = replaceWord(word.id);
               if (!result.success) {
-                Alert.alert(
-                  'Could not replace word',
-                  result.error ?? 'Please try again.',
-                );
+                if (result.error === 'No other words are available in this list.') {
+                  Alert.alert(result.error);
+                } else {
+                  Alert.alert(
+                    'Could not replace word',
+                    result.error ?? 'Please try again.',
+                  );
+                }
               }
             },
           },
         ],
       );
     },
-    [replaceWord],
+    [replaceWord, editsSavedDeck],
   );
 
   const showPauseConfirm = useCallback(

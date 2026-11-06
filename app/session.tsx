@@ -131,15 +131,18 @@ export default function SessionScreen() {
       const word = byId.get(id);
       return word ? [word] : [];
     });
-    const vocabBank =
-      resumed.length > 0
-        ? resumed
-        : !isNaN(deckSize) && deckSize > 0 && deckSize < enrichedBank.length
-          ? selectSessionSubset(enrichedBank, deckSize, settings)
-          : enrichedBank;
+    const explicitDeckRequested =
+      (typeof deckIdsParam === 'string' && deckIdsParam.trim().startsWith('[')) ||
+      (Array.isArray(deckIdsParam) &&
+        deckIdsParam.some(value => value.trim().startsWith('[')));
+    const vocabBank = explicitDeckRequested
+      ? resumed
+      : !isNaN(deckSize) && deckSize > 0 && deckSize < enrichedBank.length
+        ? selectSessionSubset(enrichedBank, deckSize, settings)
+        : enrichedBank;
 
     return { vocabBank, wordFrequencySettings: settings };
-  }, [language, poolIds, state.languagePools, deckSizeParam, explicitDeckIds]);
+  }, [language, poolIds, state.languagePools, deckSizeParam, deckIdsParam, explicitDeckIds]);
 
   const deckSavedRef = useRef(false);
   useEffect(() => {
@@ -192,6 +195,12 @@ export default function SessionScreen() {
 
     return ids;
   }, [getSessionVocab]);
+
+  const persistSingleListDeck = useCallback(() => {
+    if (!language || poolIds.length !== 1) return;
+    const studyType = state.studyTypeSelected ?? 'general_vocab';
+    void saveListDeck(language, studyType, poolIds[0], [...getSessionDeckIds()]);
+  }, [language, poolIds, state.studyTypeSelected, getSessionDeckIds]);
 
   const loadCard = useCallback(
     (stateOverride?: typeof state) => {
@@ -283,9 +292,10 @@ export default function SessionScreen() {
         deck: sessionRef.current.deck.filter(id => id !== vocabId),
         deckBankHash: '',
       };
+      persistSingleListDeck();
       handleNext();
     },
-    [handleNext],
+    [handleNext, persistSingleListDeck],
   );
 
   const handleWordReplaced = useCallback(
@@ -300,9 +310,10 @@ export default function SessionScreen() {
         ],
         deckBankHash: '',
       };
+      persistSingleListDeck();
       handleNext();
     },
-    [handleNext],
+    [handleNext, persistSingleListDeck],
   );
 
   const handleSubmit = useCallback(

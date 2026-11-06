@@ -76,8 +76,8 @@ async function loadAll(): Promise<ListDecks> {
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
     const decks: ListDecks = {};
     for (const [key, value] of Object.entries(parsed)) {
-      const ids = wordIdList(value);
-      if (ids.length > 0) decks[key] = ids;
+      if (!Array.isArray(value)) continue;
+      decks[key] = wordIdList(value);
     }
     return decks;
   } catch {
@@ -85,18 +85,30 @@ async function loadAll(): Promise<ListDecks> {
   }
 }
 
-/** Saved word ids for this list and mode, or an empty list when none are stored. */
+let writeQueue: Promise<void> = Promise.resolve();
+
+function enqueueWrite(task: () => Promise<void>): Promise<void> {
+  const run = writeQueue.then(task, task);
+  writeQueue = run.then(
+    () => undefined,
+    () => undefined,
+  );
+  return run;
+}
+
+/** Saved word ids, or null when this list and mode has no saved deck. */
 export async function getListDeck(
   language: Language,
   studyType: StudyType,
   listId: string,
-): Promise<string[]> {
-  if (!listId) return [];
+): Promise<string[] | null> {
+  if (!listId) return null;
   try {
     const decks = await loadAll();
-    return decks[listDeckKey(language, studyType, listId)] ?? [];
+    const key = listDeckKey(language, studyType, listId);
+    return Object.prototype.hasOwnProperty.call(decks, key) ? decks[key] : null;
   } catch {
-    return [];
+    return null;
   }
 }
 
@@ -106,13 +118,14 @@ export async function saveListDeck(
   listId: string,
   wordIds: string[],
 ): Promise<void> {
-  if (!listId || wordIds.length === 0) return;
+  if (!listId) return;
+  const ids = wordIds.filter(id => typeof id === 'string' && id.length > 0);
   try {
-    const decks = await loadAll();
-    decks[listDeckKey(language, studyType, listId)] = wordIds.filter(
-      id => typeof id === 'string' && id.length > 0,
-    );
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(decks));
+    await enqueueWrite(async () => {
+      const decks = await loadAll();
+      decks[listDeckKey(language, studyType, listId)] = ids;
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(decks));
+    });
   } catch {
     // Best-effort. A failed read or save is treated as no saved deck.
   }
@@ -120,7 +133,7 @@ export async function saveListDeck(
 
 export async function clearAllListDecks(): Promise<void> {
   try {
-    await AsyncStorage.removeItem(STORAGE_KEY);
+    await enqueueWrite(() => AsyncStorage.removeItem(STORAGE_KEY));
   } catch {
     // Best-effort.
   }

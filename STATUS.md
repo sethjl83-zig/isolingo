@@ -47,6 +47,7 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-11-05: In a one-list session, Remove, Replace, and Pause edit the saved deck as well as the live session. Remove and Pause make the deck smaller. Replace keeps the size, or says no other word is available and changes nothing. Reopening the list shows the edited count.
 - 2026-11-05: Opening a list continues its saved deck for that study mode. A session is one list. The resume prompt is gone. Deck Size appears only when that list has no saved deck and more than 10 eligible words. Direction shows the list, the word count, Change Size, and New Deck.
 - 2026-11-05: A per-list, per-mode deck store is written and migrated from single-list saved decks. Nothing reads it yet, so study still uses the combination store.
 - 2026-11-05: Remove, Replace, Frequency, and Pause lift with Flip and Submit when the study-card keyboard is open.

@@ -44,21 +44,28 @@ function frequencySettings(pool: Pool): Record<string, WordFrequencySetting> {
   return settings;
 }
 
-/** Ids from the per-list store that are still in the list and not paused. */
+/**
+ * Ids from the per-list store that are still in the list and not paused.
+ * Null means there is no saved deck. An empty list is a deck the user emptied.
+ * A saved deck whose ids are all gone or paused counts as no saved deck.
+ */
 export async function loadContinuableDeck(
   pool: Pool,
   language: Language,
   studyType: StudyType,
-): Promise<string[]> {
+): Promise<string[] | null> {
   try {
     const saved = await getListDeck(language, studyType, pool.id);
+    if (saved === null) return null;
     const paused = new Set(pool.pausedWordIds ?? []);
     const inList = new Set(
       pool.words.map(pw => pw?.item?.id).filter((id): id is string => !!id),
     );
-    return saved.filter(id => inList.has(id) && !paused.has(id));
+    const kept = saved.filter(id => inList.has(id) && !paused.has(id));
+    if (saved.length > 0 && kept.length === 0) return null;
+    return kept;
   } catch {
-    return [];
+    return null;
   }
 }
 
@@ -79,7 +86,7 @@ export async function resolveSingleListLaunch(
 ): Promise<SingleListLaunch> {
   const poolIds = JSON.stringify([pool.id]);
   const continued = await loadContinuableDeck(pool, language, studyType);
-  if (continued.length > 0) {
+  if (continued !== null) {
     return {
       screen: 'direction',
       poolIds,

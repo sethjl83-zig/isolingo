@@ -96,7 +96,7 @@ export default function DirectionScreen() {
       let cancelled = false;
       const revision = deckRevision.current;
       loadContinuableDeck(pool, state.languageSelected, studyType).then(kept => {
-        if (!cancelled && deckRevision.current === revision && kept.length > 0) {
+        if (!cancelled && deckRevision.current === revision && kept !== null) {
           setActiveDeckIds(kept);
         }
       });

@@ -10,6 +10,7 @@ import type { WordFrequencySetting } from '../types/state';
 import type { Language, VocabItem } from '../types/vocab';
 import type { PoolWord } from '../types/pool';
 import { enrichVocabItemsFromMaster } from '../data';
+import { eligibleStudyWords } from '../utils/listDeckLaunch';
 
 export interface ActionResult {
   success: boolean;
@@ -22,6 +23,8 @@ interface SessionWordMgmtContextValue {
   removeWord: (vocabId: string) => void;
   replaceWord: (vocabId: string) => ActionResult;
   pauseWord: (vocabId: string) => ActionResult;
+  /** True when this session is one list, so deck edits are saved. */
+  editsSavedDeck: boolean;
 }
 
 const SessionWordMgmtContext = createContext<SessionWordMgmtContextValue | null>(null);
@@ -48,7 +51,8 @@ export function SessionWordMgmtProvider({
   onWordRemoved,
   onWordReplaced,
 }: ProviderProps) {
-  const { updatePool, getLanguagePools } = useAppContext();
+  const { state, updatePool, getLanguagePools } = useAppContext();
+  const editsSavedDeck = poolIds.length === 1;
 
   const sessionPools = useMemo(
     () =>
@@ -101,19 +105,33 @@ export function SessionWordMgmtProvider({
       const candidates: { item: VocabItem; frequency: WordFrequencySetting }[] = [];
       const seenCandidateIds = new Set<string>();
 
-      for (const pool of sessionPools) {
-        const pausedIds = new Set(pool.pausedWordIds ?? []);
-        for (const pw of pool.words) {
-          if (pausedIds.has(pw.item.id)) continue;
-          if (
-            !seenCandidateIds.has(pw.item.id) &&
-            !sessionDeckIds.has(pw.item.id)
-          ) {
-            seenCandidateIds.add(pw.item.id);
-            candidates.push({
-              item: pw.item,
-              frequency: pw.frequency as WordFrequencySetting,
-            });
+      if (editsSavedDeck) {
+        const pool = sessionPools[0];
+        const studyType = state.studyTypeSelected ?? 'general_vocab';
+        const eligible = pool ? eligibleStudyWords(pool, studyType) : [];
+        for (const item of eligible) {
+          if (!seenCandidateIds.has(item.id) && !sessionDeckIds.has(item.id)) {
+            seenCandidateIds.add(item.id);
+            const frequency =
+              pool?.words.find(pw => pw.item.id === item.id)?.frequency ?? 'normal';
+            candidates.push({ item, frequency });
+          }
+        }
+      } else {
+        for (const pool of sessionPools) {
+          const pausedIds = new Set(pool.pausedWordIds ?? []);
+          for (const pw of pool.words) {
+            if (pausedIds.has(pw.item.id)) continue;
+            if (
+              !seenCandidateIds.has(pw.item.id) &&
+              !sessionDeckIds.has(pw.item.id)
+            ) {
+              seenCandidateIds.add(pw.item.id);
+              candidates.push({
+                item: pw.item,
+                frequency: pw.frequency as WordFrequencySetting,
+              });
+            }
           }
         }
       }
@@ -121,7 +139,9 @@ export function SessionWordMgmtProvider({
       if (candidates.length === 0) {
         return {
           success: false,
-          error: 'No other words in your pool are available to swap in.',
+          error: editsSavedDeck
+            ? 'No other words are available in this list.'
+            : 'No other words in your pool are available to swap in.',
         };
       }
 
@@ -131,7 +151,7 @@ export function SessionWordMgmtProvider({
       onWordReplaced?.(vocabId, enriched, pick.frequency);
       return { success: true };
     },
-    [getSessionDeckIds, sessionPools, language, onWordReplaced],
+    [getSessionDeckIds, sessionPools, language, onWordReplaced, editsSavedDeck, state.studyTypeSelected],
   );
 
   const pauseWord = useCallback(
@@ -165,8 +185,8 @@ export function SessionWordMgmtProvider({
   );
 
   const value = useMemo(
-    () => ({ getFrequency, setFrequency, removeWord, replaceWord, pauseWord }),
-    [getFrequency, setFrequency, removeWord, replaceWord, pauseWord],
+    () => ({ getFrequency, setFrequency, removeWord, replaceWord, pauseWord, editsSavedDeck }),
+    [getFrequency, setFrequency, removeWord, replaceWord, pauseWord, editsSavedDeck],
   );
 
   return (
