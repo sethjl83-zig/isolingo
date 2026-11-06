@@ -47,6 +47,7 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-11-05: A per-list, per-mode deck store is written and migrated from single-list saved decks. Nothing reads it yet, so study still uses the combination store.
 - 2026-11-05: Remove, Replace, Frequency, and Pause lift with Flip and Submit when the study-card keyboard is open.
 - 2026-11-05: French and Spanish target-to-native answers accept "one" for indefinite articles. French son/sa accepts his or her, and votre’s English answer is "your" without "(formal)".
 - 2026-11-05: Search bar is 45 points tall again on Build Your Own and Add Existing Word. Vocab Bank still shares the row with the word count.

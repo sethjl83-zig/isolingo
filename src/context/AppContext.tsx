@@ -20,6 +20,7 @@ import { getOrInitStats, updateStatsAfterCard } from '../engines/repetitionEngin
 import { loadPersistedState, savePersistedState } from '../storage/persistedState';
 import { preloadLanguageStats } from '../storage/statsStorage';
 import { wipeAppData } from '../storage/resetAppData';
+import { migrateSingleListDecks } from '../storage/listDecks';
 
 type Action =
   | { type: 'HYDRATE'; payload: Partial<AppState> }
@@ -188,7 +189,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const suppressPersist = useRef(false);
 
   useEffect(() => {
-    loadPersistedState().then(stored => {
+    loadPersistedState().then(async stored => {
       if (stored) {
         dispatch({
           type: 'HYDRATE',
@@ -200,6 +201,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           },
         });
         preloadLanguageStats(stored.selectedLanguage);
+        await migrateSingleListDecks(stored.languagePools ?? {});
       }
       hasHydrated.current = true;
       setIsReady(true);

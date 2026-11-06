@@ -171,7 +171,8 @@ Study Session
 Infinite loop of flashcards
 Card pool drawn from selected pools combined, subset to deck size, using existing repetition/frequency logic
 When a session starts, that deck’s word ids are saved for the pool combination and study type
-Resume reuses those ids and does not draw a new subset. Start Fresh clears them first
+A single-list session also writes those ids to a separate per-list, per-mode store. That store is not read yet. Multi-list decks stay only in the combination store. Start Over clears both stores
+Resume reuses the combination-store ids and does not draw a new subset. Start Fresh clears them first
 Words that are gone or paused are left out. If none of the saved words remain, there is no resume prompt
 Card types for V0: Card 1001 (Gender Matching), Card 1002 (Word Relationships), Card 1006 (Production)
 Card distribution: set in Settings under Card Frequency. Recommended is Production 70%, Word Relationships 20%, Gender Matching 10%. The three percentages are chosen independently and saved only when they total 100%. Gender Matching is still Gender mode and mixed direction only. Word Relationships is still mixed direction only. When a type cannot appear, the session splits its share across the types that can.

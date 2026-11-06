@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { clearPersistedState } from './persistedState';
 import { clearDeckSizePrefs } from './deckSizePrefs';
 import { clearAllSavedDecks } from './savedDecks';
+import { clearAllListDecks } from './listDecks';
 import { clearAllStats } from './statsStorage';
 import { clearSoundEnabled } from './soundPref';
 import { clearCardFrequency } from './cardFrequency';
@@ -17,6 +18,7 @@ export async function wipeAppData(): Promise<void> {
     clearPersistedState(),
     clearDeckSizePrefs(),
     clearAllSavedDecks(),
+    clearAllListDecks(),
     clearAllStats(),
     clearSoundEnabled(),
     clearCardFrequency(),

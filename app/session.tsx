@@ -42,6 +42,7 @@ import {
 import { enrichVocabItemsFromMaster } from '@/src/data';
 import { parsePoolIdsParam } from '@/src/utils/studyLaunch';
 import { saveSavedDeck } from '@/src/storage/savedDecks';
+import { saveListDeck } from '@/src/storage/listDecks';
 import { loadCardFrequency } from '@/src/storage/cardFrequency';
 import { updateWordStats } from '@/src/types/stats';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
@@ -144,12 +145,12 @@ export default function SessionScreen() {
   useEffect(() => {
     if (!language || !baseSessionVocab || deckSavedRef.current) return;
     deckSavedRef.current = true;
-    void saveSavedDeck(
-      language,
-      state.studyTypeSelected ?? 'general_vocab',
-      poolIds,
-      baseSessionVocab.vocabBank.map(word => word.id),
-    );
+    const studyType = state.studyTypeSelected ?? 'general_vocab';
+    const deckWordIds = baseSessionVocab.vocabBank.map(word => word.id);
+    void saveSavedDeck(language, studyType, poolIds, deckWordIds);
+    if (poolIds.length === 1) {
+      void saveListDeck(language, studyType, poolIds[0], deckWordIds);
+    }
   }, [language, baseSessionVocab, poolIds, state.studyTypeSelected]);
 
   const getSessionVocab = useCallback((): SessionVocabContext | null => {
