@@ -22,20 +22,6 @@ export function filterForStudyType(words: VocabItem[], studyType: StudyType): Vo
 
 
 
-/** Randomly pick `count` words from the master dataset for a language and study mode. */
-
-export function pickRandomWords(language: string, count: number, studyType: StudyType): VocabItem[] {
-
-  const master = filterForStudyType([...getMasterDataset(language)], studyType);
-
-  const shuffled = master.sort(() => Math.random() - 0.5);
-
-  return shuffled.slice(0, count);
-
-}
-
-
-
 /** Pick one random word from master not already in `excludeIds`. */
 
 export function pickReplacementWord(

@@ -7,7 +7,7 @@
  * read this to decide where to navigate after the pool is saved.
  */
 import React, { useCallback } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, type ImageSourcePropType, type ImageStyle } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, type ImageSourcePropType } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,7 +21,6 @@ const backChevron = require('@/assets/images/lists/back-chevron.png');
 const rowChevron = require('@/assets/images/lists/row-chevron.png');
 const checklistIcon = require('@/assets/images/lists/icon-checklist.png');
 const pencilIcon = require('@/assets/images/lists/icon-pencil.png');
-const shuffleIcon = require('@/assets/images/lists/icon-shuffle.png');
 
 // ── Launch-source tracking ────────────────────────────────────────────────────
 
@@ -39,7 +38,7 @@ export function setAddListLaunchSource(
   _addListStudyType = studyType ?? null;
 }
 
-/** Read by creation screens (random-list, curated-list, build-your-own). */
+/** Read by creation screens (curated-list, build-your-own). */
 export function getAddListLaunchSource(): {
   source: AddListLaunchSource;
   studyType: StudyType | null;
@@ -49,7 +48,6 @@ export function getAddListLaunchSource(): {
 
 interface ChoiceCardProps {
   icon: ImageSourcePropType;
-  iconStyle?: ImageStyle;
   well: string;
   title: string;
   description: string;
@@ -57,7 +55,7 @@ interface ChoiceCardProps {
   palette: (typeof Colors)['light'];
 }
 
-function ChoiceCard({ icon, iconStyle, well, title, description, onPress, palette }: ChoiceCardProps) {
+function ChoiceCard({ icon, well, title, description, onPress, palette }: ChoiceCardProps) {
   return (
     <TouchableOpacity
       style={[styles.cardShadow]}
@@ -66,7 +64,7 @@ function ChoiceCard({ icon, iconStyle, well, title, description, onPress, palett
     >
       <View style={[styles.card, { borderColor: palette.listCardBorder }]}>
         <View style={[styles.iconWell, { backgroundColor: well }]}>
-          <Image source={icon} style={[styles.choiceIcon, iconStyle]} accessibilityIgnoresInvertColors />
+          <Image source={icon} style={styles.choiceIcon} accessibilityIgnoresInvertColors />
         </View>
         <View style={styles.cardText}>
           <Text style={styles.cardTitle}>{title}</Text>
@@ -115,7 +113,7 @@ export default function AddListScreen() {
         <ChoiceCard
           icon={checklistIcon}
           well="rgba(56,161,154,0.12)"
-          title="Curated Lists"
+          title="Study a Topic"
           description="Words organized by topic"
           onPress={() => router.push('/curated-list' as never)}
           palette={palette}
@@ -127,16 +125,6 @@ export default function AddListScreen() {
           title="Build Your Own"
           description="Choose your own words"
           onPress={() => router.push('/build-your-own' as never)}
-          palette={palette}
-        />
-
-        <ChoiceCard
-          icon={shuffleIcon}
-          iconStyle={styles.shuffleIcon}
-          well="#E0F0FF"
-          title="Random"
-          description="Randomly selected words"
-          onPress={() => router.push('/random-list' as never)}
           palette={palette}
         />
         </View>
@@ -222,7 +210,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   choiceIcon: { width: 32, height: 32 },
-  shuffleIcon: { width: 32, height: 26 },
   cardText: { flex: 1, gap: 6 },
   cardTitle: {
     fontFamily: HomeFonts.interSemiBold,

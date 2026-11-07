@@ -20,7 +20,7 @@ import type { PoolDeckSize } from '@/src/types/pool';
 import { getDeckSizePref, saveDeckSizePref } from '@/src/storage/deckSizePrefs';
 import { saveListDeck } from '@/src/storage/listDecks';
 import { parsePoolIdsParam } from '@/src/utils/studyLaunch';
-import { drawSizedListDeck } from '@/src/utils/listDeckLaunch';
+import { drawSizedListDeck, resolveSingleListLaunch } from '@/src/utils/listDeckLaunch';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 import { useAppContext } from '@/src/context/AppContext';
 import ErrorBoundary from '@/src/components/ErrorBoundary';
@@ -138,9 +138,10 @@ function DeckSizeContent() {
     (Array.isArray(fromDirectionParam) ? fromDirectionParam[0] : fromDirectionParam) === '1';
   const fromCreate =
     (Array.isArray(fromCreateParam) ? fromCreateParam[0] : fromCreateParam) === '1';
+  const afterRaw = Array.isArray(afterCreateParam) ? afterCreateParam[0] : afterCreateParam;
   const afterCreate =
-    (Array.isArray(afterCreateParam) ? afterCreateParam[0] : afterCreateParam) === 'study'
-      ? 'study'
+    afterRaw === 'study' || afterRaw === 'launch' || afterRaw === 'my-lists'
+      ? afterRaw
       : 'lists';
   const poolIds = useMemo(() => parsePoolIdsParam(poolIdsParam), [poolIdsParam]);
   const totalCount = useMemo(
@@ -253,6 +254,37 @@ function DeckSizeContent() {
     if (fromCreate) {
       if (afterCreate === 'study') {
         router.replace('/select-study-list' as never);
+      } else if (afterCreate === 'launch') {
+        const found = getLanguagePools(language).find(item => item.id === poolIds[0]);
+        const pool = found
+          ? { ...found, deckSize: selected, deckSizeChosen: true }
+          : null;
+        if (pool) {
+          try {
+            const launch = await resolveSingleListLaunch(pool, language, studyType);
+            if (launch.screen === 'deck-size') {
+              router.replace({
+                pathname: '/deck-size',
+                params: { poolIds: launch.poolIds, totalCount: launch.totalCount },
+              } as never);
+            } else {
+              router.replace({
+                pathname: '/direction',
+                params: {
+                  poolIds: launch.poolIds,
+                  deckSize: launch.deckSize,
+                  deckIds: launch.deckIds,
+                },
+              } as never);
+            }
+          } catch {
+            router.back();
+          }
+        } else {
+          router.back();
+        }
+      } else if (afterCreate === 'my-lists') {
+        router.dismiss(3);
       } else {
         router.dismiss(2);
       }

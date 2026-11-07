@@ -4,7 +4,7 @@
  * Reads studyTypeSelected from global state (set by dashboard before navigating here).
  * Lets the user pick a study direction, then starts the session.
  */
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -124,6 +124,9 @@ export default function DirectionScreen() {
     } as never);
   };
 
+  const [deckNote, setDeckNote] = useState<string | null>(null);
+  const deckNoteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const handleNewDeck = () => {
     if (!pool || !state.languageSelected || activeDeckIds.length === 0) return;
     const next = drawSizedListDeck(pool, studyType, activeDeckIds.length);
@@ -131,7 +134,14 @@ export default function DirectionScreen() {
     deckRevision.current += 1;
     setActiveDeckIds(next);
     void saveListDeck(state.languageSelected, studyType, pool.id, next);
+    setDeckNote('New deck drawn');
+    if (deckNoteTimer.current) clearTimeout(deckNoteTimer.current);
+    deckNoteTimer.current = setTimeout(() => setDeckNote(null), 2000);
   };
+
+  useEffect(() => () => {
+    if (deckNoteTimer.current) clearTimeout(deckNoteTimer.current);
+  }, []);
 
   const handleStart = () => {
     router.replace({
@@ -183,6 +193,7 @@ export default function DirectionScreen() {
                 <Text style={styles.deckLink}>New Deck</Text>
               </TouchableOpacity>
             </View>
+            {deckNote ? <Text style={styles.subheading}>{deckNote}</Text> : null}
           </View>
           <View style={styles.titleBlock}>
             <Text style={styles.heading}>Study Direction</Text>

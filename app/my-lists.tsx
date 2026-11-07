@@ -17,6 +17,7 @@ import { useAppContext } from '@/src/context/AppContext';
 import type { Pool } from '@/src/types/pool';
 import type { StudyType } from '@/src/types/state';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
+import { setAddListLaunchSource } from './add-list';
 
 const backChevron = require('@/assets/images/lists/back-chevron.png');
 const plusIcon = require('@/assets/images/lists/plus.png');
@@ -367,7 +368,10 @@ export default function MyListsScreen() {
 
         <TouchableOpacity
           style={[styles.addBtn, { backgroundColor: palette.primary }]}
-          onPress={() => router.push('/add-list')}
+          onPress={() => {
+            setAddListLaunchSource('my_lists');
+            router.push('/add-list');
+          }}
           activeOpacity={0.8}
           accessibilityLabel="Add List"
         >

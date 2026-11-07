@@ -1,15 +1,16 @@
 /**
- * SCREEN — CURATED LISTS
- * Browse approved categories, multi-select, then create pools per category or combined.
+ * SCREEN — STUDY A TOPIC
+ * Single-select topic picker. Tapping a topic reuses a list with that exact
+ * name, or creates one, then continues.
  */
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useRef, useMemo, useCallback, useEffect } from 'react';
 import { getAddListLaunchSource } from './add-list';
-import {
-  View, Text, Image, TouchableOpacity, FlatList, StyleSheet, Alert, TextInput, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Platform, ScrollView } from 'react-native';
+import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { Colors } from '@/constants/theme';
 import { HomeFonts } from '@/constants/homeFonts';
 import { useAppContext } from '@/src/context/AppContext';
@@ -17,8 +18,8 @@ import { getMasterDataset } from '@/src/data';
 import type { VocabItem } from '@/src/types/vocab';
 import type { Pool } from '@/src/types/pool';
 import { generatePoolId } from '@/src/types/pool';
-import { deckSizeForNewList } from '@/src/utils/listDeckLaunch';
-import StudyButton from '@/src/components/ui/StudyButton';
+import { deckSizeForNewList, resolveSingleListLaunch } from '@/src/utils/listDeckLaunch';
+import type { SingleListLaunch } from '@/src/utils/listDeckLaunch';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
 // ── Category config ───────────────────────────────────────────────────────────
@@ -59,7 +60,6 @@ const BASIC_SUBCATEGORIES = new Set([
 const BASIC_WORDS_KEY = '__basic_words__';
 
 const backChevron = require('@/assets/images/lists/back-chevron.png');
-const checkIcon = require('@/assets/images/lists/check-white.png');
 
 type IconWell = 'orange' | 'purple' | 'teal' | 'food' | 'blue' | 'nature';
 
@@ -128,103 +128,58 @@ function hexAlpha(hex: string, alpha: number) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
 interface CuratedEntry {
   key: string;
   displayName: string;
   words: VocabItem[];
 }
 
-type ScreenStep = 'select' | 'naming';
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-/** Capitalise the first letter of a string. */
 function capitalise(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-/**
- * Find a unique pool name relative to both existing and already-queued pools.
- * Appends " 2", " 3", … until the name is free.
- */
-function uniquePoolName(baseName: string, takenNames: Set<string>): string {
-  if (!takenNames.has(baseName)) return baseName;
-  let n = 2;
-  while (takenNames.has(`${baseName} ${n}`)) n++;
-  return `${baseName} ${n}`;
-}
-
-/**
- * Pools do not store the source category. A curated list counts as that
- * category when its name is the display name, or that name plus " " and a
- * number ("People", "People 2", "Basic Words 3").
- */
-function poolNameMatchesCuratedCategory(poolName: string, displayName: string): boolean {
-  const name = poolName.trim();
-  if (name.toLowerCase() === displayName.toLowerCase()) return true;
-  if (name.slice(0, displayName.length).toLowerCase() !== displayName.toLowerCase()) return false;
-  return /^ \d+$/.test(name.slice(displayName.length));
-}
-
-function nextCombinedListName(existingPools: Pool[]): string {
-  const nums = existingPools
-    .map(p => {
-      const m = p.name.match(/^Combined List (\d+)$/);
-      return m ? parseInt(m[1], 10) : 0;
-    })
-    .filter(n => n > 0);
-  const max = nums.length > 0 ? Math.max(...nums) : 0;
-  return `Combined List ${max + 1}`;
-}
-
-function getSelectedEntries(
-  entries: CuratedEntry[],
-  selectedKeys: Set<string>,
-): CuratedEntry[] {
-  return entries.filter(e => selectedKeys.has(e.key) && e.words.length > 0);
-}
-
-function defaultCombinedListName(
-  selectedEntries: CuratedEntry[],
-  existingPools: Pool[],
-): string {
-  if (selectedEntries.length > 3) {
-    return nextCombinedListName(existingPools);
+function openListLaunch(
+  router: ReturnType<typeof useRouter>,
+  launch: SingleListLaunch,
+  replace: boolean,
+) {
+  const navigate = replace ? router.replace : router.push;
+  if (launch.screen === 'deck-size') {
+    navigate({
+      pathname: '/deck-size',
+      params: { poolIds: launch.poolIds, totalCount: launch.totalCount },
+    } as never);
+    return;
   }
-  return selectedEntries.map(e => e.displayName).join(' + ');
+  navigate({
+    pathname: '/direction',
+    params: {
+      poolIds: launch.poolIds,
+      deckSize: launch.deckSize,
+      deckIds: launch.deckIds,
+    },
+  } as never);
 }
-
-function combineWords(selectedEntries: CuratedEntry[]): VocabItem[] {
-  const seen = new Set<string>();
-  const result: VocabItem[] = [];
-  for (const entry of selectedEntries) {
-    for (const word of entry.words) {
-      if (!seen.has(word.id)) {
-        seen.add(word.id);
-        result.push(word);
-      }
-    }
-  }
-  return result;
-}
-
-// ── Screen ────────────────────────────────────────────────────────────────────
 
 export default function CuratedListScreen() {
   const router = useRouter();
-  const { state, isReady, getLanguagePools, createPool } = useAppContext();
+  const { state, isReady, getLanguagePools, createPool, updatePool } = useAppContext();
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
 
   const language = state.languageSelected;
+  const busyRef = useRef(false);
 
   useEffect(() => {
     if (isReady && !language) router.replace('/');
   }, [isReady, language, router]);
 
-  // ── Build curated entries from master dataset ──────────────────────────────
+  useFocusEffect(
+    useCallback(() => {
+      busyRef.current = false;
+    }, []),
+  );
+
   const entries: CuratedEntry[] = useMemo(() => {
     if (!language) return [];
     const master = getMasterDataset(language);
@@ -254,294 +209,72 @@ export default function CuratedListScreen() {
     return result;
   }, [language]);
 
-  const languagePools = language ? (state.languagePools[language] ?? []) : [];
-
-  const visibleEntries = useMemo(() => {
-    const curatedPools = languagePools.filter(pool => pool.createdVia === 'curated');
-    return entries.filter(entry =>
-      !curatedPools.some(pool => poolNameMatchesCuratedCategory(pool.name, entry.displayName)),
-    );
-  }, [entries, languagePools]);
-
-  // ── Selection state ───────────────────────────────────────────────────────
-  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
-  const [step, setStep] = useState<ScreenStep>('select');
-  const [listName, setListName] = useState('');
-  const [combinedWordCount, setCombinedWordCount] = useState(0);
-
-  const toggleCategory = useCallback((key: string) => {
-    setSelectedKeys(prev => {
-      const next = new Set(prev);
-      if (next.has(key)) {
-        next.delete(key);
-      } else {
-        next.add(key);
-      }
-      return next;
-    });
-  }, []);
-
-  const selectedCount = visibleEntries.filter(entry => selectedKeys.has(entry.key)).length;
-  const canProceed = selectedCount > 0;
-
-  const navigateAfterCreate = useCallback(() => {
+  const continueWithList = useCallback(async (pool: Pool) => {
     const { source } = getAddListLaunchSource();
     if (source === 'study_mode') {
-      router.replace('/select-study-list' as never);
-    } else {
-      router.dismiss(2);
+      const studyType = state.studyTypeSelected ?? 'general_vocab';
+      const launch = await resolveSingleListLaunch(pool, pool.language, studyType);
+      openListLaunch(router, launch, false);
+      return;
     }
-  }, [router]);
+    router.dismiss(2);
+  }, [router, state.studyTypeSelected]);
 
-  const createSeparatePools = useCallback(() => {
-    if (!language || !canProceed) return;
+  const handleTopicPress = useCallback(async (entry: CuratedEntry) => {
+    if (!language || busyRef.current || entry.words.length === 0) return;
+    busyRef.current = true;
+    try {
+      const existing = getLanguagePools(language).find(pool => pool.name === entry.displayName);
+      const wordCount = existing ? existing.words.length : entry.words.length;
+      let pool = existing;
 
-    const existingPools = getLanguagePools(language);
-    const takenNames = new Set(existingPools.map(p => p.name));
-    const planned = [];
-    for (const key of selectedKeys) {
-      const entry = visibleEntries.find(e => e.key === key);
-      if (!entry || entry.words.length === 0) continue;
-      planned.push(entry);
-    }
-
-    // One list can ask for a size. Several lists each take the largest size that fits.
-    const askOnce = planned.length === 1;
-    let sizePoolId: string | null = null;
-    let sizeCount = 0;
-
-    for (const entry of planned) {
-      const poolName = uniquePoolName(entry.displayName, takenNames);
-      takenNames.add(poolName);
-      const wordCount = entry.words.length;
-      const needsSize = askOnce && wordCount > 10;
-      const pool: Pool = {
-        id: generatePoolId(),
-        name: poolName,
-        language,
-        words: entry.words.map(item => ({ item, frequency: 'normal' })),
-        deckSize: deckSizeForNewList(wordCount),
-        deckSizeChosen: !needsSize,
-        createdVia: 'curated',
-        pausedWordIds: [],
-      };
-      createPool(pool);
-      if (needsSize) {
-        sizePoolId = pool.id;
-        sizeCount = wordCount;
+      if (!pool) {
+        pool = {
+          id: generatePoolId(),
+          name: entry.displayName,
+          language,
+          words: entry.words.map(item => ({ item, frequency: 'normal' as const })),
+          deckSize: deckSizeForNewList(wordCount),
+          deckSizeChosen: wordCount <= 10,
+          createdVia: 'curated',
+          pausedWordIds: [],
+        };
+        createPool(pool);
+      } else if (wordCount <= 10 && !pool.deckSizeChosen) {
+        pool = { ...pool, deckSize: wordCount, deckSizeChosen: true };
+        updatePool(pool.id, { deckSize: wordCount, deckSizeChosen: true });
       }
+
+      if (wordCount > 10 && !pool.deckSizeChosen) {
+        const { source } = getAddListLaunchSource();
+        router.push({
+          pathname: '/deck-size',
+          params: {
+            poolIds: JSON.stringify([pool.id]),
+            totalCount: String(wordCount),
+            fromCreate: '1',
+            afterCreate: source === 'study_mode' ? 'launch' : 'my-lists',
+          },
+        } as never);
+        return;
+      }
+
+      await continueWithList(pool);
+    } catch {
+      busyRef.current = false;
     }
-
-    if (sizePoolId) {
-      const { source } = getAddListLaunchSource();
-      router.replace({
-        pathname: '/deck-size',
-        params: {
-          poolIds: JSON.stringify([sizePoolId]),
-          totalCount: String(sizeCount),
-          fromCreate: '1',
-          afterCreate: source === 'study_mode' ? 'study' : 'lists',
-        },
-      } as never);
-      return;
-    }
-
-    navigateAfterCreate();
-  }, [
-    language,
-    canProceed,
-    selectedKeys,
-    visibleEntries,
-    getLanguagePools,
-    createPool,
-    navigateAfterCreate,
-    router,
-  ]);
-
-  const startCombineFlow = useCallback(() => {
-    if (!language || !canProceed) return;
-
-    const selectedEntries = getSelectedEntries(visibleEntries, selectedKeys);
-    const words = combineWords(selectedEntries);
-    if (words.length === 0) return;
-
-    const existingPools = getLanguagePools(language);
-    setCombinedWordCount(words.length);
-    setListName(defaultCombinedListName(selectedEntries, existingPools));
-    setStep('naming');
-  }, [language, canProceed, visibleEntries, selectedKeys, getLanguagePools]);
-
-  const handleConfirmCombined = useCallback(() => {
-    if (!language || !canProceed) return;
-
-    const selectedEntries = getSelectedEntries(visibleEntries, selectedKeys);
-    const words = combineWords(selectedEntries);
-    if (words.length === 0) return;
-
-    const existingPools = getLanguagePools(language);
-    const takenNames = new Set(existingPools.map(p => p.name));
-    const trimmed = listName.trim();
-    const baseName =
-      trimmed || defaultCombinedListName(selectedEntries, existingPools);
-    const poolName = uniquePoolName(baseName, takenNames);
-
-    const wordCount = words.length;
-    const needsSize = wordCount > 10;
-    const pool: Pool = {
-      id: generatePoolId(),
-      name: poolName,
-      language,
-      words: words.map(item => ({ item, frequency: 'normal' })),
-      deckSize: deckSizeForNewList(wordCount),
-      deckSizeChosen: !needsSize,
-      createdVia: 'curated',
-      pausedWordIds: [],
-    };
-
-    createPool(pool);
-    if (needsSize) {
-      const { source } = getAddListLaunchSource();
-      router.replace({
-        pathname: '/deck-size',
-        params: {
-          poolIds: JSON.stringify([pool.id]),
-          totalCount: String(wordCount),
-          fromCreate: '1',
-          afterCreate: source === 'study_mode' ? 'study' : 'lists',
-        },
-      } as never);
-      return;
-    }
-    navigateAfterCreate();
-  }, [
-    language,
-    canProceed,
-    visibleEntries,
-    selectedKeys,
-    listName,
-    getLanguagePools,
-    createPool,
-    navigateAfterCreate,
-    router,
-  ]);
-
-  const handleAddPress = useCallback(() => {
-    if (!canProceed) return;
-
-    if (selectedCount === 1) {
-      createSeparatePools();
-      return;
-    }
-
-    Alert.alert('Create separate lists or combine into one?', undefined, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Separate Lists',
-        onPress: createSeparatePools,
-      },
-      {
-        text: 'Combine into One List',
-        onPress: startCombineFlow,
-      },
-    ]);
-  }, [canProceed, selectedCount, createSeparatePools, startCombineFlow]);
+  }, [language, getLanguagePools, createPool, updatePool, router, continueWithList]);
 
   useAndroidBackHandler(
     useCallback(() => {
-      if (step === 'naming') {
-        setStep('select');
-      } else {
-        router.back();
-      }
+      router.back();
       return true;
-    }, [step, router]),
+    }, [router]),
   );
 
-  // ── Guard ─────────────────────────────────────────────────────────────────
   if (!isReady || !language) return null;
 
-  // ── Naming step (combined list) ───────────────────────────────────────────
-  if (step === 'naming') {
-    return (
-      <KeyboardAvoidingView
-        style={[styles.flex, { backgroundColor: palette.background }]}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <SafeAreaView style={styles.flex}>
-            <View style={styles.topBar}>
-              <TouchableOpacity
-                onPress={() => setStep('select')}
-                hitSlop={8}
-                accessibilityLabel="Back"
-                style={[styles.backBtn, { backgroundColor: hexAlpha(palette.primary, 0.15) }]}
-              >
-                <Image source={backChevron} style={styles.backIcon} accessibilityIgnoresInvertColors />
-              </TouchableOpacity>
-              <Text style={styles.screenTitle} pointerEvents="none">
-                Name Your List
-              </Text>
-            </View>
-
-            <ScrollView
-              contentContainerStyle={styles.namingContent}
-              keyboardShouldPersistTaps="handled"
-            >
-              <Text style={[styles.stepHeading, { color: palette.text }]}>
-                Name Your List
-              </Text>
-              <Text style={[styles.stepSub, { color: palette.subtext }]}>
-                {combinedWordCount} {combinedWordCount === 1 ? 'word' : 'words'} from{' '}
-                {selectedCount} {selectedCount === 1 ? 'category' : 'categories'}
-              </Text>
-
-              <TextInput
-                style={styles.nameInput}
-                value={listName}
-                onChangeText={setListName}
-                placeholder="Enter list name"
-                placeholderTextColor={palette.subtext}
-                autoFocus
-                returnKeyType="done"
-                onSubmitEditing={handleConfirmCombined}
-                maxLength={60}
-                selectTextOnFocus
-              />
-
-              <View style={styles.summaryCard}>
-                <View style={[styles.summaryRow, styles.summaryDivider]}>
-                  <Text style={[styles.summaryLabel, { color: palette.subtext }]}>Words</Text>
-                  <Text style={[styles.summaryValue, { color: palette.text }]}>
-                    {combinedWordCount}
-                  </Text>
-                </View>
-                <View style={styles.summaryRow}>
-                  <Text style={[styles.summaryLabel, { color: palette.subtext }]}>
-                    Created via
-                  </Text>
-                  <Text style={[styles.summaryValue, { color: palette.text }]}>Curated</Text>
-                </View>
-              </View>
-
-              <StudyButton
-                label="Confirm"
-                variant="primary"
-                size="large"
-                onPress={handleConfirmCombined}
-                disabled={listName.trim().length === 0}
-                style={styles.confirmBtn}
-                textStyle={styles.confirmLabel}
-              />
-            </ScrollView>
-          </SafeAreaView>
-        </TouchableWithoutFeedback>
-      </KeyboardAvoidingView>
-    );
-  }
-
-  // ── Row renderer ──────────────────────────────────────────────────────────
   const renderEntry = ({ item: entry }: { item: CuratedEntry }) => {
-    const isSelected = selectedKeys.has(entry.key);
     const isEmpty = entry.words.length === 0;
     const icon = CATEGORY_ICONS[entry.key] ?? BOOK_ICON;
     const wellColor = {
@@ -556,7 +289,8 @@ export default function CuratedListScreen() {
     return (
       <TouchableOpacity
         style={[styles.cardShadow, isEmpty && styles.rowDisabled]}
-        onPress={() => !isEmpty && toggleCategory(entry.key)}
+        onPress={() => { void handleTopicPress(entry); }}
+        disabled={isEmpty}
         activeOpacity={isEmpty ? 1 : 0.75}
       >
         <View style={[styles.card, { borderColor: palette.listCardBorder }]}>
@@ -581,18 +315,6 @@ export default function CuratedListScreen() {
                 : `${entry.words.length} ${entry.words.length === 1 ? 'word' : 'words'}`}
             </Text>
           </View>
-          <View
-            style={[
-              styles.checkbox,
-              isSelected
-                ? { backgroundColor: palette.teal, borderColor: palette.teal }
-                : { backgroundColor: 'transparent', borderColor: 'rgba(0,0,0,0.2)' },
-            ]}
-          >
-            {isSelected && (
-              <Image source={checkIcon} style={styles.checkIcon} accessibilityIgnoresInvertColors />
-            )}
-          </View>
         </View>
       </TouchableOpacity>
     );
@@ -609,43 +331,20 @@ export default function CuratedListScreen() {
         >
           <Image source={backChevron} style={styles.backIcon} accessibilityIgnoresInvertColors />
         </TouchableOpacity>
-        <Text style={styles.screenTitle} pointerEvents="none">Curated Lists</Text>
+        <Text style={styles.screenTitle} pointerEvents="none">Study a Topic</Text>
       </View>
 
-      <Text style={styles.summaryText}>
-        {selectedCount === 0
-          ? 'Tap a category to select it'
-          : `${selectedCount} ${selectedCount === 1 ? 'category' : 'categories'} selected`}
-      </Text>
-
       <FlatList
-        data={visibleEntries}
+        data={entries}
         keyExtractor={e => e.key}
         renderItem={renderEntry}
         style={styles.list}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>You've added every curated list.</Text>
-        }
       />
-
-      <View style={styles.bottomBar}>
-        <StudyButton
-          label={`Add to My Lists (${selectedCount} Selected)`}
-          variant="primary"
-          size="medium"
-          onPress={handleAddPress}
-          disabled={!canProceed}
-          style={styles.categoryConfirmBtn}
-          textStyle={styles.confirmLabel}
-        />
-      </View>
     </SafeAreaView>
   );
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
 
 const cardShadow = {
   shadowColor: '#000',
@@ -657,7 +356,6 @@ const cardShadow = {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#F7F5FD' },
-  flex: { flex: 1 },
 
   topBar: {
     height: 36,
@@ -688,22 +386,7 @@ const styles = StyleSheet.create({
     color: '#25262B',
   },
 
-  summaryText: {
-    marginTop: 25,
-    marginHorizontal: 16,
-    fontFamily: HomeFonts.jakartaRegular,
-    fontSize: 14,
-    lineHeight: 18,
-    color: 'rgba(0,0,0,0.6)',
-  },
-
-  list: { flex: 1 },
-  emptyText: {
-    fontFamily: HomeFonts.jakartaRegular,
-    fontSize: 14,
-    lineHeight: 18,
-    color: 'rgba(0,0,0,0.6)',
-  },
+  list: { flex: 1, marginTop: 25 },
   listContent: {
     paddingHorizontal: 16,
     paddingTop: 18,
@@ -749,106 +432,4 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     color: 'rgba(0,0,0,0.6)',
   },
-  checkbox: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkIcon: { width: 18, height: 18 },
-
-  bottomBar: {
-    alignItems: 'center',
-    paddingTop: 15,
-    paddingBottom: 29,
-    paddingHorizontal: 29,
-    backgroundColor: '#F7F5FD',
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: -2 },
-    elevation: 8,
-  },
-  confirmBtn: {
-    width: 255,
-    height: 48,
-    minWidth: 0,
-    paddingVertical: 0,
-    borderRadius: 12,
-  },
-  categoryConfirmBtn: {
-    alignSelf: 'stretch',
-    height: 48,
-    minWidth: 0,
-    paddingVertical: 0,
-    borderRadius: 12,
-  },
-  confirmLabel: {
-    fontFamily: HomeFonts.interSemiBold,
-    fontWeight: 'normal',
-    fontSize: 16,
-    lineHeight: 24,
-  },
-
-  namingContent: {
-    paddingHorizontal: 16,
-    paddingTop: 25,
-    paddingBottom: 32,
-    gap: 16,
-  },
-  stepHeading: {
-    fontFamily: HomeFonts.interSemiBold,
-    fontSize: 22,
-    lineHeight: 27,
-    color: '#25262B',
-  },
-  stepSub: {
-    fontFamily: HomeFonts.jakartaRegular,
-    fontSize: 14,
-    lineHeight: 18,
-    color: 'rgba(0,0,0,0.6)',
-    marginTop: -8,
-  },
-  nameInput: {
-    height: 48,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.4)',
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 15,
-    fontFamily: HomeFonts.jakartaMedium,
-    fontWeight: 'normal',
-    fontSize: 16,
-    lineHeight: 24,
-    color: '#25262B',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-  },
-  summaryCard: {
-    borderWidth: 1,
-    borderColor: '#DAECDF',
-    borderRadius: 12,
-    overflow: 'hidden',
-    backgroundColor: '#FFFFFF',
-  },
-  summaryDivider: {
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(210,232,215,0.8)',
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  summaryLabel: { fontSize: 14, fontFamily: HomeFonts.interRegular },
-  summaryValue: { fontSize: 14, fontFamily: HomeFonts.interSemiBold },
 });

@@ -102,23 +102,21 @@ Delete requires confirmation
 
 Add List Screen
 
-Three options: Curated Lists, Build Your Own, Random
-Back button
+Two options: Study a Topic ("Words organized by topic"), Build Your Own ("Choose your own words")
+Back button returns to the previous screen
 
-Curated Lists Screen
+Study a Topic Screen
 
+Header: "Study a Topic"
 Shows all approved categories plus "Basic Words" (combines basic nouns, basic verbs, basic adjectives, basic adverbs)
-Each category shows word count for current language
-Categories with zero words are visible but dimmed and non-tappable
-Multi-select — user can select multiple categories
-Tapping "Add to My Lists" creates one separate pool per selected category
-Pool names default to category name; duplicates get numbered suffix (e.g. "Travel 2")
-No naming screen — names are automatic
-One category with more than 10 words asks for a deck size once, then returns
-Several categories created as separate lists do not ask. Each list uses the largest of 10, 15, 20, or 25 that fits, or the word count when it has 10 or fewer
-A combined list is one list, so it asks once when it has more than 10 words
-Returns to My Lists after creation
-If launched from study mode tap: routes to Select Study List after creation instead
+Each topic shows its word count for the current language. Topics the user already has are still shown
+Topics with zero words are visible but dimmed and non-tappable
+Tapping one topic continues. There is no multi-select
+If this language already has a list with exactly that topic's name, that list is used. Otherwise a new list is created with the topic's name and words
+More than 10 words and no chosen deck size: Deck Size once, and the choice is saved on the list. No deck is drawn on that screen
+10 or fewer words: Deck Size is skipped and the list's deck size is the word count
+Opened from My Lists: returns to My Lists
+Opened from a study mode: continues the same way as tapping that list on Choose What to Study. A saved deck opens Direction Select. Otherwise a short list or a list that already has a deck size goes to Direction Select, and an older list with no chosen size asks for Deck Size first
 
 Build Your Own Screen
 
@@ -131,16 +129,6 @@ On confirm: naming screen with default name "List N"
 More than 10 words: Deck Size once, then the same return as before. The choice is saved on the list and no deck is drawn yet
 10 or fewer words: Deck Size is skipped and the list's deck size is the word count
 "Add Missing Word" opens Add Missing Word without the list checklist. That word stays on this screen, already selected, until the list is confirmed. It is saved only in the new pool.
-Returns to My Lists after creation
-If launched from study mode tap: routes to Select Study List after creation
-
-Random Screen
-
-Stepper to pick word count (minimum 10, no maximum)
-"Generate" button creates random pool from master vocab list for current language
-Naming screen with default name "List N"
-More than 10 words: Deck Size once, then the same return as before. The choice is saved on the list and no deck is drawn yet
-10 or fewer words: Deck Size is skipped and the list's deck size is the word count
 Returns to My Lists after creation
 If launched from study mode tap: routes to Select Study List after creation
 
@@ -164,13 +152,13 @@ Wheel picker showing valid options: 10, 15, 20, 25
 Sizes larger than the list's eligible word count are omitted
 A previously saved size is pre-selected when it still fits. It does not skip this screen when the list has no saved deck and more than 10 eligible words
 Saves chosen size as remembered preference for this list
-On continue: draws that many eligible words, saves them as this list's deck, then opens Direction Select. Opened from Direction Select, it returns there with the new count and saves the size on the list. Opened while creating a list, it saves the size and does not draw a deck, then returns where creation returned before
+On continue: draws that many eligible words, saves them as this list's deck, then opens Direction Select. Opened from Direction Select, it returns there with the new count and saves the size on the list. Opened while creating a list, it saves the size and does not draw a deck. Build Your Own then returns to My Lists, or to Choose What to Study when it was opened from a study mode. Study a Topic then returns to My Lists, or continues into that list's study flow when it was opened from a study mode
 
 Direction Select Screen
 
 Near the top: "List name · N words", then "Change Size" and "New Deck"
 Change Size is hidden when the list has 10 or fewer eligible words. It redraws and saves the deck at the new size
-New Deck redraws the deck at the current size and replaces the saved words. No confirmation
+New Deck redraws the deck at the current size and replaces the saved words. No confirmation. Tapping it shows "New deck drawn" under the links for about two seconds
 Shows actual language names: "[Language] to English", "English to [Language]", "Mixed"
 User selects direction and confirms to start session. The saved deck ids are passed into the session
 
