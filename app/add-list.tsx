@@ -93,15 +93,19 @@ export default function AddListScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.topBar}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          hitSlop={8}
-          accessibilityLabel="Back"
-          style={[styles.backBtn, { backgroundColor: 'rgba(94,81,164,0.15)' }]}
-        >
-          <Image source={backChevron} style={styles.backIcon} accessibilityIgnoresInvertColors />
-        </TouchableOpacity>
-        <Text style={styles.screenTitle} pointerEvents="none">Add List</Text>
+        <View pointerEvents="none" style={styles.titleOverlay}>
+          <Text style={styles.screenTitle} numberOfLines={1}>Add List</Text>
+        </View>
+        <View style={styles.headerRow} pointerEvents="box-none">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            hitSlop={8}
+            accessibilityLabel="Back"
+            style={[styles.backBtn, { backgroundColor: 'rgba(94,81,164,0.15)' }]}
+          >
+            <Image source={backChevron} style={styles.backIcon} accessibilityIgnoresInvertColors />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.content}>
@@ -147,8 +151,20 @@ const styles = StyleSheet.create({
   topBar: {
     height: 36,
     marginHorizontal: 16,
+  },
+  headerRow: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  titleOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    paddingHorizontal: 48,
   },
   backBtn: {
     width: 36,
@@ -156,6 +172,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 1,
   },
   backIcon: {
     width: 17,
@@ -163,14 +180,12 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-90deg' }],
   },
   screenTitle: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
     textAlign: 'center',
     fontFamily: HomeFonts.interSemiBold,
     fontSize: 22,
     lineHeight: 27,
     color: '#25262B',
+    includeFontPadding: false,
   },
 
   content: {

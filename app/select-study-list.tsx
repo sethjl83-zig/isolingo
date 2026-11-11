@@ -111,10 +111,18 @@ export default function SelectStudyListScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <View style={styles.topBar}>
+        <View pointerEvents="none" style={styles.titleOverlay}>
+          <Text style={styles.screenTitle} numberOfLines={1}>
+            Choose What to Study
+          </Text>
+        </View>
+        <View style={styles.headerRow} pointerEvents="box-none">
         {showHome ? (
           <TouchableOpacity
             onPress={handleBack}
+            hitSlop={12}
             accessibilityLabel="Home"
+            style={styles.headerControl}
           >
             <Text style={styles.homeLink}>Home</Text>
           </TouchableOpacity>
@@ -123,14 +131,12 @@ export default function SelectStudyListScreen() {
             onPress={handleBack}
             hitSlop={8}
             accessibilityLabel="Back"
-            style={[styles.backBtn, { backgroundColor: hexAlpha(palette.primary, 0.15) }]}
+            style={[styles.backBtn, styles.headerControl, { backgroundColor: hexAlpha(palette.primary, 0.15) }]}
           >
             <Image source={backChevron} style={styles.backIcon} accessibilityIgnoresInvertColors />
           </TouchableOpacity>
         )}
-        <Text style={styles.screenTitle} pointerEvents="none">
-          Choose What to Study
-        </Text>
+        </View>
       </View>
 
       <ScrollView
@@ -194,9 +200,22 @@ const styles = StyleSheet.create({
   topBar: {
     height: 36,
     marginHorizontal: 16,
+  },
+  headerRow: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
   },
+  titleOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    paddingHorizontal: 56,
+  },
+  headerControl: { zIndex: 1 },
   backBtn: {
     width: 36,
     height: 36,
@@ -216,14 +235,12 @@ const styles = StyleSheet.create({
     color: '#5E51A4',
   },
   screenTitle: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
     textAlign: 'center',
     fontFamily: HomeFonts.interSemiBold,
     fontSize: 22,
     lineHeight: 27,
     color: '#25262B',
+    includeFontPadding: false,
   },
 
   scroll: { flex: 1, marginTop: 25 },

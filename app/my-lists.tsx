@@ -353,30 +353,34 @@ export default function MyListsScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.topBar}>
-        <TouchableOpacity
-          style={[styles.backBtn, { backgroundColor: hexAlpha(palette.primary, 0.15) }]}
-          onPress={() => router.back()}
-          hitSlop={8}
-          accessibilityLabel="Back"
-        >
-          <Image source={backChevron} style={styles.backIcon} accessibilityIgnoresInvertColors />
-        </TouchableOpacity>
+        <View pointerEvents="none" style={styles.titleOverlay}>
+          <Text style={styles.screenTitle} numberOfLines={1}>
+            My Lists
+          </Text>
+        </View>
+        <View style={styles.headerRow} pointerEvents="box-none">
+          <TouchableOpacity
+            style={[styles.backBtn, { backgroundColor: hexAlpha(palette.primary, 0.15) }]}
+            onPress={() => router.back()}
+            hitSlop={8}
+            accessibilityLabel="Back"
+          >
+            <Image source={backChevron} style={styles.backIcon} accessibilityIgnoresInvertColors />
+          </TouchableOpacity>
 
-        <Text style={styles.screenTitle} pointerEvents="none">
-          My Lists
-        </Text>
-
-        <TouchableOpacity
-          style={[styles.addBtn, { backgroundColor: palette.primary }]}
-          onPress={() => {
-            setAddListLaunchSource('my_lists');
-            router.push('/add-list');
-          }}
-          activeOpacity={0.8}
-          accessibilityLabel="Add List"
-        >
-          <Image source={plusIcon} style={styles.plusIcon} accessibilityIgnoresInvertColors />
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.addBtn, { backgroundColor: palette.primary }]}
+            onPress={() => {
+              setAddListLaunchSource('my_lists');
+              router.push('/add-list');
+            }}
+            hitSlop={8}
+            activeOpacity={0.8}
+            accessibilityLabel="Add List"
+          >
+            <Image source={plusIcon} style={styles.plusIcon} accessibilityIgnoresInvertColors />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <Text style={styles.subtitle}>Create and manage your word lists.</Text>
@@ -533,9 +537,21 @@ const styles = StyleSheet.create({
   topBar: {
     height: HEADER_HEIGHT,
     marginHorizontal: 16,
+  },
+  headerRow: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  titleOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    paddingHorizontal: 52,
   },
   backBtn: {
     width: 36,
@@ -543,6 +559,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 1,
   },
   backIcon: {
     width: 17,
@@ -550,14 +567,12 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-90deg' }],
   },
   screenTitle: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
     textAlign: 'center',
     fontFamily: HomeFonts.interSemiBold,
     fontSize: 24,
     lineHeight: 29,
     color: '#25262B',
+    includeFontPadding: false,
   },
   addBtn: {
     width: 39,
@@ -565,6 +580,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 1,
     ...cardShadow,
   },
   plusIcon: { width: 21, height: 20 },

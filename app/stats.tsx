@@ -126,20 +126,25 @@ export default function StatsScreen() {
     <SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]} edges={['top']}>
       <View style={styles.chrome}>
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => router.back()}
-            accessibilityLabel="Back"
-            activeOpacity={0.75}
-          >
-            <Image source={backChevron} style={styles.backIcon} resizeMode="contain" accessible={false} />
-          </TouchableOpacity>
-          <Text style={styles.screenTitle} pointerEvents="none">Stats</Text>
-          <View style={styles.langPill}>
-            <Image source={globe} style={styles.globe} resizeMode="contain" accessible={false} />
-            <Text style={[styles.langLabel, { color: palette.primary }]}>
-              {LANGUAGE_LABELS[language] ?? language}
-            </Text>
+          <View pointerEvents="none" style={styles.titleOverlay}>
+            <Text style={styles.screenTitle} numberOfLines={1}>Stats</Text>
+          </View>
+          <View style={styles.headerRow} pointerEvents="box-none">
+            <TouchableOpacity
+              style={styles.backBtn}
+              onPress={() => router.back()}
+              hitSlop={8}
+              accessibilityLabel="Back"
+              activeOpacity={0.75}
+            >
+              <Image source={backChevron} style={styles.backIcon} resizeMode="contain" accessible={false} />
+            </TouchableOpacity>
+            <View style={styles.langPill}>
+              <Image source={globe} style={styles.globe} resizeMode="contain" accessible={false} />
+              <Text style={[styles.langLabel, { color: palette.primary }]}>
+                {LANGUAGE_LABELS[language] ?? language}
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -485,9 +490,21 @@ const styles = StyleSheet.create({
   chrome: { paddingHorizontal: 16 },
   header: {
     height: 36,
+  },
+  headerRow: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  titleOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    paddingHorizontal: 108,
   },
   backBtn: {
     width: 36,
@@ -504,15 +521,13 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-90deg' }],
   },
   screenTitle: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
     textAlign: 'center',
     fontFamily: HomeFonts.interSemiBold,
     fontWeight: 'normal',
     fontSize: 22,
     lineHeight: 27,
     color: '#25262B',
+    includeFontPadding: false,
   },
   langPill: {
     flexDirection: 'row',
