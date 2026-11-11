@@ -18,8 +18,8 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
-        "foregroundImage": "./assets/akuity-icon-symbol-1024.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "foregroundImage": "./assets/akuity-android-foreground-1024.png",
+        "monochromeImage": "./assets/akuity-android-monochrome-1024.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
