@@ -21,6 +21,7 @@ import { loadPersistedState, savePersistedState } from '../storage/persistedStat
 import { preloadLanguageStats } from '../storage/statsStorage';
 import { wipeAppData } from '../storage/resetAppData';
 import { migrateSingleListDecks } from '../storage/listDecks';
+import { runIdMigration } from '../storage/idMigration';
 
 type Action =
   | { type: 'HYDRATE'; payload: Partial<AppState> }
@@ -190,18 +191,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     loadPersistedState().then(async stored => {
-      if (stored) {
+      let ready = stored;
+      try {
+        ready = await runIdMigration(stored);
+      } catch {
+        ready = stored;
+      }
+      if (ready) {
         dispatch({
           type: 'HYDRATE',
           payload: {
-            languageSelected: stored.selectedLanguage,
-            directionMode: stored.directionMode,
-            languagePools: stored.languagePools,
-            defaultPoolIds: stored.defaultPoolIds,
+            languageSelected: ready.selectedLanguage,
+            directionMode: ready.directionMode,
+            languagePools: ready.languagePools,
+            defaultPoolIds: ready.defaultPoolIds,
           },
         });
-        preloadLanguageStats(stored.selectedLanguage);
-        await migrateSingleListDecks(stored.languagePools ?? {});
+        preloadLanguageStats(ready.selectedLanguage);
+        try {
+          await migrateSingleListDecks(ready.languagePools ?? {});
+        } catch {
+          // A failed deck copy leaves study able to open.
+        }
       }
       hasHydrated.current = true;
       setIsReady(true);

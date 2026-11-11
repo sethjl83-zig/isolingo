@@ -10,8 +10,8 @@ import esRaw from '../../docs/V0_Spanish_Vocab_List.json';
  *
  * - `category` is coerced from a legacy plain string to `string[]` if needed.
  * - All new optional schema fields (articleTypes, genderedCounterpart,
- *   secondaryGlosses, alternateTargetAnswers) are spread through as-is; they
- *   are typed as optional/nullable on VocabItem so missing values are safe.
+ *   secondaryGlosses, alternateTargetAnswers, frequencyRank) are spread through
+ *   as-is. frequencyRank is stored and not read. Missing values are safe.
  */
 function normalizeItem(raw: unknown): VocabItem {
   const item = raw as VocabItem & { category: string | string[] };

@@ -47,6 +47,7 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-11-10: Saved word ids are translated once at startup from the bundled rename and merge maps. Lists, paused words, per-word frequency, stats, and both deck stores are covered. Unknown ids are left as they are. frequencyRank is on the vocab type and unused.
 - 2026-11-07: Add List is Study a Topic and Build Your Own. A topic reuses a list with that exact name, or creates one. More than 10 words with no chosen size asks for Deck Size once. From a study mode it continues into that list. Random is gone. New Deck on Direction shows "New deck drawn" for about two seconds.
 - 2026-11-06: Deck size is chosen when a single list is created, if it has more than 10 words. Several curated lists each take the largest size that fits. The first open uses that size. Older lists still ask once. Change Size updates the list.
 - 2026-11-05: A one-list deck that drops to 1–4 words warns once. At 0 words, study stops on “Your Deck Is Empty” until the user starts a new deck or exits. New Deck redraws from the list at the saved size.

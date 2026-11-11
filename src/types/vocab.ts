@@ -24,6 +24,8 @@ export interface VocabItem {
   secondaryGlosses?: string[] | null;
   /** Alternate accepted spellings/forms for the target-language answer. */
   alternateTargetAnswers?: string[] | null;
+  /** Corpus frequency rank. Present on bundled vocab. Not read by the app. */
+  frequencyRank?: number;
 
   user_added?: 'y';
 }
