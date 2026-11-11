@@ -23,5 +23,22 @@
   {"specific": "de_kirche", "general": "de_gebaeude"},
   {"specific": "de_haus", "general": "de_gebaeude"},
   {"specific": "de_hund", "general": "de_haustier"},
-  {"specific": "de_katze", "general": "de_haustier"}
+  {"specific": "de_katze", "general": "de_haustier"},
+  {"specific": "de_gitarre", "general": "de_instrument"},
+  {"specific": "de_klavier", "general": "de_instrument"},
+  {"specific": "de_geige", "general": "de_instrument"},
+  {"specific": "de_trommel", "general": "de_instrument"},
+  {"specific": "de_flote", "general": "de_instrument"},
+  {"specific": "de_trompete", "general": "de_instrument"},
+  {"specific": "de_golf", "general": "de_sport"},
+  {"specific": "de_boxen", "general": "de_sport"},
+  {"specific": "de_ringen", "general": "de_sport"},
+  {"specific": "de_turnen", "general": "de_sport"},
+  {"specific": "de_physik", "general": "de_wissenschaft"},
+  {"specific": "de_chemie", "general": "de_wissenschaft"},
+  {"specific": "de_biologie", "general": "de_wissenschaft"},
+  {"specific": "de_astronomie", "general": "de_wissenschaft"},
+  {"specific": "de_geologie", "general": "de_wissenschaft"},
+  {"specific": "de_munze", "general": "de_geld"},
+  {"specific": "de_geldschein", "general": "de_geld"}
 ]

@@ -27,7 +27,7 @@
   {"word1": "de_stabil", "word2": "de_instabil"},
   {"word1": "de_praktisch", "word2": "de_unpraktisch"},
   {"word1": "de_bequem", "word2": "de_unbequem"},
-  {"word1": "de_nass", "word2": "de_trocken_obj"},
+  {"word1": "de_nass", "word2": "de_trocken"},
   {"word1": "de_weich", "word2": "de_hart"},
   {"word1": "de_schmal", "word2": "de_breit"},
   {"word1": "de_gerade", "word2": "de_krumm"},
@@ -61,5 +61,14 @@
   {"word1": "de_anfang_noun", "word2": "de_ende_noun"},
   {"word1": "de_norden", "word2": "de_sueden"},
   {"word1": "de_osten", "word2": "de_westen"},
-  {"word1": "de_liebe", "word2": "de_hass"}
+  {"word1": "de_liebe", "word2": "de_hass"},
+  {"word1": "de_grossvater", "word2": "de_grossmutter"},
+  {"word1": "de_sieg", "word2": "de_niederlage"},
+  {"word1": "de_gewinn", "word2": "de_verlust"},
+  {"word1": "de_einzahlung", "word2": "de_abhebung"},
+  {"word1": "de_krieg", "word2": "de_frieden"},
+  {"word1": "de_demokratie", "word2": "de_diktatur"},
+  {"word1": "de_vermogenswert", "word2": "de_verbindlichkeit"},
+  {"word1": "de_bauen", "word2": "de_abreissen"},
+  {"word1": "de_einzahlen", "word2": "de_abheben"}
 ]
