@@ -65,6 +65,22 @@ const MODE_LABELS: Record<StudyType, string> = {
   gender: 'Gender',
 };
 
+function formatDeckSummary(
+  listName: string,
+  deckCount: number,
+  totalCount: number,
+  studyType: StudyType,
+): string {
+  if (deckCount === totalCount) {
+    return `${listName} · ${deckCount} ${deckCount === 1 ? 'word' : 'words'}`;
+  }
+  const totalLabel = `${totalCount} ${totalCount === 1 ? 'word' : 'words'} total`;
+  if (studyType === 'gender') {
+    return `${listName} · ${deckCount} ${deckCount === 1 ? 'noun' : 'nouns'} out of ${totalLabel}`;
+  }
+  return `${listName} · ${deckCount} ${deckCount === 1 ? 'word' : 'words'} out of ${totalLabel}`;
+}
+
 export default function DirectionScreen() {
   const router = useRouter();
   const { state, setDirectionMode, getLanguagePools } = useAppContext();
@@ -110,7 +126,10 @@ export default function DirectionScreen() {
     ? (LANGUAGE_NAMES[state.languageSelected] ?? 'Target')
     : 'Target';
   const directionOptions = getDirectionOptions(langName);
-  const wordLabel = activeDeckIds.length === 1 ? 'word' : 'words';
+  const totalWordCount = pool?.words.length ?? 0;
+  const deckSummary = pool
+    ? formatDeckSummary(pool.name, activeDeckIds.length, totalWordCount, studyType)
+    : `${activeDeckIds.length} ${activeDeckIds.length === 1 ? 'word' : 'words'}`;
 
   const handleChangeSize = () => {
     if (!pool || eligibleCount <= 10) return;
@@ -185,7 +204,7 @@ export default function DirectionScreen() {
         <View style={styles.directionBlock}>
           <View style={styles.deckBlock}>
             <Text style={styles.subheading}>
-              {pool ? `${pool.name} · ${activeDeckIds.length} ${wordLabel}` : `${activeDeckIds.length} ${wordLabel}`}
+              {deckSummary}
             </Text>
             <View style={styles.deckLinks}>
               {eligibleCount > 10 ? (

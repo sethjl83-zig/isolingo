@@ -247,7 +247,7 @@ export default function AddExistingWordScreen() {
         renderItem={renderWord}
         style={styles.list}
         contentContainerStyle={styles.listContent}
-        keyboardShouldPersistTaps="never"
+        keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         ListEmptyComponent={
           <Text style={styles.emptyText}>

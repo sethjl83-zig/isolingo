@@ -410,7 +410,7 @@ export default function Card1006({
                 <CorrectText color="#38A19A" style={styles.correctLabel} />
                 {alsoCorrect.length > 0 && (
                   <Text style={styles.alsoCorrect}>
-                    Also Accepted: {alsoCorrect.join(', ')}
+                    Also accepted: {alsoCorrect.join(', ')}
                   </Text>
                 )}
               </FeedbackNote>

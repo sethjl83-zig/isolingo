@@ -7,7 +7,7 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { getAddListLaunchSource } from './add-list';
 import {
-  View, Text, Image, TouchableOpacity, FlatList, ScrollView, StyleSheet, Platform, TextInput, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from 'react-native';
+  View, Text, Image, TouchableOpacity, FlatList, ScrollView, StyleSheet, Platform, TextInput, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Animated } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -166,6 +166,25 @@ export default function BuildYourOwnScreen() {
 
   const selectedCount = selectedIds.size + newWords.length;
   const canProceed = selectedCount >= MIN_WORDS;
+  const wordsStillNeeded = Math.max(0, MIN_WORDS - selectedCount);
+  const addListLabel = canProceed
+    ? `Add to My Lists (${selectedCount})`
+    : `Select ${wordsStillNeeded} more ${wordsStillNeeded === 1 ? 'word' : 'words'}`;
+  const countScale = useRef(new Animated.Value(1)).current;
+  const countReady = useRef(false);
+
+  useEffect(() => {
+    if (!countReady.current) {
+      countReady.current = true;
+      return;
+    }
+    countScale.setValue(1.25);
+    Animated.timing(countScale, {
+      toValue: 1,
+      duration: 180,
+      useNativeDriver: true,
+    }).start();
+  }, [selectedCount, countScale]);
 
   useFocusEffect(
     useCallback(() => {
@@ -474,7 +493,7 @@ export default function BuildYourOwnScreen() {
         extraData={newWords}
         style={styles.list}
         contentContainerStyle={styles.listContent}
-        keyboardShouldPersistTaps="never"
+        keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         ListEmptyComponent={
           <Text style={styles.emptyText}>
@@ -484,8 +503,27 @@ export default function BuildYourOwnScreen() {
       />
 
       <View style={styles.bottomBar}>
+        <View style={styles.progressBlock}>
+          <View style={styles.progressLine}>
+            <Animated.Text style={[styles.progressRest, { transform: [{ scale: countScale }] }]}>
+              {selectedCount}
+            </Animated.Text>
+            <Text style={styles.progressRest}>{` of ${MIN_WORDS} words selected`}</Text>
+          </View>
+          <View style={[styles.progressTrack, { backgroundColor: palette.badgeFill }]}>
+            <View
+              style={[
+                styles.progressFill,
+                {
+                  backgroundColor: palette.primary,
+                  width: `${Math.min(100, (selectedCount / MIN_WORDS) * 100)}%`,
+                },
+              ]}
+            />
+          </View>
+        </View>
         <StudyButton
-          label={`Add to My Lists (${selectedCount} Selected)`}
+          label={addListLabel}
           variant="primary"
           size="medium"
           onPress={handleProceed}
@@ -664,6 +702,31 @@ const styles = StyleSheet.create({
   },
   checkIcon: { width: 18, height: 18 },
 
+  progressBlock: {
+    alignSelf: 'stretch',
+    gap: 8,
+  },
+  progressLine: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  progressRest: {
+    fontFamily: HomeFonts.jakartaRegular,
+    fontSize: 14,
+    lineHeight: 18,
+    color: 'rgba(0,0,0,0.6)',
+  },
+  progressTrack: {
+    alignSelf: 'stretch',
+    height: 4,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: 4,
+    borderRadius: 2,
+  },
   bottomBar: {
     alignItems: 'center',
     paddingTop: 15,

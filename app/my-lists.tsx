@@ -164,7 +164,9 @@ export default function MyListsScreen() {
 
   if (!isReady || !language) return null;
 
-  const pools = getLanguagePools(language);
+  const pools = [...getLanguagePools(language)].sort((a, b) =>
+    a.name.toLocaleLowerCase().localeCompare(b.name.toLocaleLowerCase()),
+  );
 
   // Pool IDs that are currently set as default for each study type
   const defaultGeneralIds = getDefaultPools('general_vocab', language).map(p => p.id);

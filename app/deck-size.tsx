@@ -521,7 +521,7 @@ const styles = StyleSheet.create({
     paddingTop: 35,
     gap: 40,
   },
-  selectBlock: { gap: 18, alignItems: 'center' },
+  selectBlock: { gap: 18, alignItems: 'center', zIndex: 2 },
   titleBlock: { gap: 10, alignItems: 'center', alignSelf: 'stretch' },
 
   loadingBox: {
@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
     color: 'rgba(0,0,0,0.6)',
   },
 
-  menuWrap: { alignSelf: 'stretch', gap: 8 },
+  menuWrap: { alignSelf: 'stretch' },
   sizeField: {
     height: 48,
     borderWidth: 1,
@@ -581,6 +581,12 @@ const styles = StyleSheet.create({
   },
   chevron: { width: 10.5, height: 6 },
   menu: {
+    position: 'absolute',
+    top: 56,
+    left: 0,
+    right: 0,
+    zIndex: 3,
+    elevation: 4,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.4)',
     borderRadius: 12,
