@@ -47,6 +47,7 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-11-12: Study a Topic uses Material Community icons, in the existing purple circle, for the eleven topics that have no designed image.
 - 2026-11-12: Deck Size menu overlays instead of pushing the note and Continue. Build Your Own and Add Word select a word on the first tap with the keyboard open. Build Your Own shows “N of 10 words selected” and the Add button says how many more are needed. Direction names the deck against the list total. “Also accepted” is sentence case. My Lists is alphabetical.
 - 2026-11-10: Screen titles no longer sit on the Home and Back controls. Those controls keep their size, and their tap targets are at least 44 points. The same header is fixed on the other list and study screens.
 - 2026-11-10: Saved word ids are translated once at startup from the bundled rename and merge maps. Lists, paused words, per-word frequency, stats, and both deck stores are covered. Unknown ids are left as they are. frequencyRank is on the vocab type and unused.

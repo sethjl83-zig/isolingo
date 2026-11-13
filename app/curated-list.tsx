@@ -6,6 +6,7 @@
 import React, { useRef, useMemo, useCallback, useEffect } from 'react';
 import { getAddListLaunchSource } from './add-list';
 import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -119,6 +120,26 @@ const CATEGORY_ICONS: Record<string, CategoryIcon> = {
     height: 28,
   },
 };
+
+/** Topics with no designed asset. Drawn in the same 56 pt circle, at the designed glyph size. */
+const VECTOR_TOPIC_ICONS: Record<
+  string,
+  React.ComponentProps<typeof MaterialCommunityIcons>['name']
+> = {
+  travel: 'airplane',
+  work: 'briefcase',
+  health: 'medical-bag',
+  emotions: 'emoticon-happy',
+  shopping: 'cart',
+  time: 'clock',
+  objects: 'cube',
+  culture: 'drama-masks',
+  technology: 'laptop',
+  leisure: 'party-popper',
+  connectors: 'link-variant',
+};
+
+const VECTOR_ICON_SIZE = 28;
 
 function hexAlpha(hex: string, alpha: number) {
   const h = hex.replace('#', '');
@@ -276,7 +297,9 @@ export default function CuratedListScreen() {
 
   const renderEntry = ({ item: entry }: { item: CuratedEntry }) => {
     const isEmpty = entry.words.length === 0;
-    const icon = CATEGORY_ICONS[entry.key] ?? BOOK_ICON;
+    const icon = CATEGORY_ICONS[entry.key];
+    const vectorName = icon ? undefined : VECTOR_TOPIC_ICONS[entry.key];
+    const fallback = icon ?? BOOK_ICON;
     const wellColor = {
       orange: hexAlpha(palette.listIconOrange, 0.12),
       purple: hexAlpha(palette.primary, 0.12),
@@ -284,7 +307,7 @@ export default function CuratedListScreen() {
       food: hexAlpha(palette.listIconFood, 0.12),
       blue: hexAlpha(palette.listIconBlue, 0.12),
       nature: hexAlpha(palette.listIconNature, 0.12),
-    }[icon.well];
+    }[fallback.well];
 
     return (
       <TouchableOpacity
@@ -294,13 +317,21 @@ export default function CuratedListScreen() {
         activeOpacity={isEmpty ? 1 : 0.75}
       >
         <View style={[styles.card, { borderColor: palette.listCardBorder }]}>
-          {icon.baked ? (
-            <Image source={icon.source} style={styles.bakedWell} accessibilityIgnoresInvertColors />
+          {vectorName ? (
+            <View style={[styles.iconWell, { backgroundColor: hexAlpha(palette.primary, 0.12) }]}>
+              <MaterialCommunityIcons
+                name={vectorName}
+                size={VECTOR_ICON_SIZE}
+                color={palette.primary}
+              />
+            </View>
+          ) : fallback.baked ? (
+            <Image source={fallback.source} style={styles.bakedWell} accessibilityIgnoresInvertColors />
           ) : (
             <View style={[styles.iconWell, { backgroundColor: wellColor }]}>
               <Image
-                source={icon.source}
-                style={{ width: icon.width, height: icon.height }}
+                source={fallback.source}
+                style={{ width: fallback.width, height: fallback.height }}
                 accessibilityIgnoresInvertColors
               />
             </View>
