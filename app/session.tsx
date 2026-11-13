@@ -31,6 +31,7 @@ import Card1006 from '@/src/components/cards/Card1006';
 import ErrorBoundary from '@/src/components/ErrorBoundary';
 import StudyButton from '@/src/components/ui/StudyButton';
 import { SessionWordMgmtProvider } from '@/src/context/SessionWordMgmtContext';
+import { WordMgmtConfirmHost } from '@/src/components/ui/WordMgmtStrip';
 import {
   ensureLanguageStatsLoaded,
   saveWordStats,
@@ -345,8 +346,16 @@ export default function SessionScreen() {
 
   // ── Card sweep transition ─────────────────────────────────────────────────
   // Phase 1 (140 ms): current card sweeps out to the left.
-  // Phase 2 (150 ms): new card snaps in from the right and sweeps to centre.
+  // The view then waits off the right edge until the new card is committed.
+  // Phase 2 (150 ms): that committed card sweeps to centre.
   const sweepX = useSharedValue(0);
+  const transitioningRef = useRef(false);
+  const awaitingFromKeyRef = useRef<string | null>(null);
+  const sweepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const unlockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const transitionCardKey = currentCard
+    ? getCardKey(currentCard, state.sessionCardIndex)
+    : '';
 
   const cardSlideStyle = useAnimatedStyle(() => ({
     flex: 1,
@@ -354,19 +363,46 @@ export default function SessionScreen() {
   }));
 
   const handleNext = useCallback(() => {
+    if (transitioningRef.current) return;
+    transitioningRef.current = true;
     sweepX.value = withTiming(-SCREEN_WIDTH, {
       duration: 140,
       easing: Easing.in(Easing.quad),
     });
-    setTimeout(() => {
-      sweepX.value = SCREEN_WIDTH;   // instant snap: new card starts off-screen right
-      loadNextCard();                 // React re-renders new card at SCREEN_WIDTH
-      sweepX.value = withTiming(0, {
-        duration: 150,
-        easing: Easing.out(Easing.quad),
-      });
+    if (sweepTimerRef.current) clearTimeout(sweepTimerRef.current);
+    sweepTimerRef.current = setTimeout(() => {
+      sweepX.value = SCREEN_WIDTH;
+      awaitingFromKeyRef.current = cardKeyRef.current;
+      loadNextCard();
     }, 145);
-  }, [loadNextCard]);
+  }, [loadNextCard, sweepX]);
+
+  useEffect(() => {
+    return () => {
+      if (sweepTimerRef.current) clearTimeout(sweepTimerRef.current);
+      if (unlockTimerRef.current) clearTimeout(unlockTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (awaitingFromKeyRef.current === null) return;
+    if (!transitionCardKey || transitionCardKey === awaitingFromKeyRef.current) {
+      sweepX.value = 0;
+      awaitingFromKeyRef.current = null;
+      transitioningRef.current = false;
+      return;
+    }
+    awaitingFromKeyRef.current = null;
+    sweepX.value = SCREEN_WIDTH;
+    sweepX.value = withTiming(0, {
+      duration: 150,
+      easing: Easing.out(Easing.quad),
+    });
+    if (unlockTimerRef.current) clearTimeout(unlockTimerRef.current);
+    unlockTimerRef.current = setTimeout(() => {
+      transitioningRef.current = false;
+    }, 150);
+  }, [transitionCardKey, sweepX]);
 
   const handleWordRemoved = useCallback(
     (vocabId: string) => {
@@ -694,6 +730,7 @@ export default function SessionScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: palette.background }]} edges={['top', 'left', 'right']}>
+      <WordMgmtConfirmHost>
       <SessionWordMgmtProvider
         language={language}
         poolIds={poolIds}
@@ -786,6 +823,7 @@ export default function SessionScreen() {
         </ErrorBoundary>
         </Animated.View>
       </SessionWordMgmtProvider>
+      </WordMgmtConfirmHost>
       {deckNotice === 'small' || deckNotice === 'no-words' ? (
         <DeckNoticeDialog
           notice={deckNotice}

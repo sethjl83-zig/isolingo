@@ -1,8 +1,8 @@
 /**
  * WordMgmtStrip — word-management row shown at the bottom of every study card.
  */
-import React, { useCallback, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Image } from 'react-native';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Pressable, BackHandler } from 'react-native';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HomeFonts } from '@/constants/homeFonts';
@@ -23,87 +23,136 @@ interface Props {
   words: WordFrequencyTarget[];
 }
 
+interface ConfirmDialog {
+  title: string;
+  message?: string;
+  confirmLabel: string;
+  cancelLabel?: string;
+  onConfirm?: () => void;
+}
+
+const ConfirmContext = createContext<(dialog: ConfirmDialog) => void>(() => {});
+
+export function WordMgmtConfirmHost({ children }: { children: React.ReactNode }) {
+  const [dialog, setDialog] = useState<ConfirmDialog | null>(null);
+
+  useEffect(() => {
+    if (!dialog) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      setDialog(null);
+      return true;
+    });
+    return () => sub.remove();
+  }, [dialog]);
+
+  return (
+    <ConfirmContext.Provider value={setDialog}>
+      <View style={styles.host}>
+        {children}
+        {dialog ? (
+          <Pressable style={styles.scrim} onPress={() => setDialog(null)}>
+            <Pressable style={styles.sheet} onPress={() => {}}>
+              <View style={styles.copy}>
+                <Text style={styles.title}>{dialog.title}</Text>
+                {dialog.message ? <Text style={styles.message}>{dialog.message}</Text> : null}
+              </View>
+              <View style={styles.actions}>
+                <TouchableOpacity
+                  style={styles.filled}
+                  onPress={() => {
+                    const confirm = dialog.onConfirm;
+                    setDialog(null);
+                    confirm?.();
+                  }}
+                  activeOpacity={0.75}
+                >
+                  <Text style={styles.filledLabel}>{dialog.confirmLabel}</Text>
+                </TouchableOpacity>
+                {dialog.cancelLabel ? (
+                  <TouchableOpacity
+                    style={styles.outline}
+                    onPress={() => setDialog(null)}
+                    activeOpacity={0.75}
+                  >
+                    <Text style={styles.outlineLabel}>{dialog.cancelLabel}</Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+            </Pressable>
+          </Pressable>
+        ) : null}
+      </View>
+    </ConfirmContext.Provider>
+  );
+}
+
 export default function WordMgmtStrip({ words }: Props) {
   const insets = useSafeAreaInsets();
   const { removeWord, replaceWord, pauseWord, editsSavedDeck } = useSessionWordMgmt();
+  const showConfirm = useContext(ConfirmContext);
   const [frequencyVisible, setFrequencyVisible] = useState(false);
   const [pickerFlow, setPickerFlow] = useState<PickerFlow | null>(null);
 
   const showRemoveConfirm = useCallback(
     (word: WordFrequencyTarget) => {
-      Alert.alert(
-        editsSavedDeck
+      showConfirm({
+        title: editsSavedDeck
           ? 'Remove this word from your deck?'
           : 'Skip this word for the rest of this session?',
-        undefined,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Confirm',
-            style: 'destructive',
-            onPress: () => removeWord(word.id),
-          },
-        ],
-      );
+        confirmLabel: 'Confirm',
+        cancelLabel: 'Cancel',
+        onConfirm: () => removeWord(word.id),
+      });
     },
-    [removeWord, editsSavedDeck],
+    [removeWord, editsSavedDeck, showConfirm],
   );
 
   const showReplaceConfirm = useCallback(
     (word: WordFrequencyTarget) => {
-      Alert.alert(
-        editsSavedDeck
+      showConfirm({
+        title: editsSavedDeck
           ? 'Replace this word in your deck?'
           : 'Replace this word in your current session?',
-        undefined,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Confirm',
-            style: 'destructive',
-            onPress: () => {
-              const result = replaceWord(word.id);
-              if (!result.success) {
-                if (result.error === 'No other words are available in this list.') {
-                  Alert.alert(result.error);
-                } else {
-                  Alert.alert(
-                    'Could not replace word',
-                    result.error ?? 'Please try again.',
-                  );
-                }
-              }
-            },
-          },
-        ],
-      );
+        confirmLabel: 'Confirm',
+        cancelLabel: 'Cancel',
+        onConfirm: () => {
+          const result = replaceWord(word.id);
+          if (!result.success) {
+            if (result.error === 'No other words are available in this list.') {
+              showConfirm({ title: result.error, confirmLabel: 'OK' });
+            } else {
+              showConfirm({
+                title: 'Could not replace word',
+                message: result.error ?? 'Please try again.',
+                confirmLabel: 'OK',
+              });
+            }
+          }
+        },
+      });
     },
-    [replaceWord, editsSavedDeck],
+    [replaceWord, editsSavedDeck, showConfirm],
   );
 
   const showPauseConfirm = useCallback(
     (word: WordFrequencyTarget) => {
-      Alert.alert(
-        'Pause this word?',
-        undefined,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Confirm',
-            onPress: () => {
-              const result = pauseWord(word.id);
-              if (!result.success) {
-                Alert.alert(
-                  'Could not pause word',
-                  result.error ?? 'Please try again.',
-                );
-              }
-            },
-          },
-        ],
-      );
+      showConfirm({
+        title: 'Pause this word?',
+        confirmLabel: 'Confirm',
+        cancelLabel: 'Cancel',
+        onConfirm: () => {
+          const result = pauseWord(word.id);
+          if (!result.success) {
+            showConfirm({
+              title: 'Could not pause word',
+              message: result.error ?? 'Please try again.',
+              confirmLabel: 'OK',
+            });
+          }
+        },
+      });
     },
-    [pauseWord],
+    [pauseWord, showConfirm],
   );
 
   const startFlow = useCallback(
@@ -176,6 +225,83 @@ export default function WordMgmtStrip({ words }: Props) {
 }
 
 const styles = StyleSheet.create({
+  host: { flex: 1 },
+  scrim: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    zIndex: 20,
+    elevation: 20,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    paddingTop: 243,
+    paddingBottom: 24,
+  },
+  sheet: {
+    width: 313,
+    maxWidth: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    padding: 20,
+    alignItems: 'center',
+    gap: 20,
+  },
+  copy: { gap: 10, alignItems: 'center', alignSelf: 'stretch' },
+  title: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 22,
+    color: '#25262B',
+    textAlign: 'center',
+  },
+  message: {
+    fontFamily: HomeFonts.interRegular,
+    fontWeight: 'normal',
+    fontSize: 14.8,
+    lineHeight: 20,
+    textAlign: 'center',
+    color: 'rgba(0,0,0,0.6)',
+  },
+  actions: { gap: 10, alignItems: 'center', alignSelf: 'stretch' },
+  filled: {
+    width: 220,
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#5E51A4',
+  },
+  filledLabel: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#FFFFFF',
+  },
+  outline: {
+    width: 220,
+    height: 48,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#5E51A4',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  outlineLabel: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#5E51A4',
+  },
   strip: {
     flexDirection: 'row',
     justifyContent: 'space-between',
