@@ -54,7 +54,12 @@ export default function SelectStudyListScreen() {
   const isGender = studyType === 'gender';
 
   const pools = useMemo(
-    () => (language ? getLanguagePools(language) : []),
+    () =>
+      language
+        ? [...getLanguagePools(language)].sort((a, b) =>
+            a.name.toLocaleLowerCase().localeCompare(b.name.toLocaleLowerCase()),
+          )
+        : [],
     [language, getLanguagePools],
   );
 

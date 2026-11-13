@@ -47,6 +47,7 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-11-12: Choose What to Study sorts lists by name. Study a Topic replaces the Body bust with a standing figure and gives the library icons their own muted colors.
 - 2026-11-12: Remove, Replace, and Pause wait until the next card is committed before sliding it in, and their confirms are an overlay sheet instead of a system alert.
 - 2026-11-12: Study a Topic uses Material Community icons, in the existing purple circle, for the eleven topics that have no designed image.
 - 2026-11-12: Deck Size menu overlays instead of pushing the note and Continue. Build Your Own and Add Word select a word on the first tap with the keyboard open. Build Your Own shows “N of 10 words selected” and the Add button says how many more are needed. Direction names the deck against the list total. “Also accepted” is sentence case. My Lists is alphabetical.

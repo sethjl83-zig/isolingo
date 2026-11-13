@@ -100,13 +100,6 @@ const CATEGORY_ICONS: Record<string, CategoryIcon> = {
     width: 30,
     height: 30,
   },
-  body: {
-    source: require('@/assets/images/lists/icon-body-well.png'),
-    well: 'blue',
-    width: 56,
-    height: 56,
-    baked: true,
-  },
   nature: {
     source: require('@/assets/images/lists/icon-nature.png'),
     well: 'nature',
@@ -121,22 +114,27 @@ const CATEGORY_ICONS: Record<string, CategoryIcon> = {
   },
 };
 
-/** Topics with no designed asset. Drawn in the same 56 pt circle, at the designed glyph size. */
+/** Library icons in the 56 pt circle. Omitted colors use the existing purple. */
 const VECTOR_TOPIC_ICONS: Record<
   string,
-  React.ComponentProps<typeof MaterialCommunityIcons>['name']
+  {
+    name: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
+    color?: string;
+    background?: string;
+  }
 > = {
-  travel: 'airplane',
-  work: 'briefcase',
-  health: 'medical-bag',
-  emotions: 'emoticon-happy',
-  shopping: 'cart',
-  time: 'clock',
-  objects: 'cube',
-  culture: 'drama-masks',
-  technology: 'laptop',
-  leisure: 'party-popper',
-  connectors: 'link-variant',
+  body: { name: 'human-male', color: '#5DB0FA', background: '#ECF6FE' },
+  travel: { name: 'airplane', color: '#4A7FA5', background: '#E9F0F4' },
+  work: { name: 'briefcase', color: '#7A5642', background: '#EFEBE8' },
+  emotions: { name: 'emoticon-happy', color: '#C08448', background: '#F7F0E9' },
+  health: { name: 'heart-pulse', color: '#C4544F', background: '#F8EAEA' },
+  time: { name: 'clock', color: '#1C1C1C', background: '#E4E4E4' },
+  technology: { name: 'laptop', color: '#7A828A', background: '#EFF0F1' },
+  objects: { name: 'cube', color: '#8A6246', background: '#F1ECE9' },
+  shopping: { name: 'cart', color: '#3E8F5A', background: '#E8F2EB' },
+  culture: { name: 'drama-masks' },
+  leisure: { name: 'party-popper' },
+  connectors: { name: 'link-variant' },
 };
 
 const VECTOR_ICON_SIZE = 28;
@@ -298,7 +296,7 @@ export default function CuratedListScreen() {
   const renderEntry = ({ item: entry }: { item: CuratedEntry }) => {
     const isEmpty = entry.words.length === 0;
     const icon = CATEGORY_ICONS[entry.key];
-    const vectorName = icon ? undefined : VECTOR_TOPIC_ICONS[entry.key];
+    const vector = VECTOR_TOPIC_ICONS[entry.key];
     const fallback = icon ?? BOOK_ICON;
     const wellColor = {
       orange: hexAlpha(palette.listIconOrange, 0.12),
@@ -317,12 +315,17 @@ export default function CuratedListScreen() {
         activeOpacity={isEmpty ? 1 : 0.75}
       >
         <View style={[styles.card, { borderColor: palette.listCardBorder }]}>
-          {vectorName ? (
-            <View style={[styles.iconWell, { backgroundColor: hexAlpha(palette.primary, 0.12) }]}>
+          {vector ? (
+            <View
+              style={[
+                styles.iconWell,
+                { backgroundColor: vector.background ?? hexAlpha(palette.primary, 0.12) },
+              ]}
+            >
               <MaterialCommunityIcons
-                name={vectorName}
+                name={vector.name}
                 size={VECTOR_ICON_SIZE}
-                color={palette.primary}
+                color={vector.color ?? palette.primary}
               />
             </View>
           ) : fallback.baked ? (
