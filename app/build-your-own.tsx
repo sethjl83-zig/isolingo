@@ -10,7 +10,7 @@ import {
   View, Text, Image, TouchableOpacity, FlatList, ScrollView, StyleSheet, Platform, TextInput, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Animated } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect, useNavigation } from 'expo-router';
 import { Colors, GenderColors } from '@/constants/theme';
 import { HomeFonts } from '@/constants/homeFonts';
@@ -104,6 +104,7 @@ export default function BuildYourOwnScreen() {
   const { state, isReady, getLanguagePools, createPool } = useAppContext();
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
+  const insets = useSafeAreaInsets();
 
   const language = state.languageSelected;
 
@@ -420,6 +421,11 @@ export default function BuildYourOwnScreen() {
   // ── Step 1: Word selection ────────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.flex} edges={['top', 'left', 'right']}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top : 0}
+      >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View>
           <View style={styles.topBar}>
@@ -540,6 +546,7 @@ export default function BuildYourOwnScreen() {
           textStyle={styles.primaryLabel}
         />
       </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

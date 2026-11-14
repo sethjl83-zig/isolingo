@@ -7,10 +7,10 @@
  * minimum word count, and no naming step.
  */
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, FlatList, ScrollView, StyleSheet, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { View, Text, Image, TouchableOpacity, FlatList, ScrollView, StyleSheet, Platform, TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Colors, GenderColors } from '@/constants/theme';
 import { HomeFonts } from '@/constants/homeFonts';
@@ -48,6 +48,7 @@ export default function AddExistingWordScreen() {
   const { state, isReady, updatePool, getLanguagePools } = useAppContext();
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
+  const insets = useSafeAreaInsets();
 
   const language = state.languageSelected;
 
@@ -177,6 +178,11 @@ export default function AddExistingWordScreen() {
 
   return (
     <SafeAreaView style={styles.flex} edges={['top', 'left', 'right']}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top : 0}
+      >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View>
           <View style={styles.topBar}>
@@ -272,6 +278,7 @@ export default function AddExistingWordScreen() {
           textStyle={styles.addLabel}
         />
       </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
