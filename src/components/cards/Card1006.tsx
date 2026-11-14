@@ -2,7 +2,7 @@
  * CARD_1006 — Noun / Vocab Production
  * Direction-sensitive translation card. German uses gender tiles; FR/ES uses determiner+noun input.
  */
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useLayoutEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -35,6 +35,8 @@ const GENDERS: Gender[] = ['masculine', 'feminine', 'neuter'];
 
 interface Props {
   card: Card1006Data;
+  /** Session card id. Changes for every new card, including the same word. */
+  cardId: string;
   language: Language;
   onNext: () => void;
   onFlip: () => void;
@@ -53,6 +55,7 @@ type CardState =
 
 export default function Card1006({
   card,
+  cardId,
   language,
   onNext,
   onFlip,
@@ -69,6 +72,17 @@ export default function Card1006({
   const [alsoCorrect, setAlsoCorrect] = useState<string[]>([]);
   const [showTypoHint, setShowTypoHint] = useState(false);
   const attemptRef = useRef(0);
+  const inputRef = useRef<TextInput>(null);
+
+  useLayoutEffect(() => {
+    setInputText('');
+    setSelectedGender(null);
+    setCardState('typing');
+    setAlsoCorrect([]);
+    setShowTypoHint(false);
+    attemptRef.current = 0;
+    inputRef.current?.focus();
+  }, [cardId]);
 
   const isGerman = language === 'de';
   const isNativeToTarget = card.direction === 'native_to_target';
@@ -340,6 +354,7 @@ export default function Card1006({
 
             {/* Input */}
             <TextInput
+              ref={inputRef}
               style={[
                 styles.input,
                 cardState === 'correct' && styles.inputCorrect,

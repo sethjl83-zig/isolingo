@@ -740,7 +740,6 @@ export default function SessionScreen() {
       >
         <Animated.View style={cardSlideStyle}>
         <ErrorBoundary
-          key={cardKey}
           resetKeys={[cardKey]}
           title="Card error"
           onReset={loadNextCard}
@@ -802,8 +801,8 @@ export default function SessionScreen() {
 
           {currentCard.type === 'CARD_1006' && (
             <Card1006
-              key={cardKey}
               card={currentCard}
+              cardId={cardKey}
               language={language}
               onNext={handleNext}
               onFlip={() => {}}
