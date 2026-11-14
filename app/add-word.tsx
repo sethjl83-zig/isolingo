@@ -8,7 +8,7 @@
  * Lists, Build Your Own, or Random.
  */
 import React, { useMemo, useState, useCallback } from 'react';
-import { View, Text, Image, TextInput, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, Image, TextInput, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,6 +20,7 @@ import type { VocabItem, PartOfSpeech, Gender, Language } from '@/src/types/voca
 import type { Pool } from '@/src/types/pool';
 import StudyButton from '@/src/components/ui/StudyButton';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
+import ConfirmSheet, { type ConfirmSheetRequest } from '@/src/components/ui/ConfirmSheet';
 import { holdBuildYourOwnWord } from './build-your-own';
 
 const backChevron = require('@/assets/images/lists/back-chevron.png');
@@ -173,6 +174,7 @@ export default function AddWordScreen() {
   const [plural, setPlural] = useState('');
   const [categories, setCategories] = useState<string[]>(['general']);
   const [selectedPoolIds, setSelectedPoolIds] = useState<Set<string>>(new Set());
+  const [sheet, setSheet] = useState<ConfirmSheetRequest | null>(null);
 
   const toggleCategory = (cat: string) => {
     setCategories(prev =>
@@ -196,7 +198,11 @@ export default function AddWordScreen() {
   const handleSave = () => {
     const error = validateEntry(lemma, english, pos, gender, language);
     if (error) {
-      Alert.alert('Check your entry', error);
+      setSheet({
+        title: 'Check your entry',
+        message: error,
+        buttons: [{ label: 'OK' }],
+      });
       return;
     }
 
@@ -230,7 +236,11 @@ export default function AddWordScreen() {
     if (!hasPools) return;
 
     if (selectedPoolIds.size === 0) {
-      Alert.alert('No list selected', 'Please choose at least one list to add this word to.');
+      setSheet({
+        title: 'No list selected',
+        message: 'Please choose at least one list to add this word to.',
+        buttons: [{ label: 'OK' }],
+      });
       return;
     }
 
@@ -240,10 +250,11 @@ export default function AddWordScreen() {
       pool.words.some(pw => pw.item.lemma.toLowerCase() === normalizedLemma),
     );
     if (duplicate) {
-      Alert.alert(
-        'Word already in list',
-        'This word already exists in one or more of your selected lists.',
-      );
+      setSheet({
+        title: 'Word already in list',
+        message: 'This word already exists in one or more of your selected lists.',
+        buttons: [{ label: 'OK' }],
+      });
       return;
     }
 
@@ -259,9 +270,13 @@ export default function AddWordScreen() {
 
   useAndroidBackHandler(
     useCallback(() => {
+      if (sheet) {
+        setSheet(null);
+        return true;
+      }
       router.back();
       return true;
-    }, [router]),
+    }, [router, sheet]),
   );
 
   const languageName = language === 'de' ? 'German' : language === 'fr' ? 'French' : 'Spanish';
@@ -462,6 +477,7 @@ export default function AddWordScreen() {
           />
         </View>
       </ScrollView>
+      {sheet ? <ConfirmSheet {...sheet} onDismiss={() => setSheet(null)} /> : null}
     </SafeAreaView>
   );
 }

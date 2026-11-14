@@ -5,7 +5,7 @@
  * dashboard "My Vocabulary" button.
  */
 import React, { useEffect, useCallback, useState } from 'react';
-import { View, Text, Image, TouchableOpacity, FlatList, Alert, Modal, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, FlatList, Modal, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,6 +17,7 @@ import { useAppContext } from '@/src/context/AppContext';
 import type { Pool } from '@/src/types/pool';
 import type { StudyType } from '@/src/types/state';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
+import ConfirmSheet, { type ConfirmSheetRequest } from '@/src/components/ui/ConfirmSheet';
 import { setAddListLaunchSource } from './add-list';
 
 const backChevron = require('@/assets/images/lists/back-chevron.png');
@@ -146,6 +147,7 @@ export default function MyListsScreen() {
   const palette = Colors[scheme];
   const insets = useSafeAreaInsets();
   const [defaultDialog, setDefaultDialog] = useState<DefaultDialogState | null>(null);
+  const [sheet, setSheet] = useState<ConfirmSheetRequest | null>(null);
 
   const language = state.languageSelected;
 
@@ -157,9 +159,13 @@ export default function MyListsScreen() {
 
   useAndroidBackHandler(
     useCallback(() => {
+      if (sheet) {
+        setSheet(null);
+        return true;
+      }
       router.back();
       return true;
-    }, [router]),
+    }, [router, sheet]),
   );
 
   if (!isReady || !language) return null;
@@ -241,18 +247,18 @@ export default function MyListsScreen() {
   };
 
   const handleDelete = (pool: Pool) => {
-    Alert.alert(
-      'Delete List',
-      `Delete "${pool.name}"? This cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
+    setSheet({
+      title: 'Delete List',
+      message: `Delete "${pool.name}"? This cannot be undone.`,
+      buttons: [
+        { label: 'Cancel', style: 'cancel' },
         {
-          text: 'Delete',
+          label: 'Delete',
           style: 'destructive',
           onPress: () => deletePool(pool.id, language),
         },
       ],
-    );
+    });
   };
 
   // ── Pool row renderer ──────────────────────────────────────────────────────
@@ -509,6 +515,7 @@ export default function MyListsScreen() {
         </Pressable>
         </ScrollView>
       </Modal>
+      {sheet ? <ConfirmSheet {...sheet} onDismiss={() => setSheet(null)} /> : null}
     </SafeAreaView>
   );
 }

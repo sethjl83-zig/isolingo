@@ -10,7 +10,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Switch,
-  Alert,
   Linking,
   Platform,
   ScrollView,
@@ -30,6 +29,7 @@ import {
 } from '@/src/storage/cardFrequency';
 import type { CardType } from '@/src/types/cards';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
+import ConfirmSheet, { type ConfirmSheetRequest } from '@/src/components/ui/ConfirmSheet';
 import { discardBuildYourOwnDraft } from './build-your-own';
 
 const backChevron = require('@/assets/images/lists/back-chevron.png');
@@ -90,20 +90,13 @@ function PercentStepper({
   );
 }
 
-async function openExternal(url: string) {
-  try {
-    await Linking.openURL(url);
-  } catch {
-    Alert.alert('Couldn’t open that link');
-  }
-}
-
 export default function SettingsScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const { resetApp } = useAppContext();
   const [soundOn, setSoundOn] = useState(true);
   const [wiping, setWiping] = useState(false);
+  const [sheet, setSheet] = useState<ConfirmSheetRequest | null>(null);
   const [frequency, setFrequency] = useState<CardFrequency>(DEFAULT_CARD_FREQUENCY);
   const frequencyTotal = frequency.CARD_1001 + frequency.CARD_1002 + frequency.CARD_1006;
   const frequencyValid = frequencyTotal === 100;
@@ -127,11 +120,24 @@ export default function SettingsScreen() {
 
   useAndroidBackHandler(
     useCallback(() => {
+      if (sheet) {
+        setSheet(null);
+        return true;
+      }
       if (wiping) return true;
       handleBack();
       return true;
-    }, [handleBack, wiping]),
+    }, [handleBack, sheet, wiping]),
   );
+
+  const openExternal = (url: string) => {
+    Linking.openURL(url).catch(() => {
+      setSheet({
+        title: 'Couldn’t open that link',
+        buttons: [{ label: 'OK' }],
+      });
+    });
+  };
 
   const handleSound = (enabled: boolean) => {
     setSoundOn(enabled);
@@ -152,20 +158,20 @@ export default function SettingsScreen() {
   };
 
   const handleStartOver = () => {
-    Alert.alert(
-      'Start Over',
-      'This will delete all your lists, progress, and settings. This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
+    setSheet({
+      title: 'Start Over',
+      message: 'This will delete all your lists, progress, and settings. This cannot be undone.',
+      buttons: [
+        { label: 'Cancel', style: 'cancel' },
         {
-          text: 'Start Over',
+          label: 'Start Over',
           style: 'destructive',
           onPress: () => {
             void confirmStartOver();
           },
         },
       ],
-    );
+    });
   };
 
   const confirmStartOver = async () => {
@@ -182,7 +188,11 @@ export default function SettingsScreen() {
       );
     } catch {
       setWiping(false);
-      Alert.alert('Couldn’t start over', 'Your data is still on this device. Please try again.');
+      setSheet({
+        title: 'Couldn’t start over',
+        message: 'Your data is still on this device. Please try again.',
+        buttons: [{ label: 'OK' }],
+      });
     }
   };
 
@@ -330,6 +340,7 @@ export default function SettingsScreen() {
         </View>
       </View>
       </ScrollView>
+      {sheet ? <ConfirmSheet {...sheet} onDismiss={() => setSheet(null)} /> : null}
     </SafeAreaView>
   );
 }

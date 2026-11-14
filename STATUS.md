@@ -47,6 +47,7 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-11-14: System alerts are now the in-app confirm sheet. Delete, Start Over, Exit, and the word-removal confirms use the existing red for the confirm button. Set as Default was already that sheet, so it stayed.
 - 2026-11-13: Build Your Own and Add Word keep the selection bar above the keyboard. The word list shrinks and still scrolls. Search stays usable, and a row tap still selects without closing the keyboard.
 - 2026-11-12: Choose What to Study sorts lists by name. Study a Topic replaces the Body bust with a standing figure and gives the library icons their own muted colors.
 - 2026-11-12: Remove, Replace, and Pause wait until the next card is committed before sliding it in, and their confirms are an overlay sheet instead of a system alert.

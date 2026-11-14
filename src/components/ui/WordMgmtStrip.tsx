@@ -1,14 +1,15 @@
 /**
  * WordMgmtStrip — word-management row shown at the bottom of every study card.
  */
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, Pressable, BackHandler } from 'react-native';
+import React, { createContext, useCallback, useContext, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HomeFonts } from '@/constants/homeFonts';
 import { useSessionWordMgmt } from '@/src/context/SessionWordMgmtContext';
 import WordFrequencyModal, { type WordFrequencyTarget } from './WordFrequencyModal';
 import WordPickerModal from './WordPickerModal';
+import ConfirmSheet from './ConfirmSheet';
 
 const BUTTONS = [
   { id: 'remove', label: 'Remove', icon: require('@/assets/images/gameplay/remove.png') },
@@ -36,50 +37,22 @@ const ConfirmContext = createContext<(dialog: ConfirmDialog) => void>(() => {});
 export function WordMgmtConfirmHost({ children }: { children: React.ReactNode }) {
   const [dialog, setDialog] = useState<ConfirmDialog | null>(null);
 
-  useEffect(() => {
-    if (!dialog) return;
-    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-      setDialog(null);
-      return true;
-    });
-    return () => sub.remove();
-  }, [dialog]);
-
   return (
     <ConfirmContext.Provider value={setDialog}>
       <View style={styles.host}>
         {children}
         {dialog ? (
-          <Pressable style={styles.scrim} onPress={() => setDialog(null)}>
-            <Pressable style={styles.sheet} onPress={() => {}}>
-              <View style={styles.copy}>
-                <Text style={styles.title}>{dialog.title}</Text>
-                {dialog.message ? <Text style={styles.message}>{dialog.message}</Text> : null}
-              </View>
-              <View style={styles.actions}>
-                <TouchableOpacity
-                  style={styles.filled}
-                  onPress={() => {
-                    const confirm = dialog.onConfirm;
-                    setDialog(null);
-                    confirm?.();
-                  }}
-                  activeOpacity={0.75}
-                >
-                  <Text style={styles.filledLabel}>{dialog.confirmLabel}</Text>
-                </TouchableOpacity>
-                {dialog.cancelLabel ? (
-                  <TouchableOpacity
-                    style={styles.outline}
-                    onPress={() => setDialog(null)}
-                    activeOpacity={0.75}
-                  >
-                    <Text style={styles.outlineLabel}>{dialog.cancelLabel}</Text>
-                  </TouchableOpacity>
-                ) : null}
-              </View>
-            </Pressable>
-          </Pressable>
+          <ConfirmSheet
+            title={dialog.title}
+            message={dialog.message}
+            onDismiss={() => setDialog(null)}
+            buttons={[
+              { label: dialog.confirmLabel, onPress: dialog.onConfirm },
+              ...(dialog.cancelLabel
+                ? [{ label: dialog.cancelLabel, style: 'cancel' as const }]
+                : []),
+            ]}
+          />
         ) : null}
       </View>
     </ConfirmContext.Provider>
@@ -226,82 +199,6 @@ export default function WordMgmtStrip({ words }: Props) {
 
 const styles = StyleSheet.create({
   host: { flex: 1 },
-  scrim: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    zIndex: 20,
-    elevation: 20,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    alignItems: 'center',
-    paddingTop: 243,
-    paddingBottom: 24,
-  },
-  sheet: {
-    width: 313,
-    maxWidth: '100%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 15,
-    padding: 20,
-    alignItems: 'center',
-    gap: 20,
-  },
-  copy: { gap: 10, alignItems: 'center', alignSelf: 'stretch' },
-  title: {
-    fontFamily: HomeFonts.interSemiBold,
-    fontWeight: 'normal',
-    fontSize: 22,
-    color: '#25262B',
-    textAlign: 'center',
-  },
-  message: {
-    fontFamily: HomeFonts.interRegular,
-    fontWeight: 'normal',
-    fontSize: 14.8,
-    lineHeight: 20,
-    textAlign: 'center',
-    color: 'rgba(0,0,0,0.6)',
-  },
-  actions: { gap: 10, alignItems: 'center', alignSelf: 'stretch' },
-  filled: {
-    width: 220,
-    height: 48,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#5E51A4',
-  },
-  filledLabel: {
-    fontFamily: HomeFonts.interSemiBold,
-    fontWeight: 'normal',
-    fontSize: 16,
-    lineHeight: 24,
-    color: '#FFFFFF',
-  },
-  outline: {
-    width: 220,
-    height: 48,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#5E51A4',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-  },
-  outlineLabel: {
-    fontFamily: HomeFonts.interSemiBold,
-    fontWeight: 'normal',
-    fontSize: 16,
-    lineHeight: 24,
-    color: '#5E51A4',
-  },
   strip: {
     flexDirection: 'row',
     justifyContent: 'space-between',

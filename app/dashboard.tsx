@@ -4,7 +4,7 @@
  * vocab banks shortcut, and a stats summary widget.
  */
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Modal, Pressable, Alert, ActivityIndicator, Dimensions, BackHandler, ScrollView } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Modal, Pressable, ActivityIndicator, Dimensions, BackHandler, ScrollView } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { LinearGradient } from 'expo-linear-gradient';
@@ -37,6 +37,7 @@ import { USER_NAME_KEY, CELEBRATION_PENDING_KEY, takePendingCelebration } from '
 import { setAddListLaunchSource } from './add-list';
 import { resolveSingleListLaunch } from '@/src/utils/listDeckLaunch';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
+import ConfirmSheet, { type ConfirmSheetRequest } from '@/src/components/ui/ConfirmSheet';
 
 const FLAG_IMAGES: Record<Language, number> = {
   es: require('@/assets/images/home/flag-es.png'),
@@ -386,6 +387,7 @@ export default function DashboardScreen() {
   const [streakNoteOpen,    setStreakNoteOpen]    = useState(false);
   const [statsLoading,      setStatsLoading]      = useState(false);
   const [showLangHint,      setShowLangHint]      = useState(false);
+  const [sheet,             setSheet]             = useState<ConfirmSheetRequest | null>(null);
   const [welcomeLayout,     setWelcomeLayout]     = useState<WelcomeLayout | null>(null);
   const welcomeWrapRef = useRef<View>(null);
   const blockStatsNavRef = useRef(false);
@@ -456,12 +458,19 @@ export default function DashboardScreen() {
 
   useAndroidBackHandler(
     useCallback(() => {
-      Alert.alert('Exit app?', undefined, [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Exit', style: 'destructive', onPress: () => BackHandler.exitApp() },
-      ]);
+      if (sheet) {
+        setSheet(null);
+        return true;
+      }
+      setSheet({
+        title: 'Exit app?',
+        buttons: [
+          { label: 'Cancel', style: 'cancel' },
+          { label: 'Exit', style: 'destructive', onPress: () => BackHandler.exitApp() },
+        ],
+      });
       return true;
-    }, []),
+    }, [sheet]),
   );
 
   if (!isReady) return null;
@@ -758,7 +767,11 @@ export default function DashboardScreen() {
         style={styles.vocabBankBtn}
         onPress={() => {
           if (!state.languageSelected) {
-            Alert.alert('No language selected', 'Please select a language from the dropdown first.');
+            setSheet({
+              title: 'No language selected',
+              message: 'Please select a language from the dropdown first.',
+              buttons: [{ label: 'OK' }],
+            });
             return;
           }
           router.push('/my-lists' as never);
@@ -826,6 +839,7 @@ export default function DashboardScreen() {
         />
       )}
 
+      {sheet ? <ConfirmSheet {...sheet} onDismiss={() => setSheet(null)} /> : null}
     </SafeAreaView>
   );
 }

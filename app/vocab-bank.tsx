@@ -6,7 +6,7 @@
  * Paused words appear in a separate section below a divider.
  */
 import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, InteractionManager, Platform } from 'react-native';
+import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, InteractionManager, Platform } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,6 +20,7 @@ import type { WordFrequencySetting } from '@/src/types/state';
 import type { Pool, PoolWord } from '@/src/types/pool';
 import { filterVocabBySearch, sortVocabByLemma } from '@/src/utils/vocabBank';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
+import ConfirmSheet, { type ConfirmSheetRequest } from '@/src/components/ui/ConfirmSheet';
 import StudyButton from '@/src/components/ui/StudyButton';
 import SearchBar from '@/src/components/ui/SearchBar';
 import {
@@ -61,6 +62,7 @@ export default function VocabBankScreen() {
   const palette = Colors[scheme];
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [sheet, setSheet] = useState<ConfirmSheetRequest | null>(null);
   const [displayWords, setDisplayWords] = useState<DisplayWords | null>(null);
   const [loadingWords, setLoadingWords] = useState(true);
 
@@ -84,9 +86,13 @@ export default function VocabBankScreen() {
 
   useAndroidBackHandler(
     useCallback(() => {
+      if (sheet) {
+        setSheet(null);
+        return true;
+      }
       router.back();
       return true;
-    }, [router]),
+    }, [router, sheet]),
   );
 
   const poolWordsKey = useMemo(() => {
@@ -225,32 +231,35 @@ export default function VocabBankScreen() {
 
   const handleRemoveActiveWord = useCallback(
     (item: VocabItem) => {
-      Alert.alert('Remove this word from this list?', undefined, [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: () => removeWordFromPool(item),
-        },
-      ]);
+      setSheet({
+        title: 'Remove this word from this list?',
+        buttons: [
+          { label: 'Cancel', style: 'cancel' },
+          {
+            label: 'Remove',
+            style: 'destructive',
+            onPress: () => removeWordFromPool(item),
+          },
+        ],
+      });
     },
     [removeWordFromPool],
   );
 
   const handleRemovePausedWord = useCallback(
     (item: VocabItem) => {
-      Alert.alert(
-        'Remove this word from your list?',
-        `“${item.lemma}” will be permanently removed from this pool.`,
-        [
-          { text: 'Cancel', style: 'cancel' },
+      setSheet({
+        title: 'Remove this word from your list?',
+        message: `“${item.lemma}” will be permanently removed from this pool.`,
+        buttons: [
+          { label: 'Cancel', style: 'cancel' },
           {
-            text: 'Remove',
+            label: 'Remove',
             style: 'destructive',
             onPress: () => removeWordFromPool(item),
           },
         ],
-      );
+      });
     },
     [removeWordFromPool],
   );
@@ -378,6 +387,7 @@ export default function VocabBankScreen() {
           disabled={loadingWords}
         />
       </View>
+      {sheet ? <ConfirmSheet {...sheet} onDismiss={() => setSheet(null)} /> : null}
     </SafeAreaView>
   );
 }
