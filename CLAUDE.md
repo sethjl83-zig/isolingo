@@ -42,7 +42,7 @@ These apply to any work on the vocab files.
 - **Validate before finishing:** zero duplicate IDs, missing fields, non-ASCII IDs, invalid categories, or nouns without gender.
 - **Build English-first:** draft the English concept list, then derive German, French, and Spanish together so all three stay in parity.
 - **Tag every applicable category** on a word, not just the one that prompted adding it.
-- **Same-word collisions:** create a new entry with a `senseLabel`. Never create duplicates.
+- **Same-word collisions:** create a new entry with a `senseLabel`. Never create duplicates. Leave the label blank when it would only name a part of speech (noun, verb, adjective, adverb, pronoun, preposition, conjunction, article) or a grammatical gender (masculine, feminine, neuter).
 - **Pair files:** always two same-language IDs, never a raw English string.
 - **No new categories** without checking with James first.
 - **No piecemeal changes:** finish a whole set before applying it.

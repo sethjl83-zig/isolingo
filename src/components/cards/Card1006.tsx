@@ -33,6 +33,17 @@ import {
 
 const GENDERS: Gender[] = ['masculine', 'feminine', 'neuter'];
 
+const NON_SENSE_LABELS = new Set([
+  'noun', 'verb', 'adjective', 'adverb', 'pronoun', 'preposition', 'conjunction', 'article',
+  'masculine', 'feminine', 'neuter',
+]);
+
+function usableSenseLabel(value: string | null | undefined): string | null {
+  const trimmed = value?.trim() ?? '';
+  if (!trimmed || NON_SENSE_LABELS.has(trimmed.toLowerCase())) return null;
+  return trimmed;
+}
+
 interface Props {
   card: Card1006Data;
   /** Session card id. Changes for every new card, including the same word. */
@@ -228,7 +239,7 @@ export default function Card1006({
       : null;
 
   // ── Sense label subtitle (shown beneath prompt when present) ─────────────────
-  const senseLabel = card.item.senseLabel?.trim() || null;
+  const senseLabel = usableSenseLabel(card.item.senseLabel);
   const possessiveFormLabel =
     language === 'fr' &&
     card.direction === 'native_to_target' &&
@@ -242,7 +253,7 @@ export default function Card1006({
   const promptSubtitle =
     senseLabel && possessiveFormLabel
       ? `${senseLabel} · ${possessiveFormLabel}`
-      : possessiveFormLabel ?? (senseLabel ? `(${senseLabel})` : null);
+      : possessiveFormLabel ?? senseLabel;
 
   // ── Feedback text (non-German answer reveal uses plain feedback string) ─────
   let feedbackText = '';

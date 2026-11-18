@@ -47,6 +47,8 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-11-17: The sense-label line no longer uses parentheses.
+- 2026-11-17: Sense labels that only name a part of speech or a grammatical gender are blank. 71 existing labels were cleared.
 - 2026-11-17: French native-to-target Production prompts say "your" for both second-person forms. Informal and formal sit on the sense-label line. Answers are unchanged.
 - 2026-11-14: Production cards keep the answer field mounted across cards and reset it when the card id changes, so the keyboard stays up. Gender Matching and Word Relationships still remount.
 - 2026-11-14: System alerts are now the in-app confirm sheet. Delete, Start Over, Exit, and the word-removal confirms use the existing red for the confirm button. Set as Default was already that sheet, so it stayed.
