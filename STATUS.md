@@ -47,6 +47,7 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-11-17: French native-to-target Production prompts say "your" for both second-person forms. Informal and formal sit on the sense-label line. Answers are unchanged.
 - 2026-11-14: Production cards keep the answer field mounted across cards and reset it when the card id changes, so the keyboard stays up. Gender Matching and Word Relationships still remount.
 - 2026-11-14: System alerts are now the in-app confirm sheet. Delete, Start Over, Exit, and the word-removal confirms use the existing red for the confirm button. Set as Default was already that sheet, so it stayed.
 - 2026-11-13: Build Your Own and Add Word keep the selection bar above the keyboard. The word list shrinks and still scrolls. Search stays usable, and a row tap still selects without closing the keyboard.

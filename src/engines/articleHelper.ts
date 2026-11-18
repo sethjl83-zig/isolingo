@@ -196,7 +196,7 @@ export function getEnglishDeterminerPrompt(
         case 'second':
           return `your ${englishNoun}`;
         case 'formal_second':
-          return `your (formal) ${englishNoun}`;
+          return `your ${englishNoun}`;
         case 'third':
           return `his/her ${englishNoun}`;
       }

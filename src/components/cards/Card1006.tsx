@@ -229,6 +229,20 @@ export default function Card1006({
 
   // ── Sense label subtitle (shown beneath prompt when present) ─────────────────
   const senseLabel = card.item.senseLabel?.trim() || null;
+  const possessiveFormLabel =
+    language === 'fr' &&
+    card.direction === 'native_to_target' &&
+    card.determinerType === 'possessive'
+      ? card.possessivePerson === 'second'
+        ? 'informal'
+        : card.possessivePerson === 'formal_second'
+        ? 'formal'
+        : null
+      : null;
+  const promptSubtitle =
+    senseLabel && possessiveFormLabel
+      ? `${senseLabel} · ${possessiveFormLabel}`
+      : possessiveFormLabel ?? (senseLabel ? `(${senseLabel})` : null);
 
   // ── Feedback text (non-German answer reveal uses plain feedback string) ─────
   let feedbackText = '';
@@ -345,11 +359,11 @@ export default function Card1006({
               ) : (
                 <Text style={[styles.prompt, { color: promptColor }]}>{card.prompt}</Text>
               )}
-              {senseLabel && (
+              {promptSubtitle ? (
                 <Text style={styles.senseLabel}>
-                  ({senseLabel})
+                  {promptSubtitle}
                 </Text>
-              )}
+              ) : null}
             </View>
 
             {/* Input */}
