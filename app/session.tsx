@@ -18,7 +18,7 @@ import { CommonActions, useNavigation } from '@react-navigation/native';
 import { Colors } from '@/constants/theme';
 import { HomeFonts } from '@/constants/homeFonts';
 import { useAppContext } from '@/src/context/AppContext';
-import type { WordFrequencySetting } from '@/src/types/state';
+import type { DirectionMode, WordFrequencySetting } from '@/src/types/state';
 import type { VocabItem } from '@/src/types/vocab';
 import { generateNextCard, makeSessionState, advanceSession, type SessionVocabContext } from '@/src/engines/sessionEngine';
 import { getCard1002PairKey } from '@/src/engines/card1002Engine';
@@ -162,6 +162,19 @@ export default function SessionScreen() {
   const [smallDeckCount, setSmallDeckCount] = useState(0);
 
   const language = state.languageSelected;
+  const sessionDirectionRef = useRef<DirectionMode>(state.directionMode);
+  const [sessionDirection, setSessionDirection] = useState<DirectionMode>(state.directionMode);
+
+  const cycleSessionDirection = useCallback(() => {
+    const index = ['target_to_native', 'native_to_target', 'mixed'].indexOf(
+      sessionDirectionRef.current,
+    );
+    const next = (['target_to_native', 'native_to_target', 'mixed'] as const)[
+      (index + 1) % 3
+    ];
+    sessionDirectionRef.current = next;
+    setSessionDirection(next);
+  }, []);
 
   // ── Pool-derived session vocab ─────────────────────────────────────────────
   // Pool IDs are passed via navigation params from select-study-list / deck-size.
@@ -301,8 +314,9 @@ export default function SessionScreen() {
           setCurrentCard(null);
           return;
         }
+        const baseState = stateOverride ?? state;
         const { card, updatedSession } = generateNextCard(
-          stateOverride ?? state,
+          { ...baseState, directionMode: sessionDirectionRef.current },
           sessionRef.current,
           vocab,
         );
@@ -767,6 +781,8 @@ export default function SessionScreen() {
               }}
               onExit={handleExit}
               onHome={handleHome}
+              direction={sessionDirection}
+              onCycleDirection={cycleSessionDirection}
               onSubmit={correct =>
                 handleSubmit(
                   null,
@@ -789,6 +805,8 @@ export default function SessionScreen() {
               onFlip={() => {}}
               onExit={handleExit}
               onHome={handleHome}
+              direction={sessionDirection}
+              onCycleDirection={cycleSessionDirection}
               onSubmit={correct =>
                 handleSubmit(
                   null,
@@ -812,6 +830,8 @@ export default function SessionScreen() {
               onFlip={() => {}}
               onExit={handleExit}
               onHome={handleHome}
+              direction={sessionDirection}
+              onCycleDirection={cycleSessionDirection}
               onSubmit={(correct, isFirstAttempt) =>
                 handleSubmit(
                   currentCard.item.id,

@@ -3,12 +3,13 @@
  * Direction-sensitive translation card. German uses gender tiles; FR/ES uses determiner+noun input.
  */
 import React, { useState, useCallback, useRef, useLayoutEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TextInput, ScrollView, StyleSheet } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { Colors, GenderColors } from '@/constants/theme';
 import { HomeFonts } from '@/constants/homeFonts';
 import type { Card1006Data } from '@/src/types/cards';
+import type { DirectionMode } from '@/src/types/state';
 import type { Gender, Language } from '@/src/types/vocab';
 import { splitDisplayForm } from '@/src/engines/articleHelper';
 import GenderTile from '../ui/GenderTile';
@@ -16,6 +17,7 @@ import StudyButton from '../ui/StudyButton';
 import CorrectText from '../ui/CorrectText';
 import FeedbackNote from '../ui/FeedbackNote';
 import StudyCardLayout from './StudyCardLayout';
+import SessionHeader from './SessionHeader';
 import { playCorrect, playIncorrect } from '@/src/utils/soundPlayer';
 import {
   studyChrome,
@@ -55,6 +57,8 @@ interface Props {
   onHome: () => void;
   /** `isFirstAttempt` is true when the user answered correctly on their very first submit. */
   onSubmit: (correct: boolean, isFirstAttempt: boolean) => void;
+  direction: DirectionMode;
+  onCycleDirection: () => void;
 }
 
 type CardState =
@@ -73,6 +77,8 @@ export default function Card1006({
   onExit,
   onHome,
   onSubmit,
+  direction,
+  onCycleDirection,
 }: Props) {
   const scheme  = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
@@ -372,6 +378,14 @@ export default function Card1006({
         </View>
       }
     >
+      <View style={styles.cardColumn}>
+      <SessionHeader
+        language={language}
+        direction={direction}
+        onCycleDirection={onCycleDirection}
+        onExit={onExit}
+        onHome={onHome}
+      />
       <ScrollView
         style={studyChrome.scroll}
         contentContainerStyle={studyChrome.content}
@@ -379,15 +393,6 @@ export default function Card1006({
         keyboardDismissMode="none"
         showsVerticalScrollIndicator={false}
       >
-            <View style={studyChrome.topBar}>
-              <TouchableOpacity onPress={onExit}>
-                <Text style={studyChrome.exit}>Exit Study</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={onHome}>
-                <Text style={studyChrome.home}>Home</Text>
-              </TouchableOpacity>
-            </View>
-
             {/* Prompt */}
             <View style={styles.promptArea}>
               {promptParts ? (
@@ -477,11 +482,13 @@ export default function Card1006({
             )}
 
       </ScrollView>
+      </View>
     </StudyCardLayout>
   );
 }
 
 const styles = StyleSheet.create({
+  cardColumn: { flex: 1 },
   bottomColumn: { flexDirection: 'column' },
   feedbackNote: {
     marginTop: 0,

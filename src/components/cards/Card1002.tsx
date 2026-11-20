@@ -10,6 +10,7 @@ import { Colors, GenderColors } from '@/constants/theme';
 import { HomeFonts } from '@/constants/homeFonts';
 import type { Card1002Data, Card1002WordDisplay, RelationshipType } from '@/src/types/cards';
 import { getRelationshipLabel, isRelationshipType } from '@/src/types/cards';
+import type { DirectionMode } from '@/src/types/state';
 import type { Gender, Language } from '@/src/types/vocab';
 import { splitDisplayForm } from '@/src/engines/articleHelper';
 import { getPrimaryEnglish } from '@/src/engines/genderedCounterpartHelper';
@@ -17,6 +18,7 @@ import StudyButton from '../ui/StudyButton';
 import CorrectText from '../ui/CorrectText';
 import FeedbackNote from '../ui/FeedbackNote';
 import StudyCardLayout from './StudyCardLayout';
+import SessionHeader from './SessionHeader';
 import { playCorrect, playIncorrect } from '@/src/utils/soundPlayer';
 import {
   studyChrome,
@@ -37,6 +39,8 @@ interface Props {
   onExit: () => void;
   onHome: () => void;
   onSubmit: (correct: boolean) => void;
+  direction: DirectionMode;
+  onCycleDirection: () => void;
 }
 
 type AnswerState = 'idle' | 'correct' | 'incorrect' | 'flipped';
@@ -94,6 +98,8 @@ export default function Card1002({
   onExit,
   onHome,
   onSubmit,
+  direction,
+  onCycleDirection,
 }: Props) {
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
@@ -167,21 +173,20 @@ export default function Card1002({
         </View>
       }
     >
+      <View style={styles.cardColumn}>
+      <SessionHeader
+        language={language}
+        direction={direction}
+        onCycleDirection={onCycleDirection}
+        onExit={onExit}
+        onHome={onHome}
+      />
       <ScrollView
         style={studyChrome.scroll}
         contentContainerStyle={studyChrome.content}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={studyChrome.topBar}>
-          <TouchableOpacity onPress={onExit}>
-            <Text style={studyChrome.exit}>Exit Study</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={onHome}>
-            <Text style={studyChrome.home}>Home</Text>
-          </TouchableOpacity>
-        </View>
-
         <Text style={styles.instruction}>
           What is the relationship between these words?
         </Text>
@@ -257,11 +262,13 @@ export default function Card1002({
           </FeedbackNote>
         )}
       </ScrollView>
+      </View>
     </StudyCardLayout>
   );
 }
 
 const styles = StyleSheet.create({
+  cardColumn: { flex: 1 },
   instruction: {
     fontFamily: HomeFonts.jakartaMedium,
     fontWeight: 'normal',
