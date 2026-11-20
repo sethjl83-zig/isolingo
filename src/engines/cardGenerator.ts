@@ -18,7 +18,6 @@ import {
   collectTargetToNativeEnglishGlosses,
   findGenderedCounterpart,
   isAmbiguousEnglishPair,
-  mergeCounterpartEnglishAccepted,
   stripEnglishGenderPrefix,
 } from './genderedCounterpartHelper';
 import { selectWord } from './repetitionEngine';
@@ -318,17 +317,6 @@ function card1006TargetToNative(
     entry.alternates.forEach(addAccepted);
   });
 
-  const accepted = counterpart
-    ? mergeCounterpartEnglishAccepted(
-        canonical,
-        acceptedAnswers,
-        counterpart,
-        usedDeterminer,
-        possessivePerson,
-        language,
-      )
-    : acceptedAnswers;
-
   return {
     type: 'CARD_1006',
     item,
@@ -337,7 +325,7 @@ function card1006TargetToNative(
     possessivePerson,
     prompt,
     canonicalAnswer: canonical,
-    acceptedAnswers: accepted,
+    acceptedAnswers,
   };
 }
 
