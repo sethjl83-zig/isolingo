@@ -263,7 +263,11 @@ export default function SessionScreen() {
       }
     }
 
-    return { vocabBank, wordFrequencySettings };
+    return {
+      vocabBank,
+      wordFrequencySettings,
+      removedWordIds: sessionRemovedIdsRef.current,
+    };
   }, [baseSessionVocab]);
 
   const getSessionDeckIds = useCallback((): ReadonlySet<string> => {

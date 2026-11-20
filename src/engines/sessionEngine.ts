@@ -15,6 +15,8 @@ import {
 export interface SessionVocabContext {
   vocabBank: VocabItem[];
   wordFrequencySettings: Record<string, WordFrequencySetting>;
+  /** Words removed or paused during this session. Kept out of Relationship Judgment. */
+  removedWordIds?: ReadonlySet<string>;
 }
 
 // ── Session state ─────────────────────────────────────────────────────────────
@@ -128,10 +130,20 @@ export function generateNextCard(
   const card1002Context: Card1002Context = {
     language: languageSelected,
     activeBank: bank,
-    extendedBankById: buildExtendedBankMap(languageSelected, state.languagePools, bank),
+    extendedBankById: buildExtendedBankMap(
+      languageSelected,
+      state.languagePools,
+      bank,
+      vocab.removedWordIds,
+    ),
     recentPairKeys: session.recentCard1002PairKeys,
   };
-  const card1002Available = isCard1002Available(card1002Context);
+  // Gender mode never deals Relationship Judgment. Its saved share is split
+  // across the types still eligible, the same way any other ineligible card is.
+  const card1002Available =
+    studyTypeSelected === 'general_vocab' &&
+    directionMode === 'mixed' &&
+    isCard1002Available(card1002Context);
 
   // ── Card type & direction ─────────────────────────────────────────────────
   const cardType = selectCardType(

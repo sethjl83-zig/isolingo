@@ -36,17 +36,26 @@ export function buildExtendedBankMap(
   language: Language,
   languagePools: Partial<Record<Language, Pool[]>>,
   activeBank: VocabItem[] = [],
+  excludedWordIds?: ReadonlySet<string>,
 ): Map<string, VocabItem> {
-  const raw: VocabItem[] = [];
+  // Every word the user has in any list for this language. Paused words and
+  // words removed in this session stay out. The master list is not a source.
+  const rawById = new Map<string, VocabItem>();
   for (const pool of languagePools[language] ?? []) {
+    const paused = new Set(pool.pausedWordIds ?? []);
     for (const pw of pool.words) {
-      raw.push(pw.item);
+      if (excludedWordIds?.has(pw.item.id)) continue;
+      if (paused.has(pw.item.id)) continue;
+      if (!rawById.has(pw.item.id)) rawById.set(pw.item.id, pw.item);
     }
   }
-  if (raw.length === 0) {
-    raw.push(...activeBank);
+  if (rawById.size === 0) {
+    for (const item of activeBank) {
+      if (excludedWordIds?.has(item.id)) continue;
+      if (!rawById.has(item.id)) rawById.set(item.id, item);
+    }
   }
-  const enriched = enrichVocabItemsFromMaster(raw, language);
+  const enriched = enrichVocabItemsFromMaster([...rawById.values()], language);
   return new Map(enriched.map(w => [w.id, w]));
 }
 
@@ -141,60 +150,74 @@ function buildKnownPairKeys(language: Language, extendedIds: Set<string>): Set<s
   return keys;
 }
 
-function collectCandidates(ctx: Card1002Context): CandidatePair[] {
-  const { language, activeBank, extendedBankById } = ctx;
-  const activeById = new Map(activeBank.map(w => [w.id, w]));
-  const activeIds = new Set(activeBank.map(w => w.id));
-  const extendedIds = new Set(extendedBankById.keys());
+/** Both words in the deck, then one, then a pair that only sits in the user's lists. */
+function deckPriority(idA: string, idB: string, deckIds: Set<string>): number {
+  const aInDeck = deckIds.has(idA);
+  const bInDeck = deckIds.has(idB);
+  if (aInDeck && bInDeck) return 2;
+  if (aInDeck || bInDeck) return 1;
+  return 0;
+}
+
+/**
+ * same_meaning is dealt half as often as each other type. The rest are equal.
+ * Integer weights keep the half exact: 1 against 2.
+ */
+const RELATIONSHIP_DRAW_WEIGHT: Record<RelationshipType, number> = {
+  opposites: 2,
+  go_hand_in_hand: 2,
+  same_kind: 2,
+  hyponym: 2,
+  no_clear_relationship: 2,
+  same_meaning: 1,
+};
+
+function listWords(ctx: Card1002Context): VocabItem[] {
+  const byId = new Map(ctx.extendedBankById);
+  for (const item of ctx.activeBank) {
+    if (!byId.has(item.id)) byId.set(item.id, item);
+  }
+  return [...byId.values()];
+}
+
+function collectTypedPairs(ctx: Card1002Context): CandidatePair[] {
+  const { language } = ctx;
+  const words = listWords(ctx);
+  const byId = new Map(words.map(w => [w.id, w]));
+  const deckIds = new Set(ctx.activeBank.map(w => w.id));
   const data = getRelationshipData(language);
   const candidates: CandidatePair[] = [];
 
-  const addJsonPair = (
-    type: RelationshipType,
-    id1: string,
-    id2: string,
-  ) => {
-    if (!extendedIds.has(id1) || !extendedIds.has(id2)) return;
-    // At least one word must be in the current session bank.
-    const aActive = activeIds.has(id1);
-    const bActive = activeIds.has(id2);
-    if (!aActive && !bActive) return;
-
-    const itemA = activeById.get(id1) ?? extendedBankById.get(id1);
-    const itemB = activeById.get(id2) ?? extendedBankById.get(id2);
+  const addJsonPair = (type: RelationshipType, id1: string, id2: string) => {
+    const itemA = byId.get(id1);
+    const itemB = byId.get(id2);
     if (!itemA || !itemB) return;
-
-    const priority = aActive && bActive ? 16 : 12;
     candidates.push({
       type,
       itemA,
       itemB,
       showEnglishForB: false,
-      priority,
+      priority: deckPriority(itemA.id, itemB.id, deckIds),
     });
   };
 
   for (const p of data.antonyms) addJsonPair('opposites', p.word1, p.word2);
   for (const p of data.related) addJsonPair('go_hand_in_hand', p.word1, p.word2);
   for (const p of data.sameKind) addJsonPair('same_kind', p.word1, p.word2);
-  for (const p of data.hyponyms) {
-    addJsonPair('hyponym', p.specific, p.general);
-  }
+  for (const p of data.hyponyms) addJsonPair('hyponym', p.specific, p.general);
 
-  // same_meaning: word paired with its own English translation
-  for (const item of activeBank) {
+  for (const item of words) {
     candidates.push({
       type: 'same_meaning',
       itemA: item,
       itemB: item,
       showEnglishForB: true,
-      priority: 8,
+      priority: deckPriority(item.id, item.id, deckIds),
     });
   }
 
-  // same_meaning: two active words sharing the same primary English gloss
   const byEnglish = new Map<string, VocabItem[]>();
-  for (const item of activeBank) {
+  for (const item of words) {
     const key = getPrimaryEnglish(item).toLowerCase();
     if (!byEnglish.has(key)) byEnglish.set(key, []);
     byEnglish.get(key)!.push(item);
@@ -208,58 +231,185 @@ function collectCandidates(ctx: Card1002Context): CandidatePair[] {
           itemA: group[i],
           itemB: group[j],
           showEnglishForB: false,
-          priority: 7,
+          priority: deckPriority(group[i].id, group[j].id, deckIds),
         });
       }
-    }
-  }
-
-  // no_clear_relationship: unrelated active words
-  const knownKeys = buildKnownPairKeys(language, extendedIds);
-  for (let i = 0; i < activeBank.length; i++) {
-    for (let j = i + 1; j < activeBank.length; j++) {
-      const a = activeBank[i];
-      const b = activeBank[j];
-      if (getPrimaryEnglish(a).toLowerCase() === getPrimaryEnglish(b).toLowerCase()) continue;
-      if (knownKeys.has(pairKey(a.id, b.id))) continue;
-      candidates.push({
-        type: 'no_clear_relationship',
-        itemA: a,
-        itemB: b,
-        showEnglishForB: false,
-        priority: 4,
-      });
     }
   }
 
   return candidates;
 }
 
+function isUnrelated(a: VocabItem, b: VocabItem, knownKeys: Set<string>): boolean {
+  if (a.id === b.id) return false;
+  if (getPrimaryEnglish(a).toLowerCase() === getPrimaryEnglish(b).toLowerCase()) return false;
+  if (knownKeys.has(pairKey(a.id, b.id))) return false;
+  return true;
+}
+
+/** Stop once `need` genuinely unrelated pairs have been found. */
+function hasUnrelatedPairs(ctx: Card1002Context, need: number): boolean {
+  if (need <= 0) return true;
+  const words = listWords(ctx);
+  const knownKeys = buildKnownPairKeys(ctx.language, new Set(words.map(w => w.id)));
+  let found = 0;
+  for (let i = 0; i < words.length && found < need; i++) {
+    for (let j = i + 1; j < words.length; j++) {
+      if (!isUnrelated(words[i], words[j], knownKeys)) continue;
+      found += 1;
+      if (found >= need) return true;
+    }
+  }
+  return false;
+}
+
+function reservoirUnrelated(
+  left: VocabItem[],
+  right: VocabItem[],
+  sameList: boolean,
+  knownKeys: Set<string>,
+  recentPairKeys: string[],
+  freshOnly: boolean,
+  priority: number,
+): CandidatePair | null {
+  let count = 0;
+  let picked: CandidatePair | null = null;
+  const consider = (a: VocabItem, b: VocabItem) => {
+    if (!isUnrelated(a, b, knownKeys)) return;
+    if (freshOnly && isPairSpacingBlocked(pairKey(a.id, b.id), recentPairKeys)) return;
+    count += 1;
+    if (Math.random() < 1 / count) {
+      picked = {
+        type: 'no_clear_relationship',
+        itemA: a,
+        itemB: b,
+        showEnglishForB: false,
+        priority,
+      };
+    }
+  };
+  if (sameList) {
+    for (let i = 0; i < left.length; i++) {
+      for (let j = i + 1; j < left.length; j++) consider(left[i], left[j]);
+    }
+  } else {
+    for (const a of left) {
+      for (const b of right) consider(a, b);
+    }
+  }
+  return picked;
+}
+
+/**
+ * Prefer a pair with both words in the deck, then one, then any list pair.
+ * When `freshOnly` is set, a pair from the last 5 Card 1002 cards is skipped.
+ */
+function pickUnrelatedPair(ctx: Card1002Context, freshOnly: boolean): CandidatePair | null {
+  const words = listWords(ctx);
+  const deckIds = new Set(ctx.activeBank.map(w => w.id));
+  const deck = words.filter(w => deckIds.has(w.id));
+  const outside = words.filter(w => !deckIds.has(w.id));
+  const knownKeys = buildKnownPairKeys(ctx.language, new Set(words.map(w => w.id)));
+  const recent = ctx.recentPairKeys ?? [];
+  const tiers: Array<[VocabItem[], VocabItem[], boolean, number]> = [
+    [deck, deck, true, 2],
+    [deck, outside, false, 1],
+    [outside, outside, true, 0],
+  ];
+  for (const [left, right, sameList, priority] of tiers) {
+    const picked = reservoirUnrelated(
+      left,
+      right,
+      sameList,
+      knownKeys,
+      recent,
+      freshOnly,
+      priority,
+    );
+    if (picked) return picked;
+  }
+  return null;
+}
+
+function countValidPairs(ctx: Card1002Context): number {
+  const typed = collectTypedPairs(ctx).length;
+  if (typed >= 2) return typed;
+  return hasUnrelatedPairs(ctx, 2 - typed) ? 2 : typed;
+}
+
 export function countCard1002ValidPairs(ctx: Card1002Context): number {
-  return collectCandidates(ctx).length;
+  return countValidPairs(ctx);
 }
 
 export function isCard1002Available(ctx: Card1002Context): boolean {
-  return countCard1002ValidPairs(ctx) >= 2;
+  return countValidPairs(ctx) >= 2;
 }
 
-function pickCandidate(candidates: CandidatePair[]): CandidatePair | null {
-  if (candidates.length === 0) return null;
-  const maxPriority = Math.max(...candidates.map(c => c.priority));
-  const top = candidates.filter(c => c.priority === maxPriority);
+function pickWeightedType(types: RelationshipType[]): RelationshipType {
+  const total = types.reduce((sum, type) => sum + RELATIONSHIP_DRAW_WEIGHT[type], 0);
+  let rand = Math.random() * total;
+  for (const type of types) {
+    rand -= RELATIONSHIP_DRAW_WEIGHT[type];
+    if (rand <= 0) return type;
+  }
+  return types[types.length - 1];
+}
+
+function pickWithinType(
+  pairs: CandidatePair[],
+  recentPairKeys: string[],
+  freshOnly: boolean,
+): CandidatePair | null {
+  const fresh = pairs.filter(
+    pair => !isPairSpacingBlocked(pairKey(pair.itemA.id, pair.itemB.id), recentPairKeys),
+  );
+  const pool = fresh.length > 0 ? fresh : pairs;
+  if (freshOnly && fresh.length === 0) return null;
+  if (pool.length === 0) return null;
+  const maxPriority = Math.max(...pool.map(pair => pair.priority));
+  const top = pool.filter(pair => pair.priority === maxPriority);
   return top[Math.floor(Math.random() * top.length)];
 }
 
 export function generateCard1002(ctx: Card1002Context): Card1002Data | null {
-  const candidates = collectCandidates(ctx);
-
   const recentPairKeys = ctx.recentPairKeys ?? [];
-  let eligible = candidates.filter(
-    c => !isPairSpacingBlocked(pairKey(c.itemA.id, c.itemB.id), recentPairKeys),
-  );
-  if (eligible.length === 0) eligible = candidates;
+  const typed = collectTypedPairs(ctx);
+  const byType = new Map<RelationshipType, CandidatePair[]>();
+  for (const pair of typed) {
+    const list = byType.get(pair.type);
+    if (list) list.push(pair);
+    else byType.set(pair.type, [pair]);
+  }
 
-  const picked = pickCandidate(eligible);
+  const freshUnrelated = pickUnrelatedPair(ctx, true);
+  const anyUnrelated = freshUnrelated ?? pickUnrelatedPair(ctx, false);
+
+  const freshTypes: RelationshipType[] = [];
+  const allTypes: RelationshipType[] = [];
+  for (const type of ALL_RELATIONSHIP_TYPES) {
+    if (type === 'no_clear_relationship') {
+      if (anyUnrelated) allTypes.push(type);
+      if (freshUnrelated) freshTypes.push(type);
+      continue;
+    }
+    const pairs = byType.get(type) ?? [];
+    if (pairs.length === 0) continue;
+    allTypes.push(type);
+    if (pairs.some(pair => !isPairSpacingBlocked(pairKey(pair.itemA.id, pair.itemB.id), recentPairKeys))) {
+      freshTypes.push(type);
+    }
+  }
+
+  const types = freshTypes.length > 0 ? freshTypes : allTypes;
+  if (types.length === 0) return null;
+
+  const chosen = pickWeightedType(types);
+  const picked =
+    chosen === 'no_clear_relationship'
+      ? freshTypes.length > 0
+        ? freshUnrelated
+        : anyUnrelated
+      : pickWithinType(byType.get(chosen) ?? [], recentPairKeys, freshTypes.length > 0);
   if (!picked) return null;
 
   let showEnglishForB = picked.showEnglishForB;

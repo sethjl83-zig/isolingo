@@ -20,8 +20,10 @@ export function getEligibleCardTypes(
   const isGenderMode = studyType === 'gender';
 
   if (directionMode === 'mixed') {
+    // Relationship Judgment is General Vocab only. In Gender mode its share
+    // is left out of the draw, and the types that remain split that share.
     return isGenderMode
-      ? ['CARD_1006', 'CARD_1001', 'CARD_1002']
+      ? ['CARD_1006', 'CARD_1001']
       : ['CARD_1006', 'CARD_1002'];
   }
   // Pure directional modes: only CARD_1006 is eligible
