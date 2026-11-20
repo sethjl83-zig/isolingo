@@ -47,6 +47,7 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-11-19: Deck Options can grow the deck. New words are added at the end, the card on screen stays, and the next card uses the longer deck.
 - 2026-11-19: A one-list session shows a tune icon beside the direction pill. It opens Deck Options, and New Deck uses the existing redraw.
 - 2026-11-19: The study header stays above the card. A direction pill changes direction for this session only, starting on the next card.
 - 2026-11-19: German-to-English and Spanish-to-English cards no longer accept the other word's English when a gendered pair has different glosses.

@@ -3,7 +3,7 @@
  * Infinite study loop: generates cards, delivers them, updates repetition state.
  */
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Dimensions, Modal, Pressable, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Dimensions, Modal, Pressable, ScrollView, TouchableOpacity, BackHandler } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import Animated, {
@@ -32,7 +32,6 @@ import ErrorBoundary from '@/src/components/ErrorBoundary';
 import StudyButton from '@/src/components/ui/StudyButton';
 import { SessionWordMgmtProvider } from '@/src/context/SessionWordMgmtContext';
 import { WordMgmtConfirmHost } from '@/src/components/ui/WordMgmtStrip';
-import ConfirmSheet from '@/src/components/ui/ConfirmSheet';
 import {
   ensureLanguageStatsLoaded,
   saveWordStats,
@@ -52,6 +51,16 @@ import { updateWordStats } from '@/src/types/stats';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
+const DECK_SIZE_STEPS = [10, 15, 20, 25] as const;
+
+function shuffleCopy<T>(items: T[]): T[] {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
 
 type DeckNotice = 'small' | 'empty' | 'no-words';
 
@@ -128,6 +137,84 @@ function DeckNoticeDialog({
   );
 }
 
+function DeckOptionsSheet({
+  deckLength,
+  sizes,
+  onGrow,
+  onNewDeck,
+  onDismiss,
+}: {
+  deckLength: number;
+  sizes: readonly number[];
+  onGrow: (size: number) => void;
+  onNewDeck: () => void;
+  onDismiss: () => void;
+}) {
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      onDismiss();
+      return true;
+    });
+    return () => sub.remove();
+  }, [onDismiss]);
+
+  const showSizes = sizes.some(size => size > deckLength);
+
+  return (
+    <Pressable style={styles.deckOptionsScrim} onPress={onDismiss}>
+      <Pressable style={styles.dialogSheet} onPress={() => {}}>
+        <Text style={styles.dialogTitle}>Deck Options</Text>
+        {showSizes ? (
+          <View style={styles.deckOptionsSizes}>
+            <Text style={styles.deckOptionsLabel}>Deck size</Text>
+            <View style={styles.deckOptionsPills}>
+              {sizes.map(size => {
+                const current = size === deckLength;
+                return (
+                  <TouchableOpacity
+                    key={size}
+                    style={[styles.deckSizePill, current ? styles.deckSizePillOn : styles.deckSizePillOff]}
+                    onPress={() => onGrow(size)}
+                    disabled={current}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: current }}
+                    accessibilityLabel={`${size} words`}
+                  >
+                    <Text style={[styles.deckSizePillText, current ? styles.deckSizePillTextOn : styles.deckSizePillTextOff]}>
+                      {size}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        ) : null}
+        <Text style={styles.dialogMessage}>
+          New words are added to your deck. Your progress is kept.
+        </Text>
+        <View style={styles.dialogActions}>
+          <TouchableOpacity
+            style={styles.dialogFilled}
+            onPress={onNewDeck}
+            activeOpacity={0.75}
+            accessibilityRole="button"
+          >
+            <Text style={styles.dialogFilledLabel}>New Deck</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.dialogOutline}
+            onPress={onDismiss}
+            activeOpacity={0.75}
+            accessibilityRole="button"
+          >
+            <Text style={styles.dialogOutlineLabel}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </Pressable>
+    </Pressable>
+  );
+}
+
 function getCardKey(card: CardData, index: number): string {
   switch (card.type) {
     case 'CARD_1001':
@@ -142,7 +229,7 @@ function getCardKey(card: CardData, index: number): string {
 export default function SessionScreen() {
   const router = useRouter();
   const navigation = useNavigation();
-  const { state, recordCardResult, incrementCardIndex, getLanguagePools } = useAppContext();
+  const { state, recordCardResult, incrementCardIndex, getLanguagePools, updatePool } = useAppContext();
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
 
@@ -583,6 +670,39 @@ export default function SessionScreen() {
     loadCard();
   }, [language, poolIds, state.studyTypeSelected, getLanguagePools, loadCard]);
 
+  const growDeckTo = useCallback((size: number) => {
+    if (!language || poolIds.length !== 1) return;
+    const studyType = state.studyTypeSelected ?? 'general_vocab';
+    const pool = getLanguagePools(language).find(item => item.id === poolIds[0]);
+    const current = getSessionVocab();
+    if (!pool || !current) return;
+    const existingIds = current.vocabBank.map(word => word.id);
+    const needed = size - existingIds.length;
+    if (needed <= 0) return;
+    const inDeck = new Set(existingIds);
+    const removed = sessionRemovedIdsRef.current;
+    const candidates = eligibleStudyWords(pool, studyType).filter(
+      word => !inDeck.has(word.id) && !removed.has(word.id),
+    );
+    const picked = shuffleCopy(candidates).slice(0, needed);
+    if (picked.length === 0) return;
+    const enriched = enrichVocabItemsFromMaster(picked, language);
+    const frequencyById = new Map(pool.words.map(pw => [pw.item.id, pw.frequency]));
+    for (const item of enriched) {
+      sessionAddedWordsRef.current.set(item.id, {
+        item,
+        frequency: frequencyById.get(item.id) ?? 'normal',
+      });
+    }
+    sessionRef.current = {
+      ...sessionRef.current,
+      deckBankHash: '',
+    };
+    const newIds = [...existingIds, ...enriched.map(word => word.id)];
+    void saveListDeck(language, studyType, pool.id, newIds);
+    updatePool(pool.id, { deckSize: newIds.length, deckSizeChosen: true });
+  }, [language, poolIds, state.studyTypeSelected, getLanguagePools, getSessionVocab, updatePool]);
+
   const handleExit = useCallback(() => {
     const exitTarget = {
       pathname: '/select-study-list' as const,
@@ -763,6 +883,13 @@ export default function SessionScreen() {
 
   const cardKey = getCardKey(currentCard, state.sessionCardIndex);
   cardKeyRef.current = cardKey;
+  const liveDeckLength = getSessionDeckIds().size;
+  const eligibleCount = listPool && state.studyTypeSelected
+    ? eligibleStudyWords(listPool, state.studyTypeSelected).length
+    : 0;
+  const deckSizeOptions = DECK_SIZE_STEPS.filter(
+    size => size >= liveDeckLength && size <= eligibleCount,
+  );
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: palette.background }]} edges={['top', 'left', 'right']}>
@@ -881,13 +1008,14 @@ export default function SessionScreen() {
         />
       ) : null}
       {deckOptionsOpen ? (
-        <ConfirmSheet
-          title="Deck Options"
-          message="Draw a new set of words from this list? Your progress in this session will restart."
-          buttons={[
-            { label: 'New Deck', onPress: () => { void handleRedrawDeck(); } },
-            { label: 'Cancel', style: 'cancel' },
-          ]}
+        <DeckOptionsSheet
+          deckLength={liveDeckLength}
+          sizes={deckSizeOptions}
+          onGrow={growDeckTo}
+          onNewDeck={() => {
+            closeDeckOptions();
+            void handleRedrawDeck();
+          }}
           onDismiss={closeDeckOptions}
         />
       ) : null}
@@ -1034,4 +1162,53 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     color: '#5E51A4',
   },
+  deckOptionsScrim: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    zIndex: 20,
+    elevation: 20,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    paddingTop: 243,
+    paddingBottom: 24,
+  },
+  deckOptionsSizes: { gap: 10, alignItems: 'center', alignSelf: 'stretch' },
+  deckOptionsLabel: {
+    fontFamily: HomeFonts.interMedium,
+    fontWeight: 'normal',
+    fontSize: 14.8,
+    lineHeight: 20,
+    color: '#25262B',
+    textAlign: 'center',
+  },
+  deckOptionsPills: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  deckSizePill: {
+    minWidth: 44,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deckSizePillOn: { backgroundColor: '#5E51A4' },
+  deckSizePillOff: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#5E51A4',
+  },
+  deckSizePillText: {
+    fontFamily: HomeFonts.interMedium,
+    fontWeight: 'normal',
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  deckSizePillTextOn: { color: '#FFFFFF' },
+  deckSizePillTextOff: { color: '#5E51A4' },
 });
