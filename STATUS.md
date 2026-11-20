@@ -47,6 +47,8 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-11-19: The Body topic icon is a standing figure drawn with views. The arms hang 30 degrees out from vertical. The circle is unchanged.
+- 2026-11-19: Study a Topic is alphabetical. Culture is a muted blue-teal and Connectors is gray. Body stays the standing figure because react-native-svg is not installed.
 - 2026-11-17: The sense-label line no longer uses parentheses.
 - 2026-11-17: Sense labels that only name a part of speech or a grammatical gender are blank. 71 existing labels were cleared.
 - 2026-11-17: French native-to-target Production prompts say "your" for both second-person forms. Informal and formal sit on the sense-label line. Answers are unchanged.

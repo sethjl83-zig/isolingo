@@ -132,12 +132,29 @@ const VECTOR_TOPIC_ICONS: Record<
   technology: { name: 'laptop', color: '#7A828A', background: '#EFF0F1' },
   objects: { name: 'cube', color: '#8A6246', background: '#F1ECE9' },
   shopping: { name: 'cart', color: '#3E8F5A', background: '#E8F2EB' },
-  culture: { name: 'drama-masks' },
+  culture: { name: 'drama-masks', color: '#4E7A82', background: '#EAEFF0' },
   leisure: { name: 'party-popper' },
-  connectors: { name: 'link-variant' },
+  connectors: { name: 'link-variant', color: '#6F7378', background: '#EEEEEF' },
 };
 
 const VECTOR_ICON_SIZE = 28;
+
+function BodyFigure({ color }: { color: string }) {
+  return (
+    <View style={styles.bodyFigure}>
+      <View style={[styles.bodyHead, { backgroundColor: color }]} />
+      <View style={styles.bodyTrunk}>
+        <View style={[styles.bodyArm, styles.bodyArmLeft, { backgroundColor: color }]} />
+        <View style={[styles.bodyTorso, { backgroundColor: color }]} />
+        <View style={[styles.bodyArm, styles.bodyArmRight, { backgroundColor: color }]} />
+      </View>
+      <View style={styles.bodyLegs}>
+        <View style={[styles.bodyLeg, { backgroundColor: color }]} />
+        <View style={[styles.bodyLeg, { backgroundColor: color }]} />
+      </View>
+    </View>
+  );
+}
 
 function hexAlpha(hex: string, alpha: number) {
   const h = hex.replace('#', '');
@@ -224,6 +241,10 @@ export default function CuratedListScreen() {
       );
       result.push({ key, displayName: capitalise(key), words });
     }
+
+    result.sort((a, b) =>
+      a.displayName.toLocaleLowerCase().localeCompare(b.displayName.toLocaleLowerCase()),
+    );
 
     return result;
   }, [language]);
@@ -322,11 +343,15 @@ export default function CuratedListScreen() {
                 { backgroundColor: vector.background ?? hexAlpha(palette.primary, 0.12) },
               ]}
             >
-              <MaterialCommunityIcons
-                name={vector.name}
-                size={VECTOR_ICON_SIZE}
-                color={vector.color ?? palette.primary}
-              />
+              {entry.key === 'body' ? (
+                <BodyFigure color={vector.color ?? '#5DB0FA'} />
+              ) : (
+                <MaterialCommunityIcons
+                  name={vector.name}
+                  size={VECTOR_ICON_SIZE}
+                  color={vector.color ?? palette.primary}
+                />
+              )}
             </View>
           ) : fallback.baked ? (
             <Image source={fallback.source} style={styles.bakedWell} accessibilityIgnoresInvertColors />
@@ -467,6 +492,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  bodyFigure: { height: 31, alignItems: 'center' },
+  bodyHead: { width: 8, height: 8, borderRadius: 4 },
+  bodyTrunk: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 1 },
+  bodyTorso: { width: 10, height: 13, borderRadius: 4 },
+  bodyArm: {
+    width: 3,
+    height: 11,
+    borderRadius: 1.5,
+    transformOrigin: 'top center',
+  },
+  bodyArmLeft: { marginRight: -2, transform: [{ rotate: '-30deg' }] },
+  bodyArmRight: { marginLeft: -2, transform: [{ rotate: '30deg' }] },
+  bodyLegs: { flexDirection: 'row', gap: 2, marginTop: -1 },
+  bodyLeg: { width: 3, height: 10, borderRadius: 1.5 },
   bakedWell: { width: 56, height: 56 },
   rowInfo: { flex: 1, gap: 6 },
   rowName: {
