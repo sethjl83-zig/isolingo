@@ -241,8 +241,7 @@ Card 1001 — Gender Matching
 
 Direction neutral — eligible in mixed mode, Gender mode only
 Shows 3-5 nouns; user taps a row then a gender tile to match
-German: bare noun, no article; noun recolors to the assigned tile color
-French/Spanish: definite article + noun; only the noun is color-coded, article stays default
+Bare noun only, in all three languages. No article, determiner, or possessive, before or after the answer. German is the capitalized lemma. The whole noun recolors to the assigned tile color.
 Always shows all gender tiles (3 for German, 2 for French/Spanish) regardless of genders present
 Gender tiles: solid color only (no text, no icons); masculine #4da3ff, feminine #d66aa6, neuter #A4922D (German only)
 Submit disabled until every noun is assigned; re-assign allowed before Submit

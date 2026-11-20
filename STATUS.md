@@ -47,6 +47,7 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-11-19: Gender Matching shows the bare noun in German, French, and Spanish. The article is gone before and after the answer.
 - 2026-11-19: Relationship Judgment is General Vocab mixed mode only. Its pairs are chosen by relationship type first, and the words can come from the user's other lists.
 - 2026-11-19: The Body topic icon is a standing figure drawn with views. The arms hang 30 degrees out from vertical. The circle is unchanged.
 - 2026-11-19: Study a Topic is alphabetical. Culture is a muted blue-teal and Connectors is gray. Body stays the standing figure because react-native-svg is not installed.

@@ -10,7 +10,6 @@ import { Colors, GenderColors } from '@/constants/theme';
 import { HomeFonts } from '@/constants/homeFonts';
 import type { Card1001Data } from '@/src/types/cards';
 import type { Gender, Language } from '@/src/types/vocab';
-import { splitDisplayForm } from '@/src/engines/articleHelper';
 import GenderTile from '../ui/GenderTile';
 import StudyButton from '../ui/StudyButton';
 import CorrectText from '../ui/CorrectText';
@@ -37,34 +36,12 @@ interface Props {
 }
 
 function NounLabel({
-  language,
-  lemma,
   displayForm,
-  gender,
   nounColor,
-  defaultColor,
 }: {
-  language: Language;
-  lemma: string;
   displayForm: string;
-  gender: Gender | null;
   nounColor: string;
-  defaultColor: string;
 }) {
-  const isFrEs = language === 'fr' || language === 'es';
-  if (isFrEs && gender) {
-    const parts = splitDisplayForm(language, gender, lemma, 'definite');
-    return (
-      <Text style={styles.nounText}>
-        <Text style={{ color: defaultColor }}>
-          {parts.article}
-          {parts.separator}
-        </Text>
-        <Text style={{ color: nounColor }}>{parts.noun}</Text>
-      </Text>
-    );
-  }
-
   return <Text style={[styles.nounText, { color: nounColor }]}>{displayForm}</Text>;
 }
 
@@ -235,12 +212,8 @@ export default function Card1001({
                 activeOpacity={0.75}
               >
                 <NounLabel
-                  language={language}
-                  lemma={noun.item.lemma}
                   displayForm={noun.displayForm}
-                  gender={noun.item.gender}
                   nounColor={nounColor}
-                  defaultColor="rgba(0,0,0,0.8)"
                 />
               </TouchableOpacity>
             );

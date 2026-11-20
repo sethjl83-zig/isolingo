@@ -73,8 +73,8 @@ export function getArticle(
 }
 
 /**
- * German Card 1001 display form: the bare lemma only, capitalized.
- * French/Spanish Card 1001 uses getDisplayForm / splitDisplayForm instead.
+ * Card 1001 display form: the bare lemma only, in every language.
+ * German is capitalized. French and Spanish keep the stored lemma.
  */
 export function getBareLemmaDisplayForm(language: Language, lemma: string): string {
   const trimmed = lemma.trim();

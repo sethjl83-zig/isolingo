@@ -154,10 +154,7 @@ export function generateCard1001(
     type: 'CARD_1001',
     nouns: shuffled.map(item => ({
       item,
-      displayForm:
-        language === 'de' || !item.gender
-          ? getBareLemmaDisplayForm(language, item.lemma)
-          : getDisplayForm(language, item.gender, item.lemma, 'definite'),
+      displayForm: getBareLemmaDisplayForm(language, item.lemma),
     })),
   };
 }
