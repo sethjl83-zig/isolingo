@@ -37,6 +37,8 @@ interface Props {
   onSubmit: (allCorrect: boolean) => void;
   direction: DirectionMode;
   onCycleDirection: () => void;
+  showDeckOptions: boolean;
+  onOpenDeckOptions: () => void;
 }
 
 function NounLabel({
@@ -59,6 +61,8 @@ export default function Card1001({
   onSubmit,
   direction,
   onCycleDirection,
+  showDeckOptions,
+  onOpenDeckOptions,
 }: Props) {
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
@@ -186,6 +190,8 @@ export default function Card1001({
         onCycleDirection={onCycleDirection}
         onExit={onExit}
         onHome={onHome}
+        showDeckOptions={showDeckOptions}
+        onOpenDeckOptions={onOpenDeckOptions}
       />
       <ScrollView
         style={studyChrome.scroll}

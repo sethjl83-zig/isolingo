@@ -32,6 +32,7 @@ import ErrorBoundary from '@/src/components/ErrorBoundary';
 import StudyButton from '@/src/components/ui/StudyButton';
 import { SessionWordMgmtProvider } from '@/src/context/SessionWordMgmtContext';
 import { WordMgmtConfirmHost } from '@/src/components/ui/WordMgmtStrip';
+import ConfirmSheet from '@/src/components/ui/ConfirmSheet';
 import {
   ensureLanguageStatsLoaded,
   saveWordStats,
@@ -160,6 +161,8 @@ export default function SessionScreen() {
   const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
   const [deckNotice, setDeckNotice] = useState<DeckNotice | null>(null);
   const [smallDeckCount, setSmallDeckCount] = useState(0);
+  const [deckOptionsOpen, setDeckOptionsOpen] = useState(false);
+  const deckOptionsOpenRef = useRef(false);
 
   const language = state.languageSelected;
   const sessionDirectionRef = useRef<DirectionMode>(state.directionMode);
@@ -617,6 +620,11 @@ export default function SessionScreen() {
 
   useAndroidBackHandler(
     useCallback(() => {
+      if (deckOptionsOpenRef.current) {
+        deckOptionsOpenRef.current = false;
+        setDeckOptionsOpen(false);
+        return true;
+      }
       if (blockingNoticeRef.current) return true;
       if (smallNoticeRef.current) {
         setDeckNotice(null);
@@ -630,6 +638,16 @@ export default function SessionScreen() {
   const handleHome = useCallback(() => {
     router.replace('/dashboard');
   }, [router]);
+
+  const openDeckOptions = useCallback(() => {
+    deckOptionsOpenRef.current = true;
+    setDeckOptionsOpen(true);
+  }, []);
+
+  const closeDeckOptions = useCallback(() => {
+    deckOptionsOpenRef.current = false;
+    setDeckOptionsOpen(false);
+  }, []);
 
   if (!language) {
     return (
@@ -783,6 +801,8 @@ export default function SessionScreen() {
               onHome={handleHome}
               direction={sessionDirection}
               onCycleDirection={cycleSessionDirection}
+              showDeckOptions={singleList}
+              onOpenDeckOptions={openDeckOptions}
               onSubmit={correct =>
                 handleSubmit(
                   null,
@@ -807,6 +827,8 @@ export default function SessionScreen() {
               onHome={handleHome}
               direction={sessionDirection}
               onCycleDirection={cycleSessionDirection}
+              showDeckOptions={singleList}
+              onOpenDeckOptions={openDeckOptions}
               onSubmit={correct =>
                 handleSubmit(
                   null,
@@ -832,6 +854,8 @@ export default function SessionScreen() {
               onHome={handleHome}
               direction={sessionDirection}
               onCycleDirection={cycleSessionDirection}
+              showDeckOptions={singleList}
+              onOpenDeckOptions={openDeckOptions}
               onSubmit={(correct, isFirstAttempt) =>
                 handleSubmit(
                   currentCard.item.id,
@@ -854,6 +878,17 @@ export default function SessionScreen() {
           onKeep={() => setDeckNotice(null)}
           onNewDeck={handleRedrawDeck}
           onExit={handleExit}
+        />
+      ) : null}
+      {deckOptionsOpen ? (
+        <ConfirmSheet
+          title="Deck Options"
+          message="Draw a new set of words from this list? Your progress in this session will restart."
+          buttons={[
+            { label: 'New Deck', onPress: () => { void handleRedrawDeck(); } },
+            { label: 'Cancel', style: 'cancel' },
+          ]}
+          onDismiss={closeDeckOptions}
         />
       ) : null}
     </SafeAreaView>

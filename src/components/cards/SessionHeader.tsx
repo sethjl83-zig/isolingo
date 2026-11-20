@@ -1,9 +1,10 @@
 /**
- * Fixed study header: Exit Study, the session direction pill, and Home.
+ * Fixed study header: Exit Study, the session direction pill, the deck-options icon, and Home.
  * Sits above the card scroll so it stays put while the card moves.
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { HomeFonts } from '@/constants/homeFonts';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -14,6 +15,8 @@ const CYCLE: DirectionMode[] = ['target_to_native', 'native_to_target', 'mixed']
 
 /** Text is shorter than 44. hitSlop brings the tap target up to 44 points. */
 const LABEL_HIT_SLOP = { top: 12, bottom: 12, left: 8, right: 8 };
+/** The glyph is 20 points. 12 points of hitSlop on each side makes the target 44. */
+const ICON_HIT_SLOP = { top: 12, bottom: 12, left: 12, right: 12 };
 
 function languageCode(language: Language): string {
   if (language === 'fr') return 'FR';
@@ -34,6 +37,8 @@ interface Props {
   onCycleDirection: () => void;
   onExit: () => void;
   onHome: () => void;
+  showDeckOptions: boolean;
+  onOpenDeckOptions: () => void;
 }
 
 export default function SessionHeader({
@@ -42,6 +47,8 @@ export default function SessionHeader({
   onCycleDirection,
   onExit,
   onHome,
+  showDeckOptions,
+  onOpenDeckOptions,
 }: Props) {
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
@@ -72,17 +79,34 @@ export default function SessionHeader({
         >
           <Text style={styles.exit}>Exit Study</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          onPress={cycle}
-          accessibilityRole="button"
-          accessibilityLabel={`Study direction ${directionLabel(direction, language)}`}
-        >
-          <View style={[styles.pill, { backgroundColor: palette.badgeFill }]}>
-            <Text style={[styles.pillText, { color: palette.primary }]}>
-              {directionLabel(direction, language)}
-            </Text>
-          </View>
-        </TouchableOpacity>
+        <View style={styles.middle}>
+          <TouchableOpacity
+            onPress={cycle}
+            accessibilityRole="button"
+            accessibilityLabel={`Study direction ${directionLabel(direction, language)}`}
+          >
+            <View style={[styles.pill, { backgroundColor: palette.badgeFill }]}>
+              <Text style={[styles.pillText, { color: palette.primary }]}>
+                {directionLabel(direction, language)}
+              </Text>
+            </View>
+          </TouchableOpacity>
+          {showDeckOptions ? (
+            <TouchableOpacity
+              onPress={onOpenDeckOptions}
+              hitSlop={ICON_HIT_SLOP}
+              accessibilityRole="button"
+              accessibilityLabel="Deck options"
+              style={styles.optionsButton}
+            >
+              <MaterialCommunityIcons
+                name="tune-variant"
+                size={20}
+                color={palette.primary}
+              />
+            </TouchableOpacity>
+          ) : null}
+        </View>
         <TouchableOpacity
           onPress={onHome}
           hitSlop={LABEL_HIT_SLOP}
@@ -125,6 +149,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 22,
     color: '#5E51A4',
+  },
+  middle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  optionsButton: {
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   pill: {
     borderRadius: 20,

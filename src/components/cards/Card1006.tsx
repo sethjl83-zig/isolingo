@@ -59,6 +59,8 @@ interface Props {
   onSubmit: (correct: boolean, isFirstAttempt: boolean) => void;
   direction: DirectionMode;
   onCycleDirection: () => void;
+  showDeckOptions: boolean;
+  onOpenDeckOptions: () => void;
 }
 
 type CardState =
@@ -79,6 +81,8 @@ export default function Card1006({
   onSubmit,
   direction,
   onCycleDirection,
+  showDeckOptions,
+  onOpenDeckOptions,
 }: Props) {
   const scheme  = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
@@ -385,6 +389,8 @@ export default function Card1006({
         onCycleDirection={onCycleDirection}
         onExit={onExit}
         onHome={onHome}
+        showDeckOptions={showDeckOptions}
+        onOpenDeckOptions={onOpenDeckOptions}
       />
       <ScrollView
         style={studyChrome.scroll}
