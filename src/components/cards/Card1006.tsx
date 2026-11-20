@@ -295,7 +295,38 @@ export default function Card1006({
       style={{ backgroundColor: palette.background }}
       words={[{ id: card.item.id, lemma: card.item.lemma }]}
       bottomBar={
-        <View style={studyChrome.bottomBar}>
+        <View style={styles.bottomColumn}>
+          {cardState === 'correct' ? (
+            <FeedbackNote tone="correct" style={styles.feedbackNote}>
+              <CorrectText color="#38A19A" style={styles.correctLabel} />
+              {alsoCorrect.length > 0 && (
+                <Text style={styles.alsoCorrect}>
+                  Also accepted: {alsoCorrect.join(', ')}
+                </Text>
+              )}
+            </FeedbackNote>
+          ) : (cardState === 'incorrect_final' || cardState === 'flipped') &&
+            showGenderTiles &&
+            correctDisplayGender ? (
+            <FeedbackNote tone="info" style={styles.feedbackNote}>
+              <Text style={styles.noteText}>
+                {'Correct Answer: '}
+                <Text style={{ color: GenderColors[correctDisplayGender] }}>
+                  {correctDisplayNoun}
+                </Text>
+              </Text>
+              {germanErrorHints.length > 0 && (
+                <Text style={styles.errorHints}>
+                  {germanErrorHints.join(' ')}
+                </Text>
+              )}
+            </FeedbackNote>
+          ) : feedbackText !== '' ? (
+            <FeedbackNote tone="info" style={styles.feedbackNote}>
+              <Text style={styles.noteText}>{feedbackText}</Text>
+            </FeedbackNote>
+          ) : null}
+          <View style={studyChrome.bottomBar}>
           <StudyButton
             label="Flip"
             variant="secondary"
@@ -337,6 +368,7 @@ export default function Card1006({
               textStyle={actionLabelStyle}
             />
           )}
+          </View>
         </View>
       }
     >
@@ -444,44 +476,18 @@ export default function Card1006({
               </View>
             )}
 
-            {/* Feedback */}
-            {cardState === 'correct' ? (
-              <FeedbackNote tone="correct">
-                <CorrectText color="#38A19A" style={styles.correctLabel} />
-                {alsoCorrect.length > 0 && (
-                  <Text style={styles.alsoCorrect}>
-                    Also accepted: {alsoCorrect.join(', ')}
-                  </Text>
-                )}
-              </FeedbackNote>
-            ) : (cardState === 'incorrect_final' || cardState === 'flipped') &&
-              showGenderTiles &&
-              correctDisplayGender ? (
-              <FeedbackNote tone="info">
-                <Text style={styles.noteText}>
-                  {'Correct Answer: '}
-                  <Text style={{ color: GenderColors[correctDisplayGender] }}>
-                    {correctDisplayNoun}
-                  </Text>
-                </Text>
-                {germanErrorHints.length > 0 && (
-                  <Text style={styles.errorHints}>
-                    {germanErrorHints.join(' ')}
-                  </Text>
-                )}
-              </FeedbackNote>
-            ) : feedbackText !== '' ? (
-              <FeedbackNote tone="info">
-                <Text style={styles.noteText}>{feedbackText}</Text>
-              </FeedbackNote>
-            ) : null}
-
       </ScrollView>
     </StudyCardLayout>
   );
 }
 
 const styles = StyleSheet.create({
+  bottomColumn: { flexDirection: 'column' },
+  feedbackNote: {
+    marginTop: 0,
+    marginBottom: 10,
+    marginHorizontal: 16,
+  },
   promptArea: { alignItems: 'center', marginBottom: 12 },
   prompt: {
     fontFamily: HomeFonts.jakartaSemiBold,

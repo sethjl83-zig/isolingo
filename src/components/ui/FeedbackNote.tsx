@@ -1,18 +1,19 @@
 import React from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 const infoIcon = require('@/assets/images/gameplay/info.png');
 
 interface Props {
   tone: 'info' | 'correct';
   children: React.ReactNode;
+  style?: StyleProp<ViewStyle>;
 }
 
 /** Purple info note from Gameplay 2C. Correct uses the same card in teal. */
-export default function FeedbackNote({ tone, children }: Props) {
+export default function FeedbackNote({ tone, children, style }: Props) {
   const correct = tone === 'correct';
   return (
-    <View style={[styles.note, correct && styles.correct]}>
+    <View style={[styles.note, correct && styles.correct, style]}>
       <Image
         source={infoIcon}
         style={styles.icon}
