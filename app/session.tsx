@@ -3,7 +3,7 @@
  * Infinite study loop: generates cards, delivers them, updates repetition state.
  */
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Dimensions, Modal, Pressable, ScrollView, TouchableOpacity, BackHandler } from 'react-native';
+import { View, Text, Image, StyleSheet, ActivityIndicator, Dimensions, Modal, Pressable, ScrollView, TouchableOpacity, BackHandler } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import Animated, {
@@ -15,11 +15,12 @@ import Animated, {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { CommonActions, useNavigation } from '@react-navigation/native';
-import { Colors } from '@/constants/theme';
+import { Colors, GenderColors } from '@/constants/theme';
 import { HomeFonts } from '@/constants/homeFonts';
 import { useAppContext } from '@/src/context/AppContext';
 import type { DirectionMode, WordFrequencySetting } from '@/src/types/state';
 import type { VocabItem } from '@/src/types/vocab';
+import { getWordLemmaColor } from '@/src/utils/vocabBank';
 import { generateNextCard, makeSessionState, advanceSession, type SessionVocabContext } from '@/src/engines/sessionEngine';
 import { getCard1002PairKey } from '@/src/engines/card1002Engine';
 import { selectSessionSubset } from '@/src/engines/repetitionEngine';
@@ -51,7 +52,15 @@ import { updateWordStats } from '@/src/types/stats';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
+const SCREEN_HEIGHT = Dimensions.get('window').height;
 const DECK_SIZE_STEPS = [10, 15, 20, 25] as const;
+const checkIcon = require('@/assets/images/lists/check-white.png');
+
+function onScreenWordIds(card: CardData): string[] {
+  if (card.type === 'CARD_1001') return card.nouns.map(noun => noun.item.id);
+  if (card.type === 'CARD_1002') return [card.itemA.id, card.itemB.id];
+  return [card.item.id];
+}
 
 function shuffleCopy<T>(items: T[]): T[] {
   const copy = [...items];
@@ -140,25 +149,140 @@ function DeckNoticeDialog({
 function DeckOptionsSheet({
   deckLength,
   sizes,
+  words,
+  lockedIds,
+  shrinkSize,
   onGrow,
+  onOpenShrink,
+  onConfirmShrink,
+  onBack,
+  onHardwareBack,
   onNewDeck,
   onDismiss,
 }: {
   deckLength: number;
   sizes: readonly number[];
+  words: VocabItem[];
+  lockedIds: ReadonlySet<string>;
+  shrinkSize: number | null;
   onGrow: (size: number) => void;
+  onOpenShrink: (size: number) => void;
+  onConfirmShrink: (ids: string[]) => void;
+  onBack: () => void;
+  onHardwareBack: () => void;
   onNewDeck: () => void;
   onDismiss: () => void;
 }) {
+  const scheme = useColorScheme() ?? 'light';
+  const palette = Colors[scheme];
+  const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set());
+
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [shrinkSize]);
+
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-      onDismiss();
+      onHardwareBack();
       return true;
     });
     return () => sub.remove();
-  }, [onDismiss]);
+  }, [onHardwareBack]);
 
-  const showSizes = sizes.some(size => size > deckLength);
+  const showSizes = sizes.some(size => size !== deckLength);
+  const removeCount = shrinkSize === null ? 0 : deckLength - shrinkSize;
+  const selectedCount = selectedIds.size;
+  const shrinkReady = shrinkSize !== null && selectedCount === removeCount && removeCount > 0;
+
+  const toggleWord = (id: string) => {
+    if (lockedIds.has(id)) return;
+    setSelectedIds(current => {
+      const next = new Set(current);
+      if (next.has(id)) {
+        next.delete(id);
+        return next;
+      }
+      if (next.size >= removeCount) return current;
+      next.add(id);
+      return next;
+    });
+  };
+
+  if (shrinkSize !== null) {
+    return (
+      <Pressable style={styles.shrinkScrim} onPress={onDismiss}>
+        <Pressable style={[styles.dialogSheet, styles.shrinkSheet]} onPress={() => {}}>
+          <Text style={styles.dialogTitle}>Choose Words to Remove</Text>
+          <Text style={styles.dialogMessage}>
+            {`Remove ${removeCount} words to reach ${shrinkSize}.`}
+          </Text>
+          <ScrollView
+            style={styles.shrinkList}
+            contentContainerStyle={styles.shrinkListContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {words.map(word => {
+              const locked = lockedIds.has(word.id);
+              const selected = selectedIds.has(word.id);
+              const lemmaColor = getWordLemmaColor(word, palette.text, GenderColors);
+              return (
+                <TouchableOpacity
+                  key={word.id}
+                  style={[styles.shrinkRow, locked && styles.deckOptionsDisabled]}
+                  onPress={() => toggleWord(word.id)}
+                  disabled={locked}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: selected, disabled: locked }}
+                  accessibilityLabel={word.lemma}
+                >
+                  <View
+                    style={[
+                      styles.shrinkCheck,
+                      selected
+                        ? { backgroundColor: palette.teal, borderColor: palette.teal }
+                        : { backgroundColor: 'transparent', borderColor: 'rgba(0,0,0,0.2)' },
+                    ]}
+                  >
+                    {selected ? (
+                      <Image source={checkIcon} style={styles.shrinkCheckIcon} accessibilityIgnoresInvertColors />
+                    ) : null}
+                  </View>
+                  <View style={styles.shrinkWords}>
+                    <Text style={[styles.shrinkLemma, { color: lemmaColor }]}>{word.lemma}</Text>
+                    <Text style={styles.shrinkEnglish}>{word.english}</Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+          <Text style={styles.dialogMessage}>
+            {`${selectedCount} of ${removeCount} selected`}
+          </Text>
+          <View style={styles.dialogActions}>
+            <TouchableOpacity
+              style={[styles.dialogFilled, !shrinkReady && styles.deckOptionsDisabled]}
+              onPress={() => onConfirmShrink([...selectedIds])}
+              disabled={!shrinkReady}
+              activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: !shrinkReady }}
+            >
+              <Text style={styles.dialogFilledLabel}>{`Remove ${removeCount} Words`}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.dialogOutline}
+              onPress={onBack}
+              activeOpacity={0.75}
+              accessibilityRole="button"
+            >
+              <Text style={styles.dialogOutlineLabel}>Back</Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Pressable>
+    );
+  }
 
   return (
     <Pressable style={styles.deckOptionsScrim} onPress={onDismiss}>
@@ -174,7 +298,10 @@ function DeckOptionsSheet({
                   <TouchableOpacity
                     key={size}
                     style={[styles.deckSizePill, current ? styles.deckSizePillOn : styles.deckSizePillOff]}
-                    onPress={() => onGrow(size)}
+                    onPress={() => {
+                      if (size < deckLength) onOpenShrink(size);
+                      else onGrow(size);
+                    }}
                     disabled={current}
                     accessibilityRole="button"
                     accessibilityState={{ selected: current }}
@@ -190,7 +317,7 @@ function DeckOptionsSheet({
           </View>
         ) : null}
         <Text style={styles.dialogMessage}>
-          New words are added to your deck. Your progress is kept.
+          Larger sizes add random words. Smaller sizes ask which words to remove. Your progress is kept.
         </Text>
         <View style={styles.dialogActions}>
           <TouchableOpacity
@@ -250,6 +377,8 @@ export default function SessionScreen() {
   const [smallDeckCount, setSmallDeckCount] = useState(0);
   const [deckOptionsOpen, setDeckOptionsOpen] = useState(false);
   const deckOptionsOpenRef = useRef(false);
+  const [shrinkSize, setShrinkSize] = useState<number | null>(null);
+  const shrinkSizeRef = useRef<number | null>(null);
 
   const language = state.languageSelected;
   const sessionDirectionRef = useRef<DirectionMode>(state.directionMode);
@@ -512,15 +641,21 @@ export default function SessionScreen() {
     }, 150);
   }, [transitionCardKey, sweepX]);
 
+  const markWordsRemoved = useCallback((ids: readonly string[]) => {
+    if (ids.length === 0) return;
+    const drop = new Set(ids);
+    for (const id of ids) sessionRemovedIdsRef.current.add(id);
+    sessionRef.current = {
+      ...sessionRef.current,
+      deck: sessionRef.current.deck.filter(id => !drop.has(id)),
+      deckBankHash: '',
+    };
+  }, []);
+
   const handleWordRemoved = useCallback(
     (vocabId: string) => {
       const before = getSessionDeckIds().size;
-      sessionRemovedIdsRef.current.add(vocabId);
-      sessionRef.current = {
-        ...sessionRef.current,
-        deck: sessionRef.current.deck.filter(id => id !== vocabId),
-        deckBankHash: '',
-      };
+      markWordsRemoved([vocabId]);
       persistSingleListDeck();
       const after = getSessionDeckIds().size;
       if (poolIds.length === 1 && after !== before) {
@@ -537,7 +672,7 @@ export default function SessionScreen() {
       }
       handleNext();
     },
-    [handleNext, persistSingleListDeck, getSessionDeckIds, poolIds.length],
+    [handleNext, persistSingleListDeck, getSessionDeckIds, poolIds.length, markWordsRemoved],
   );
 
   const handleWordReplaced = useCallback(
@@ -703,6 +838,25 @@ export default function SessionScreen() {
     updatePool(pool.id, { deckSize: newIds.length, deckSizeChosen: true });
   }, [language, poolIds, state.studyTypeSelected, getLanguagePools, getSessionVocab, updatePool]);
 
+  const shrinkDeckTo = useCallback((ids: readonly string[]) => {
+    if (!language || poolIds.length !== 1 || !currentCard) return;
+    const current = getSessionVocab();
+    if (!current || ids.length === 0) return;
+    const locked = new Set(onScreenWordIds(currentCard));
+    const removable = ids.filter(
+      id => !locked.has(id) && current.vocabBank.some(word => word.id === id),
+    );
+    if (removable.length === 0) return;
+    markWordsRemoved(removable);
+    persistSingleListDeck();
+    updatePool(poolIds[0], {
+      deckSize: getSessionDeckIds().size,
+      deckSizeChosen: true,
+    });
+    shrinkSizeRef.current = null;
+    setShrinkSize(null);
+  }, [language, poolIds, currentCard, getSessionVocab, markWordsRemoved, persistSingleListDeck, getSessionDeckIds, updatePool]);
+
   const handleExit = useCallback(() => {
     const exitTarget = {
       pathname: '/select-study-list' as const,
@@ -738,11 +892,22 @@ export default function SessionScreen() {
     });
   }, [navigation, router]);
 
+  const retreatDeckOptions = useCallback(() => {
+    if (shrinkSizeRef.current !== null) {
+      shrinkSizeRef.current = null;
+      setShrinkSize(null);
+      return;
+    }
+    deckOptionsOpenRef.current = false;
+    shrinkSizeRef.current = null;
+    setShrinkSize(null);
+    setDeckOptionsOpen(false);
+  }, []);
+
   useAndroidBackHandler(
     useCallback(() => {
       if (deckOptionsOpenRef.current) {
-        deckOptionsOpenRef.current = false;
-        setDeckOptionsOpen(false);
+        retreatDeckOptions();
         return true;
       }
       if (blockingNoticeRef.current) return true;
@@ -752,7 +917,7 @@ export default function SessionScreen() {
       }
       handleExit();
       return true;
-    }, [handleExit]),
+    }, [handleExit, retreatDeckOptions]),
   );
 
   const handleHome = useCallback(() => {
@@ -766,7 +931,14 @@ export default function SessionScreen() {
 
   const closeDeckOptions = useCallback(() => {
     deckOptionsOpenRef.current = false;
+    shrinkSizeRef.current = null;
+    setShrinkSize(null);
     setDeckOptionsOpen(false);
+  }, []);
+
+  const openShrink = useCallback((size: number) => {
+    shrinkSizeRef.current = size;
+    setShrinkSize(size);
   }, []);
 
   if (!language) {
@@ -887,9 +1059,14 @@ export default function SessionScreen() {
   const eligibleCount = listPool && state.studyTypeSelected
     ? eligibleStudyWords(listPool, state.studyTypeSelected).length
     : 0;
-  const deckSizeOptions = DECK_SIZE_STEPS.filter(
-    size => size >= liveDeckLength && size <= eligibleCount,
+  const deckSizeOptions = DECK_SIZE_STEPS.filter(size => {
+    if (size <= liveDeckLength) return true;
+    return size <= eligibleCount;
+  });
+  const deckWords = [...(getSessionVocab()?.vocabBank ?? [])].sort((a, b) =>
+    a.lemma.localeCompare(b.lemma, language, { sensitivity: 'base' }),
   );
+  const lockedIds = new Set(onScreenWordIds(currentCard));
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: palette.background }]} edges={['top', 'left', 'right']}>
@@ -1011,7 +1188,14 @@ export default function SessionScreen() {
         <DeckOptionsSheet
           deckLength={liveDeckLength}
           sizes={deckSizeOptions}
+          words={deckWords}
+          lockedIds={lockedIds}
+          shrinkSize={shrinkSize}
           onGrow={growDeckTo}
+          onOpenShrink={openShrink}
+          onConfirmShrink={shrinkDeckTo}
+          onBack={retreatDeckOptions}
+          onHardwareBack={retreatDeckOptions}
           onNewDeck={() => {
             closeDeckOptions();
             void handleRedrawDeck();
@@ -1211,4 +1395,56 @@ const styles = StyleSheet.create({
   },
   deckSizePillTextOn: { color: '#FFFFFF' },
   deckSizePillTextOff: { color: '#5E51A4' },
+  deckOptionsDisabled: { opacity: 0.4 },
+  shrinkScrim: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    zIndex: 20,
+    elevation: 20,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    paddingTop: 48,
+    paddingBottom: 24,
+  },
+  shrinkSheet: {
+    alignItems: 'stretch',
+    maxHeight: SCREEN_HEIGHT - 96,
+  },
+  shrinkList: {
+    alignSelf: 'stretch',
+    maxHeight: 180,
+  },
+  shrinkListContent: { gap: 8 },
+  shrinkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    minHeight: 44,
+  },
+  shrinkCheck: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  shrinkCheckIcon: { width: 18, height: 18 },
+  shrinkWords: { flex: 1, gap: 2 },
+  shrinkLemma: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 18,
+    lineHeight: 22,
+  },
+  shrinkEnglish: {
+    fontFamily: HomeFonts.interRegular,
+    fontWeight: 'normal',
+    fontSize: 13.5,
+    lineHeight: 16,
+    color: 'rgba(0,0,0,0.6)',
+  },
 });
