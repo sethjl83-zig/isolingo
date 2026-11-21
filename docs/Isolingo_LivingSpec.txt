@@ -65,7 +65,7 @@ First screen for returning users
 Welcome banner: "Welcome, [Name]!" at the top
 "What do you want to study?" label below the welcome banner
 Language selector card below the prompt (globe icon, "Select Language" caption, flag, language name, down arrow)
-Two study mode cards: General Vocabulary, Gender. The Gender card uses the three-gender symbol when German is selected, and the two-gender symbol for Spanish, French, and when no language is selected.
+Two study mode cards: General Vocabulary, Gender. Each card is at least 170 points tall and grows if the title or subtitle wraps, so the subtitle is not cut off. The title and subtitle sit together under the icon. The Gender card uses the three-gender symbol when German is selected, and the two-gender symbol for Spanish, French, and when no language is selected.
 Stats card below the study mode cards: heading "Your Progress" (shown in uppercase), Mastered, Accuracy (circular ring), Today, Streak, and "View Details →"
 Streak is consecutive local calendar days with at least 5 answered cards of any type (Gender Matching, Word Relationships, or Production), stored per language next to the daily stats. Each card counts once. The current day does not break the streak until it ends. The count shows from 0, and a finished day turns it green at 1–6, yellow at 7–9, and red at 10 or more. From 7 days, a yellow caution mark opens: “Practicing too many days in a row can actually hurt learning outcomes — consider taking a few days off.”
 Tapping the stats card → Stats screen

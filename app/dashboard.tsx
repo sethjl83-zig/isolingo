@@ -4,7 +4,7 @@
  * vocab banks shortcut, and a stats summary widget.
  */
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Modal, Pressable, ActivityIndicator, Dimensions, BackHandler, ScrollView } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Modal, Pressable, ActivityIndicator, Dimensions, BackHandler, ScrollView, Platform } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { LinearGradient } from 'expo-linear-gradient';
@@ -627,7 +627,7 @@ export default function DashboardScreen() {
               <View style={styles.modeIconCircle}>
                 <Image source={require('@/assets/images/home/vocab-book.png')} style={styles.modeBookIcon} />
               </View>
-              <View>
+              <View style={styles.modeCardText}>
                 <Text style={styles.modeCardLabel}>
                   General Vocabulary
                 </Text>
@@ -650,7 +650,7 @@ export default function DashboardScreen() {
               <View style={styles.modeIconCircle}>
                 <GenderModeIcon language={language} size={30} />
               </View>
-              <View>
+              <View style={styles.modeCardText}>
                 <Text style={styles.modeCardLabel}>Gender</Text>
                 <Text style={styles.modeCardDesc}>
                   Focus on noun gender
@@ -954,7 +954,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     flexBasis: 175,
     maxWidth: 175,
-    height: 170,
+    minHeight: 170,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#766BB2',
@@ -970,9 +970,16 @@ const styles = StyleSheet.create({
     gap: 15,
   },
   modeCardMain: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 1,
+    minWidth: 0,
     alignSelf: 'stretch',
     gap: 10,
+  },
+  modeCardText: {
+    flexShrink: 1,
+    minWidth: 0,
+    justifyContent: 'center',
   },
   modeIconCircle: {
     width: 60,
@@ -989,12 +996,14 @@ const styles = StyleSheet.create({
     fontSize: 12.8,
     lineHeight: 28,
     color: '#FEFCFA',
+    ...(Platform.OS === 'android' ? { includeFontPadding: false } : null),
   },
   modeCardDesc: {
     fontFamily: HomeFonts.jakartaMedium,
     fontSize: 11,
     lineHeight: 17,
     color: 'rgba(254,252,250,0.6)',
+    ...(Platform.OS === 'android' ? { includeFontPadding: false } : null),
   },
 
   ringValue: {
