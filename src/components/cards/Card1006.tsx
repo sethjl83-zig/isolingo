@@ -61,6 +61,11 @@ interface Props {
   onCycleDirection: () => void;
   showDeckOptions: boolean;
   onOpenDeckOptions: () => void;
+  /**
+   * Ids in the source list that share a primary English gloss with another word.
+   * Null means this session is not one list, so the sense label stays visible.
+   */
+  sharedGlossIds: ReadonlySet<string> | null;
 }
 
 type CardState =
@@ -83,6 +88,7 @@ export default function Card1006({
   onCycleDirection,
   showDeckOptions,
   onOpenDeckOptions,
+  sharedGlossIds,
 }: Props) {
   const scheme  = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
@@ -249,7 +255,10 @@ export default function Card1006({
       : null;
 
   // ── Sense label subtitle (shown beneath prompt when present) ─────────────────
-  const senseLabel = usableSenseLabel(card.item.senseLabel);
+  const senseLabel =
+    sharedGlossIds === null || sharedGlossIds.has(card.item.id)
+      ? usableSenseLabel(card.item.senseLabel)
+      : null;
   const possessiveFormLabel =
     language === 'fr' &&
     card.direction === 'native_to_target' &&

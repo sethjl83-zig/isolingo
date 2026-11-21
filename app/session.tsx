@@ -47,6 +47,7 @@ import { saveSavedDeck } from '@/src/storage/savedDecks';
 import { saveListDeck } from '@/src/storage/listDecks';
 import { getDeckSizePref } from '@/src/storage/deckSizePrefs';
 import { drawSizedListDeck, eligibleStudyWords, resolveRedrawCount } from '@/src/utils/listDeckLaunch';
+import { sharedPrimaryGlossIds } from '@/src/utils/senseLabelVisibility';
 import { loadCardFrequency } from '@/src/storage/cardFrequency';
 import { updateWordStats } from '@/src/types/stats';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
@@ -941,6 +942,16 @@ export default function SessionScreen() {
     setShrinkSize(size);
   }, []);
 
+  const sharedGlossIds = useMemo(() => {
+    if (!language || poolIds.length !== 1) return null;
+    const pool = (state.languagePools[language] ?? []).find(item => item.id === poolIds[0]);
+    if (!pool) return null;
+    return sharedPrimaryGlossIds(
+      `${language}:${pool.id}`,
+      pool.words.map(word => word.item),
+    );
+  }, [language, poolIds, state.languagePools]);
+
   if (!language) {
     return (
       <SafeAreaView style={styles.messageScreen}>
@@ -1160,6 +1171,7 @@ export default function SessionScreen() {
               onCycleDirection={cycleSessionDirection}
               showDeckOptions={singleList}
               onOpenDeckOptions={openDeckOptions}
+              sharedGlossIds={sharedGlossIds}
               onSubmit={(correct, isFirstAttempt) =>
                 handleSubmit(
                   currentCard.item.id,

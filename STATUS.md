@@ -47,6 +47,7 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-11-20: A Production sense label shows only when another word in the same list has the same English gloss. French formal and informal labels stay.
 - 2026-11-20: Deck Options can shrink the deck. The user picks the words to remove, the card on screen stays, and those words remain in the list.
 - 2026-11-19: Deck Options can grow the deck. New words are added at the end, the card on screen stays, and the next card uses the longer deck.
 - 2026-11-19: A one-list session shows a tune icon beside the direction pill. It opens Deck Options, and New Deck uses the existing redraw.

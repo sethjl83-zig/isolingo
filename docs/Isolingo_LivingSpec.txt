@@ -267,6 +267,7 @@ Target to Native validation accepts both bare noun and article+noun as correct E
 Target to Native, indefinite article (French un/une, Spanish un/una): shown answer stays "a/an [noun]"; "one [noun]" is also accepted. Typing "one [noun]" lists the a/an form as also accepted
 Target to Native, French son/sa: "his [noun]" and "her [noun]" are both accepted. The shown answer is "his [noun]/her [noun]". Typing one lists the other as also accepted. English-to-target prompts still say "his/her"
 Target to Native, French votre: the English answer is "your [noun]". "(formal)" stays on the English-to-target prompt only
+Sense label: the subtitle under the prompt, including a combined "label · formal" line, shows in both directions only when another word in the same list has the same primary English gloss. Compare that gloss after lowercasing, trimming, and removing a leading "male " or "female ". Use the list the deck was drawn from, including paused words, not only the current deck. A session that is not one list still shows the label. French "informal" and "formal" are not sense labels. They still show on English-to-target possessive prompts
 Max 2 attempts; Flip available at all times
 Input clears between cards; Flip state resets between cards
 Gender tile color updates immediately on each tile tap including re-selection after wrong answer
