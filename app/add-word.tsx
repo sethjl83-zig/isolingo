@@ -152,8 +152,12 @@ function PoolCheckRow({
 
 export default function AddWordScreen() {
   const router = useRouter();
-  const { fromBuild } = useLocalSearchParams<{ fromBuild?: string | string[] }>();
+  const { fromBuild, poolId } = useLocalSearchParams<{
+    fromBuild?: string | string[];
+    poolId?: string | string[];
+  }>();
   const isFromBuild = fromBuild === '1' || (Array.isArray(fromBuild) && fromBuild.includes('1'));
+  const presetPoolId = Array.isArray(poolId) ? poolId[0] : poolId;
   const { state, updatePool, getLanguagePools } = useAppContext();
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
@@ -173,7 +177,9 @@ export default function AddWordScreen() {
   const [gender, setGender] = useState<Gender | null>(null);
   const [plural, setPlural] = useState('');
   const [categories, setCategories] = useState<string[]>(['general']);
-  const [selectedPoolIds, setSelectedPoolIds] = useState<Set<string>>(new Set());
+  const [selectedPoolIds, setSelectedPoolIds] = useState<Set<string>>(
+    () => new Set(presetPoolId ? [presetPoolId] : []),
+  );
   const [sheet, setSheet] = useState<ConfirmSheetRequest | null>(null);
 
   const toggleCategory = (cat: string) => {

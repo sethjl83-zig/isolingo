@@ -6,10 +6,10 @@
  * Paused words appear in a separate section below a divider.
  */
 import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, InteractionManager, Platform } from 'react-native';
+import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, InteractionManager, Platform, Keyboard, KeyboardAvoidingView } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Colors } from '@/constants/theme';
 import { HomeFonts } from '@/constants/homeFonts';
@@ -60,6 +60,19 @@ export default function VocabBankScreen() {
   const { state, updatePool, getLanguagePools } = useAppContext();
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
+  const insets = useSafeAreaInsets();
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(showEvent, () => setKeyboardOpen(true));
+    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardOpen(false));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [sheet, setSheet] = useState<ConfirmSheetRequest | null>(null);
@@ -299,6 +312,11 @@ export default function VocabBankScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+    <KeyboardAvoidingView
+      style={styles.safe}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top : 0}
+    >
       <View style={styles.topBar}>
         <View pointerEvents="none" style={styles.titleOverlay}>
           <Text style={styles.topBarTitle} numberOfLines={1}>
@@ -362,7 +380,13 @@ export default function VocabBankScreen() {
         />
       )}
 
-      <View style={styles.bottomBar}>
+      <View
+        style={[
+          styles.bottomBar,
+          { paddingBottom: keyboardOpen ? 0 : Math.max(insets.bottom, 29) },
+          keyboardOpen && styles.bottomBarOpen,
+        ]}
+      >
         <StudyButton
           label="Add Word"
           variant="primary"
@@ -377,17 +401,9 @@ export default function VocabBankScreen() {
           textStyle={styles.actionLabel}
           disabled={loadingWords}
         />
-        <StudyButton
-          label="Add Missing Word"
-          variant="primary"
-          size="medium"
-          onPress={() => router.push('/add-word')}
-          style={styles.actionBtn}
-          textStyle={styles.actionLabel}
-          disabled={loadingWords}
-        />
       </View>
       {sheet ? <ConfirmSheet {...sheet} onDismiss={() => setSheet(null)} /> : null}
+    </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -512,6 +528,10 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     shadowOffset: { width: 0, height: -2 },
     elevation: 8,
+  },
+  bottomBarOpen: {
+    shadowOpacity: 0,
+    elevation: 0,
   },
   actionBtn: {
     flex: 1,

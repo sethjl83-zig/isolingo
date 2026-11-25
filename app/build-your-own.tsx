@@ -105,6 +105,18 @@ export default function BuildYourOwnScreen() {
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
   const insets = useSafeAreaInsets();
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(showEvent, () => setKeyboardOpen(true));
+    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardOpen(false));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const language = state.languageSelected;
 
@@ -424,7 +436,7 @@ export default function BuildYourOwnScreen() {
     <SafeAreaView style={styles.flex} edges={['top', 'left', 'right']}>
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top : 0}
       >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -509,13 +521,24 @@ export default function BuildYourOwnScreen() {
         }
       />
 
-      <View style={styles.bottomBar}>
+      <View
+        style={[
+          styles.bottomBar,
+          { paddingBottom: keyboardOpen ? 0 : Math.max(insets.bottom, 29) },
+          keyboardOpen && styles.bottomBarOpen,
+        ]}
+      >
         <View style={styles.progressBlock}>
           <View style={styles.progressLine}>
-            <Animated.Text style={[styles.progressRest, { transform: [{ scale: countScale }] }]}>
-              {selectedCount}
+            <Animated.Text
+              style={[
+                styles.progressRest,
+                { color: canProceed ? palette.teal : palette.destructive },
+                canProceed && { transform: [{ scale: countScale }] },
+              ]}
+            >
+              {canProceed ? `${selectedCount} selected` : 'Minimum 10 words required'}
             </Animated.Text>
-            <Text style={styles.progressRest}>{` of ${MIN_WORDS} words selected`}</Text>
           </View>
           <View style={[styles.progressTrack, { backgroundColor: palette.badgeFill }]}>
             <View
@@ -749,6 +772,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: -2 },
     elevation: 8,
     gap: 12,
+  },
+  bottomBarOpen: {
+    shadowOpacity: 0,
+    elevation: 0,
   },
   primaryBtn: {
     alignSelf: 'stretch',

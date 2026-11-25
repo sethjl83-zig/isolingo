@@ -47,6 +47,7 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-11-24: The word-list bottom bar drops its home-indicator padding and shadow while the keyboard is open. Build Your Own’s count line says “Minimum 10 words required” until 10 are selected. Add Missing Word moved from Vocab Bank to the Add Word screen.
 - 2026-11-24: Word search matches the typed text anywhere in the word. Words that start with it stay first. Add Missing Word entries on Build Your Own stay at the top.
 - 2026-11-24: Production feedback keeps a one-line box. Also accepted and the German hints sit in a separate note under it.
 - 2026-11-24: French English-to-target son/sa prompts say "his" or "her" at random. A leading "male" or "female" gloss is shown in parentheses. Combined his/her answers are accepted on French-to-English cards.

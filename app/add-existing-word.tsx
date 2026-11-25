@@ -7,7 +7,7 @@
  * minimum word count, and no naming step.
  */
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, FlatList, ScrollView, StyleSheet, Platform, TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView } from 'react-native';
+import { View, Text, Image, TouchableOpacity, FlatList, ScrollView, StyleSheet, Platform, TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, PixelRatio, useWindowDimensions } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -49,6 +49,19 @@ export default function AddExistingWordScreen() {
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
   const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(showEvent, () => setKeyboardOpen(true));
+    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardOpen(false));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const language = state.languageSelected;
 
@@ -106,6 +119,13 @@ export default function AddExistingWordScreen() {
     searchMode === 'target'
       ? `Search ${getLanguageDisplayName(language)} words…`
       : 'Search English words…';
+
+  // Widths measured from Plus Jakarta Sans Medium 14 (toggle) and Inter SemiBold 14 (button).
+  const fontScale = PixelRatio.getFontScale();
+  const targetLabelWidth = ({ de: 71.4, fr: 63.1, es: 72.5 }[language ?? 'es'] ?? 72.5) * fontScale;
+  const toggleWidth = targetLabelWidth + 24 + 6 + 65.9 * fontScale + 24;
+  const missingTextRoom = windowWidth - 32 - toggleWidth - 8 - 22 - 4;
+  const missingLabelSize = Math.min(14 * fontScale, (14 * Math.max(missingTextRoom, 0)) / 160.8);
 
   const selectedCount = selectedIds.size;
   const canAdd = selectedCount > 0;
@@ -181,7 +201,7 @@ export default function AddExistingWordScreen() {
     <SafeAreaView style={styles.flex} edges={['top', 'left', 'right']}>
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top : 0}
       >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -203,11 +223,31 @@ export default function AddExistingWordScreen() {
           </View>
 
           <View style={styles.searchWrap}>
-            <SearchModeToggle
-              mode={searchMode}
-              onModeChange={setSearchMode}
-              language={language}
-            />
+            <View style={styles.modeRow}>
+              <View style={styles.modeToggle}>
+                <SearchModeToggle
+                  mode={searchMode}
+                  onModeChange={setSearchMode}
+                  language={language!}
+                />
+              </View>
+              <TouchableOpacity
+                style={[styles.missingBtn, { borderColor: palette.primary }]}
+                onPress={() =>
+                  router.push({ pathname: '/add-word', params: { poolId: poolId ?? '' } } as never)
+                }
+                accessibilityRole="button"
+                accessibilityLabel="Add Missing Word"
+              >
+                <Text
+                  style={[styles.missingLabel, { color: palette.primary, fontSize: missingLabelSize }]}
+                  numberOfLines={1}
+                  allowFontScaling={false}
+                >
+                  Add Missing Word
+                </Text>
+              </TouchableOpacity>
+            </View>
             <SearchBar
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -265,7 +305,13 @@ export default function AddExistingWordScreen() {
         }
       />
 
-      <View style={styles.bottomBar}>
+      <View
+        style={[
+          styles.bottomBar,
+          { paddingBottom: keyboardOpen ? 0 : Math.max(insets.bottom, 29) },
+          keyboardOpen && styles.bottomBarOpen,
+        ]}
+      >
         <Text style={styles.counter}>
           {selectedCount} {selectedCount === 1 ? 'word' : 'words'} selected
         </Text>
@@ -339,6 +385,29 @@ const styles = StyleSheet.create({
     marginTop: 15,
     marginHorizontal: 16,
     gap: 15,
+  },
+  modeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  modeToggle: { flexShrink: 0 },
+  missingBtn: {
+    height: 44,
+    flexShrink: 1,
+    minWidth: 0,
+    paddingHorizontal: 10,
+    borderRadius: 22,
+    borderWidth: 1,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  missingLabel: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    includeFontPadding: false,
   },
 
   chipScroll: { flexGrow: 0, marginTop: 15 },
@@ -435,6 +504,10 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     shadowOffset: { width: 0, height: -2 },
     elevation: 8,
+  },
+  bottomBarOpen: {
+    shadowOpacity: 0,
+    elevation: 0,
   },
   counter: {
     fontFamily: HomeFonts.jakartaRegular,

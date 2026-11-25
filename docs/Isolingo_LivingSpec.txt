@@ -123,7 +123,8 @@ Build Your Own Screen
 Search bar at top. Search matches the typed text anywhere in the word, ignoring case and extra spaces. Target mode matches the lemma. English mode matches the primary English gloss and every secondary gloss, after a leading "male " or "female " is removed. Words that start with the typed text come first, then the other matches. Each group stays in the list's alphabetical order. An empty search shows the whole list. A word added with Add Missing Word stays at the top and is not filtered out. A category chip still limits the list, and the search runs inside that limit
 Category filter chips below search bar
 Scrollable multi-select word list (checkboxes)
-Counter showing selected word count (minimum 10)
+Counter: "Minimum 10 words required" in red until 10 words are selected, then "N selected" in teal. The progress bar stays. "Select N more words" and "Add to My Lists (N)" stay
+While the keyboard is open, the bottom bar drops its home-indicator padding and its top shadow, so there is no gray line and no empty gap under the last button. Dragging the list still dismisses the keyboard. With the keyboard closed, the bar keeps the bottom inset
 "Add to My Lists" button active once 10+ words selected
 On confirm: naming screen with default name "List N"
 More than 10 words: Deck Size once, then the same return as before. The choice is saved on the list and no deck is drawn yet
@@ -195,20 +196,20 @@ Static column headers: Word (left), Frequency (right)
 Per-word frequency: three-position snap slider (Low, Medium, High)
 Slider indicator color: red (Low), yellow (Medium), green (High)
 No POS label, no gender label — color coding handles gender
-Two buttons at bottom: "Add Word" (opens Add Existing Word screen) and "Add Missing Word" (opens Add Missing Word screen)
+One button at the bottom: "Add Word" (opens Add Existing Word). Add Missing Word is on that screen, not here. While the keyboard is open, the bar drops its home-indicator padding and its top shadow. With the keyboard closed, the bar keeps the bottom inset
 Paused words section below active words, separated by a dividing line labeled "Paused words" — each paused word has Unpause and Remove buttons instead of frequency slider
 
 Add Existing Word Screen
 
 Header: "Add Word"
-Search bar and category filter chips. Search works the same way as Build Your Own, including the category limit
+An "Add Missing Word" outline pill sits to the right of the Target/English toggle, above the search bar. It opens Add Missing Word with this list already selected, and saving there returns here. Search bar and category filter chips. Search works the same way as Build Your Own, including the category limit. While the keyboard is open, the bottom bar drops its home-indicator padding and its top shadow. With the keyboard closed, the bar keeps the bottom inset
 Shows all master vocab words for current language, excluding words already in the pool
 Multi-select with counter
 "Add to List" button adds selected words to pool and returns to Vocab Bank Manager
 
 Add Missing Word Screen (formerly Add Custom Word)
 
-Accessible from Vocab Bank Manager
+Accessible from Add Word, with that list already selected, and from Build Your Own. Build Your Own opens it without the list checklist
 Fields: target language word, English translation, additional accepted English meanings (optional), additional accepted target language answers (optional), part of speech (dropdown), gender (if applicable), plural (if applicable), category (multi-select chips)
 Bare lemma only — no articles or determiners
 Pool selection section: multi-select checklist of user's existing pools for current language (must select at least one)
