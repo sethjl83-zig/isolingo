@@ -40,7 +40,7 @@ interface Props {
   onHome: () => void;
   onSubmit: (correct: boolean) => void;
   direction: DirectionMode;
-  onCycleDirection: () => void;
+  onSelectDirection: (mode: DirectionMode) => void;
   showDeckOptions: boolean;
   onOpenDeckOptions: () => void;
 }
@@ -101,7 +101,7 @@ export default function Card1002({
   onHome,
   onSubmit,
   direction,
-  onCycleDirection,
+  onSelectDirection,
   showDeckOptions,
   onOpenDeckOptions,
 }: Props) {
@@ -181,7 +181,7 @@ export default function Card1002({
       <SessionHeader
         language={language}
         direction={direction}
-        onCycleDirection={onCycleDirection}
+        onSelectDirection={onSelectDirection}
         onExit={onExit}
         onHome={onHome}
         showDeckOptions={showDeckOptions}

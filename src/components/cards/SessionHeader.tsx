@@ -1,9 +1,19 @@
 /**
- * Fixed study header: Exit Study, the session direction pill, the deck-options icon, and Home.
- * Sits above the card scroll so it stays put while the card moves.
+ * Fixed study header. Row 1 is Exit Study and Home. Row 2 is the direction
+ * slider and, for a one-list session, the deck-options icon. A caption line
+ * under that row stays reserved so the card does not move when it appears.
  */
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  PanResponder,
+  Animated,
+  Platform,
+  PixelRatio,
+} from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { HomeFonts } from '@/constants/homeFonts';
 import { Colors } from '@/constants/theme';
@@ -11,30 +21,50 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import type { DirectionMode } from '@/src/types/state';
 import type { Language } from '@/src/types/vocab';
 
-const CYCLE: DirectionMode[] = ['target_to_native', 'native_to_target', 'mixed'];
+const MODES: DirectionMode[] = ['target_to_native', 'native_to_target', 'mixed'];
+const TRACK_WIDTH = 216;
+const SEGMENT = TRACK_WIDTH / MODES.length;
+const TRACK_HEIGHT = 32;
+/** Widest segment label, "Ge → En", at Inter Medium 13. Measured from the font file. */
+const WIDEST_LABEL_AT_13 = 57.7;
+const LABEL_ROOM = SEGMENT - 8;
 
 /** Text is shorter than 44. hitSlop brings the tap target up to 44 points. */
 const LABEL_HIT_SLOP = { top: 12, bottom: 12, left: 8, right: 8 };
 /** The glyph is 20 points. 12 points of hitSlop on each side makes the target 44. */
 const ICON_HIT_SLOP = { top: 12, bottom: 12, left: 12, right: 12 };
+/** The track is 32 points. 6 points of hitSlop on each side makes the target 44. */
+const SLIDER_HIT_SLOP = { top: 6, bottom: 6, left: 0, right: 0 };
+
+const androidFont = Platform.OS === 'android' ? { includeFontPadding: false as const } : null;
 
 function languageCode(language: Language): string {
-  if (language === 'fr') return 'FR';
-  if (language === 'es') return 'ES';
-  return 'DE';
+  if (language === 'fr') return 'Fr';
+  if (language === 'es') return 'Sp';
+  return 'Ge';
 }
 
-function directionLabel(mode: DirectionMode, language: Language): string {
-  const code = languageCode(language);
-  if (mode === 'native_to_target') return `EN → ${code}`;
+function segmentLabel(mode: DirectionMode, code: string): string {
+  if (mode === 'native_to_target') return `En → ${code}`;
   if (mode === 'mixed') return 'Mixed';
-  return `${code} → EN`;
+  return `${code} → En`;
+}
+
+function labelFontSize(): number {
+  const fontScale = PixelRatio.getFontScale();
+  const natural = WIDEST_LABEL_AT_13 * fontScale;
+  if (natural <= LABEL_ROOM) return 13 * fontScale;
+  return (13 * fontScale * LABEL_ROOM) / natural;
+}
+
+function nearestIndex(value: number): number {
+  return Math.min(MODES.length - 1, Math.max(0, Math.round(value)));
 }
 
 interface Props {
   language: Language;
   direction: DirectionMode;
-  onCycleDirection: () => void;
+  onSelectDirection: (mode: DirectionMode) => void;
   onExit: () => void;
   onHome: () => void;
   showDeckOptions: boolean;
@@ -44,7 +74,7 @@ interface Props {
 export default function SessionHeader({
   language,
   direction,
-  onCycleDirection,
+  onSelectDirection,
   onExit,
   onHome,
   showDeckOptions,
@@ -52,8 +82,33 @@ export default function SessionHeader({
 }: Props) {
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
-  const [showCaption, setShowCaption] = useState(false);
+  const code = languageCode(language);
+  const fontSize = labelFontSize();
+  const lineHeight = fontSize * (18 / 13);
+  const directionRef = useRef(direction);
+  const onSelectRef = useRef(onSelectDirection);
+  directionRef.current = direction;
+  onSelectRef.current = onSelectDirection;
+
+  const position = useRef(new Animated.Value(MODES.indexOf(direction))).current;
+  const dragging = useRef(false);
+  const dragOrigin = useRef(MODES.indexOf(direction));
+  const captionOpacity = useRef(new Animated.Value(0)).current;
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [knobIndex, setKnobIndex] = useState(MODES.indexOf(direction));
+  const [captionVisible, setCaptionVisible] = useState(false);
+  const fontScale = PixelRatio.getFontScale();
+  const captionLine = 16 * fontScale;
+
+  useEffect(() => {
+    setKnobIndex(MODES.indexOf(direction));
+    if (dragging.current) return;
+    Animated.timing(position, {
+      toValue: MODES.indexOf(direction),
+      duration: 180,
+      useNativeDriver: true,
+    }).start();
+  }, [direction, position]);
 
   useEffect(() => {
     return () => {
@@ -61,16 +116,97 @@ export default function SessionHeader({
     };
   }, []);
 
-  const cycle = () => {
-    onCycleDirection();
-    setShowCaption(true);
+  const showCaption = () => {
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => setShowCaption(false), 2000);
+    setCaptionVisible(true);
+    Animated.timing(captionOpacity, {
+      toValue: 1,
+      duration: 150,
+      useNativeDriver: true,
+    }).start();
+    timerRef.current = setTimeout(() => {
+      Animated.timing(captionOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start(() => setCaptionVisible(false));
+    }, 2000);
   };
+
+  const commit = (index: number) => {
+    const next = MODES[index];
+    if (next === directionRef.current) return;
+    onSelectRef.current(next);
+    showCaption();
+  };
+
+  const pan = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderTerminationRequest: () => false,
+      onPanResponderGrant: () => {
+        dragging.current = true;
+        position.stopAnimation(value => {
+          dragOrigin.current = value;
+        });
+      },
+      onPanResponderMove: (_, gesture) => {
+        if (Math.abs(gesture.dx) < 4) return;
+        const next = Math.min(
+          MODES.length - 1,
+          Math.max(0, dragOrigin.current + gesture.dx / SEGMENT),
+        );
+        position.setValue(next);
+        const landed = nearestIndex(next);
+        setKnobIndex(prev => (prev === landed ? prev : landed));
+      },
+      onPanResponderRelease: (event, gesture) => {
+        dragging.current = false;
+        const tapped = Math.abs(gesture.dx) < 4 && Math.abs(gesture.dy) < 4;
+        const index = tapped
+          ? Math.min(
+              MODES.length - 1,
+              Math.max(0, Math.floor(event.nativeEvent.locationX / SEGMENT)),
+            )
+          : nearestIndex(dragOrigin.current + gesture.dx / SEGMENT);
+        setKnobIndex(index);
+        if (MODES[index] === directionRef.current) {
+          Animated.timing(position, {
+            toValue: index,
+            duration: 180,
+            useNativeDriver: true,
+          }).start();
+          return;
+        }
+        commit(index);
+      },
+      onPanResponderTerminate: () => {
+        dragging.current = false;
+        const index = MODES.indexOf(directionRef.current);
+        setKnobIndex(index);
+        Animated.timing(position, {
+          toValue: index,
+          duration: 180,
+          useNativeDriver: true,
+        }).start();
+      },
+    }),
+  ).current;
+
+  const knobShift = position.interpolate({
+    inputRange: [0, 1, 2],
+    outputRange: [0, SEGMENT, SEGMENT * 2],
+  });
+  const labelStyle = [
+    styles.segmentText,
+    androidFont,
+    { fontSize, lineHeight, color: palette.primary },
+  ];
 
   return (
     <View style={styles.wrap}>
-      <View style={styles.bar}>
+      <View style={styles.row}>
         <TouchableOpacity
           onPress={onExit}
           hitSlop={LABEL_HIT_SLOP}
@@ -79,34 +215,6 @@ export default function SessionHeader({
         >
           <Text style={styles.exit}>Exit Study</Text>
         </TouchableOpacity>
-        <View style={styles.middle}>
-          <TouchableOpacity
-            onPress={cycle}
-            accessibilityRole="button"
-            accessibilityLabel={`Study direction ${directionLabel(direction, language)}`}
-          >
-            <View style={[styles.pill, { backgroundColor: palette.badgeFill }]}>
-              <Text style={[styles.pillText, { color: palette.primary }]}>
-                {directionLabel(direction, language)}
-              </Text>
-            </View>
-          </TouchableOpacity>
-          {showDeckOptions ? (
-            <TouchableOpacity
-              onPress={onOpenDeckOptions}
-              hitSlop={ICON_HIT_SLOP}
-              accessibilityRole="button"
-              accessibilityLabel="Deck options"
-              style={styles.optionsButton}
-            >
-              <MaterialCommunityIcons
-                name="tune-variant"
-                size={20}
-                color={palette.primary}
-              />
-            </TouchableOpacity>
-          ) : null}
-        </View>
         <TouchableOpacity
           onPress={onHome}
           hitSlop={LABEL_HIT_SLOP}
@@ -116,11 +224,77 @@ export default function SessionHeader({
           <Text style={styles.home}>Home</Text>
         </TouchableOpacity>
       </View>
-      {showCaption ? (
-        <Text style={[styles.caption, { color: palette.subtext }]} pointerEvents="none">
-          Applies from the next card
-        </Text>
-      ) : null}
+
+      <View style={styles.sliderRow}>
+        <View
+          style={[styles.track, { backgroundColor: palette.badgeFill }]}
+          hitSlop={SLIDER_HIT_SLOP}
+          accessibilityRole="adjustable"
+          accessibilityLabel="Study direction"
+          accessibilityValue={{ text: segmentLabel(direction, code) }}
+          {...pan.panHandlers}
+        >
+          {MODES.map(mode => (
+            <Text key={mode} style={labelStyle} numberOfLines={1} allowFontScaling={false}>
+              {segmentLabel(mode, code)}
+            </Text>
+          ))}
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.knob,
+              { backgroundColor: palette.primary, transform: [{ translateX: knobShift }] },
+            ]}
+          >
+            <Text
+              style={[
+                styles.segmentText,
+                androidFont,
+                { fontSize, lineHeight, color: palette.buttonPrimaryText },
+              ]}
+              numberOfLines={1}
+              allowFontScaling={false}
+            >
+              {segmentLabel(MODES[knobIndex], code)}
+            </Text>
+          </Animated.View>
+        </View>
+        {showDeckOptions ? (
+          <TouchableOpacity
+            onPress={onOpenDeckOptions}
+            hitSlop={ICON_HIT_SLOP}
+            accessibilityRole="button"
+            accessibilityLabel="Deck options"
+            style={styles.optionsButton}
+          >
+            <MaterialCommunityIcons
+              name="tune-variant"
+              size={20}
+              color={palette.primary}
+            />
+          </TouchableOpacity>
+        ) : null}
+      </View>
+
+      <Animated.Text
+        style={[
+          styles.caption,
+          androidFont,
+          {
+            color: palette.subtext,
+            opacity: captionOpacity,
+            height: captionLine,
+            fontSize: 13 * fontScale,
+            lineHeight: captionLine,
+          },
+        ]}
+        pointerEvents="none"
+        allowFontScaling={false}
+        accessibilityElementsHidden={!captionVisible}
+        importantForAccessibility={captionVisible ? 'yes' : 'no-hide-descendants'}
+      >
+        Applies from the next card
+      </Animated.Text>
     </View>
   );
 }
@@ -131,7 +305,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     zIndex: 2,
   },
-  bar: {
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  sliderRow: {
+    marginTop: 4,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -150,37 +330,40 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: '#5E51A4',
   },
-  middle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
   optionsButton: {
     width: 20,
     height: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pill: {
-    borderRadius: 20,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
+  track: {
+    width: TRACK_WIDTH,
+    height: TRACK_HEIGHT,
+    borderRadius: TRACK_HEIGHT / 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    overflow: 'hidden',
   },
-  pillText: {
+  knob: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    width: SEGMENT,
+    height: TRACK_HEIGHT,
+    borderRadius: TRACK_HEIGHT / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  segmentText: {
+    flex: 1,
+    textAlign: 'center',
     fontFamily: HomeFonts.interMedium,
     fontWeight: 'normal',
-    fontSize: 13,
-    lineHeight: 18,
   },
   caption: {
-    position: 'absolute',
-    top: '100%',
-    left: 16,
-    right: 16,
+    marginTop: 2,
     textAlign: 'center',
     fontFamily: HomeFonts.interRegular,
     fontWeight: 'normal',
-    fontSize: 13,
-    lineHeight: 16,
   },
 });

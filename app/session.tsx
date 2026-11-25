@@ -384,15 +384,10 @@ export default function SessionScreen() {
   const sessionDirectionRef = useRef<DirectionMode>(state.directionMode);
   const [sessionDirection, setSessionDirection] = useState<DirectionMode>(state.directionMode);
 
-  const cycleSessionDirection = useCallback(() => {
-    const index = ['target_to_native', 'native_to_target', 'mixed'].indexOf(
-      sessionDirectionRef.current,
-    );
-    const next = (['target_to_native', 'native_to_target', 'mixed'] as const)[
-      (index + 1) % 3
-    ];
-    sessionDirectionRef.current = next;
-    setSessionDirection(next);
+  const selectSessionDirection = useCallback((mode: DirectionMode) => {
+    if (mode === sessionDirectionRef.current) return;
+    sessionDirectionRef.current = mode;
+    setSessionDirection(mode);
   }, []);
 
   // ── Pool-derived session vocab ─────────────────────────────────────────────
@@ -1104,7 +1099,7 @@ export default function SessionScreen() {
               onExit={handleExit}
               onHome={handleHome}
               direction={sessionDirection}
-              onCycleDirection={cycleSessionDirection}
+              onSelectDirection={selectSessionDirection}
               showDeckOptions={singleList}
               onOpenDeckOptions={openDeckOptions}
               onSubmit={correct =>
@@ -1130,7 +1125,7 @@ export default function SessionScreen() {
               onExit={handleExit}
               onHome={handleHome}
               direction={sessionDirection}
-              onCycleDirection={cycleSessionDirection}
+              onSelectDirection={selectSessionDirection}
               showDeckOptions={singleList}
               onOpenDeckOptions={openDeckOptions}
               onSubmit={correct =>
@@ -1157,7 +1152,7 @@ export default function SessionScreen() {
               onExit={handleExit}
               onHome={handleHome}
               direction={sessionDirection}
-              onCycleDirection={cycleSessionDirection}
+              onSelectDirection={selectSessionDirection}
               showDeckOptions={singleList}
               onOpenDeckOptions={openDeckOptions}
               onSubmit={(correct, isFirstAttempt) =>

@@ -60,7 +60,7 @@ interface Props {
   /** `isFirstAttempt` is true when the user answered correctly on their very first submit. */
   onSubmit: (correct: boolean, isFirstAttempt: boolean) => void;
   direction: DirectionMode;
-  onCycleDirection: () => void;
+  onSelectDirection: (mode: DirectionMode) => void;
   showDeckOptions: boolean;
   onOpenDeckOptions: () => void;
 }
@@ -82,7 +82,7 @@ export default function Card1006({
   onHome,
   onSubmit,
   direction,
-  onCycleDirection,
+  onSelectDirection,
   showDeckOptions,
   onOpenDeckOptions,
 }: Props) {
@@ -396,7 +396,7 @@ export default function Card1006({
       <SessionHeader
         language={language}
         direction={direction}
-        onCycleDirection={onCycleDirection}
+        onSelectDirection={onSelectDirection}
         onExit={onExit}
         onHome={onHome}
         showDeckOptions={showDeckOptions}
