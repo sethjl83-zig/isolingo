@@ -194,10 +194,10 @@ Pool mode: shows words from the specific pool (poolId param)
 Shows all words with color-coded gender for nouns
 Search bar at top. Search uses the same match as Build Your Own. This screen has no target or English switch, so a word matches on its lemma or its English glosses. The same two groups apply, inside the active words and again inside the paused words
 Static column headers: Word (left), Frequency (right)
-Per-word frequency: three-position snap slider (Low, Medium, High)
+Per-word frequency: three-position snap slider (Low, Medium, High). A move stays on screen until Save Changes. Save Changes sits above Add Word. It stays gray until a frequency differs from the saved value, then it is solid purple. One tap writes every draft change. "Changes saved" shows above the bar for about two seconds. Back, and Android Back, ask "Save your changes?" when a draft is pending. Save writes and leaves. Discard drops the draft and leaves. Tapping outside that sheet stays on the screen. Remove and Unpause still happen immediately, and Remove drops that word's draft
 Slider indicator color: red (Low), yellow (Medium), green (High)
 No POS label, no gender label — color coding handles gender
-One button at the bottom: "Add Word" (opens Add Existing Word). Add Missing Word is on that screen, not here. While the keyboard is open, the bar drops its home-indicator padding and its top shadow. With the keyboard closed, the bar keeps the bottom inset
+Two stacked buttons: "Save Changes", then "Add Word" (opens Add Existing Word). Add Missing Word is on that screen, not here. While the keyboard is open, the bar drops its home-indicator padding and its top shadow. With the keyboard closed, the bar keeps the bottom inset
 Paused words section below active words, separated by a dividing line labeled "Paused words" — each paused word has Unpause and Remove buttons instead of frequency slider
 
 Add Existing Word Screen

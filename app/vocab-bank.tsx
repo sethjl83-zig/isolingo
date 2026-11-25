@@ -76,6 +76,9 @@ export default function VocabBankScreen() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [sheet, setSheet] = useState<ConfirmSheetRequest | null>(null);
+  const [draft, setDraft] = useState<Record<string, WordFrequencySetting>>({});
+  const [savedNote, setSavedNote] = useState(false);
+  const savedNoteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [displayWords, setDisplayWords] = useState<DisplayWords | null>(null);
   const [loadingWords, setLoadingWords] = useState(true);
 
@@ -97,15 +100,74 @@ export default function VocabBankScreen() {
     }
   }, [language, poolId, router]);
 
+  const poolRef = useRef(pool);
+  poolRef.current = pool;
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
+  const hasDraftChanges = Object.keys(draft).length > 0;
+
+  const clearSavedNoteTimer = useCallback(() => {
+    if (savedNoteTimer.current) {
+      clearTimeout(savedNoteTimer.current);
+      savedNoteTimer.current = null;
+    }
+  }, []);
+
+  useEffect(() => clearSavedNoteTimer, [clearSavedNoteTimer]);
+
+  const writeDraft = useCallback(
+    (thenLeave: boolean) => {
+      const current = poolRef.current;
+      const pending = draftRef.current;
+      if (!current) return;
+      const words: PoolWord[] = current.words.map(pw => {
+        const next = pending[pw.item.id];
+        if (!next || next === pw.frequency) return pw;
+        return { ...pw, frequency: next as PoolWord['frequency'] };
+      });
+      updatePool(current.id, { words });
+      setDraft({});
+      if (thenLeave) {
+        router.back();
+        return;
+      }
+      setSavedNote(true);
+      clearSavedNoteTimer();
+      savedNoteTimer.current = setTimeout(() => setSavedNote(false), 2000);
+    },
+    [clearSavedNoteTimer, router, updatePool],
+  );
+
+  const requestLeave = useCallback(() => {
+    if (Object.keys(draftRef.current).length === 0) {
+      router.back();
+      return;
+    }
+    setSheet({
+      title: 'Save your changes?',
+      buttons: [
+        { label: 'Save', onPress: () => writeDraft(true) },
+        {
+          label: 'Discard',
+          style: 'cancel',
+          onPress: () => {
+            setDraft({});
+            router.back();
+          },
+        },
+      ],
+    });
+  }, [router, writeDraft]);
+
   useAndroidBackHandler(
     useCallback(() => {
       if (sheet) {
         setSheet(null);
         return true;
       }
-      router.back();
+      requestLeave();
       return true;
-    }, [router, sheet]),
+    }, [requestLeave, sheet]),
   );
 
   const poolWordsKey = useMemo(() => {
@@ -114,9 +176,6 @@ export default function VocabBankScreen() {
     const pausedIds = [...(pool.pausedWordIds ?? [])].sort().join('|');
     return `${pool.id}:${wordIds}:${pausedIds}`;
   }, [pool]);
-
-  const poolRef = useRef(pool);
-  poolRef.current = pool;
 
   useEffect(() => {
     const currentPool = poolRef.current;
@@ -208,18 +267,15 @@ export default function VocabBankScreen() {
 
   const wordCount = activeWords.length + pausedWords.length;
 
-  const handleFrequencyChange = useCallback(
-    (id: string, frequency: WordFrequencySetting) => {
-      if (!pool) return;
-      const updatedWords: PoolWord[] = pool.words.map((pw: PoolWord) =>
-        pw.item.id === id
-          ? { ...pw, frequency: frequency as PoolWord['frequency'] }
-          : pw,
-      );
-      updatePool(pool.id, { words: updatedWords });
-    },
-    [pool, updatePool],
-  );
+  const handleFrequencyChange = useCallback((id: string, frequency: WordFrequencySetting) => {
+    const saved = frequencyByIdRef.current.get(id) ?? 'normal';
+    setDraft(prev => {
+      const next = { ...prev };
+      if (frequency === saved) delete next[id];
+      else next[id] = frequency;
+      return next;
+    });
+  }, []);
 
   const handleUnpause = useCallback(
     (id: string) => {
@@ -237,6 +293,12 @@ export default function VocabBankScreen() {
       updatePool(pool.id, {
         words: pool.words.filter(pw => pw.item.id !== item.id),
         pausedWordIds: pool.pausedWordIds.filter(pid => pid !== item.id),
+      });
+      setDraft(prev => {
+        if (!(item.id in prev)) return prev;
+        const next = { ...prev };
+        delete next[item.id];
+        return next;
       });
     },
     [pool, updatePool],
@@ -286,7 +348,7 @@ export default function VocabBankScreen() {
           return (
             <ActiveWordRow
               item={row.item}
-              frequency={frequencyByIdRef.current.get(row.item.id) ?? 'normal'}
+              frequency={draftRef.current[row.item.id] ?? frequencyByIdRef.current.get(row.item.id) ?? 'normal'}
               onFrequencyChange={handleFrequencyChange}
               onRemove={handleRemoveActiveWord}
             />
@@ -325,7 +387,7 @@ export default function VocabBankScreen() {
         </View>
         <View style={styles.headerRow} pointerEvents="box-none">
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={requestLeave}
             hitSlop={8}
             accessibilityLabel="Back"
             style={[styles.backBtn, { backgroundColor: 'rgba(94,81,164,0.15)' }]}
@@ -361,7 +423,7 @@ export default function VocabBankScreen() {
           data={listRows}
           keyExtractor={keyExtractor}
           renderItem={renderItem}
-          extraData={frequencyById}
+          extraData={draft}
           style={styles.list}
           contentContainerStyle={styles.listContent}
           keyboardShouldPersistTaps="handled"
@@ -380,6 +442,9 @@ export default function VocabBankScreen() {
         />
       )}
 
+      {savedNote ? (
+        <Text style={[styles.savedNote, { color: palette.subtext }]}>Changes saved</Text>
+      ) : null}
       <View
         style={[
           styles.bottomBar,
@@ -387,6 +452,15 @@ export default function VocabBankScreen() {
           keyboardOpen && styles.bottomBarOpen,
         ]}
       >
+        <StudyButton
+          label="Save Changes"
+          variant={hasDraftChanges ? 'primary' : 'inactive'}
+          size="medium"
+          onPress={() => writeDraft(false)}
+          style={styles.actionBtn}
+          textStyle={styles.actionLabel}
+          disabled={loadingWords || !hasDraftChanges}
+        />
         <StudyButton
           label="Add Word"
           variant="primary"
@@ -512,9 +586,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
 
+  savedNote: {
+    fontFamily: HomeFonts.interRegular,
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: 'center',
+    marginBottom: 6,
+    includeFontPadding: false,
+  },
   bottomBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'column',
+    alignItems: 'stretch',
     justifyContent: 'center',
     gap: 10,
     paddingTop: 15,
@@ -534,7 +616,7 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   actionBtn: {
-    flex: 1,
+    alignSelf: 'stretch',
     height: 48,
     minWidth: 0,
     paddingVertical: 0,

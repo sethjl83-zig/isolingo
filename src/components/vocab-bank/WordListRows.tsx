@@ -187,13 +187,15 @@ const styles = StyleSheet.create({
   lemma: {
     fontFamily: HomeFonts.interSemiBold,
     fontSize: 18,
-    lineHeight: 22,
+    lineHeight: 26,
+    includeFontPadding: false,
   },
   english: {
     fontFamily: HomeFonts.interRegular,
     fontSize: 13.5,
-    lineHeight: 16,
+    lineHeight: 20,
     color: 'rgba(0,0,0,0.6)',
+    includeFontPadding: false,
   },
   customTag: {
     fontFamily: HomeFonts.interMedium,

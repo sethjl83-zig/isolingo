@@ -47,6 +47,7 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-11-25: Vocab Bank frequency sliders stay in a draft until Save Changes. Back asks before leaving unsaved changes. The word lines are tall enough for descenders.
 - 2026-11-25: Category chips on Build Your Own and Add Word scroll with the word list. Word rows are about 52 points tall. Add Word’s missing-word control reads “+ Missing Word”.
 - 2026-11-24: The word-list bottom bar drops its home-indicator padding and shadow while the keyboard is open. Build Your Own’s count line says “Minimum 10 words required” until 10 are selected. Add Missing Word moved from Vocab Bank to the Add Word screen.
 - 2026-11-24: Word search matches the typed text anywhere in the word. Words that start with it stay first. Add Missing Word entries on Build Your Own stay at the top.
