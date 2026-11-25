@@ -302,6 +302,37 @@ export default function Card1006({
         )
       : [];
 
+  const feedbackExtra =
+    cardState === 'correct' && alsoCorrect.length > 0
+      ? `Also accepted: ${alsoCorrect.join(', ')}`
+      : germanErrorHints.length > 0
+        ? germanErrorHints.join(' ')
+        : null;
+
+  const showGermanAnswer =
+    (cardState === 'incorrect_final' || cardState === 'flipped') &&
+    showGenderTiles &&
+    !!correctDisplayGender;
+
+  const feedbackMain = cardState === 'correct' ? (
+    <FeedbackNote tone="correct" singleLine note={feedbackExtra} style={styles.feedbackNote}>
+      <CorrectText color="#38A19A" style={styles.correctLabel} />
+    </FeedbackNote>
+  ) : showGermanAnswer && correctDisplayGender ? (
+    <FeedbackNote tone="info" singleLine note={feedbackExtra} style={styles.feedbackNote}>
+      <Text style={styles.noteText} numberOfLines={1}>
+        {'Correct Answer: '}
+        <Text style={{ color: GenderColors[correctDisplayGender] }}>
+          {correctDisplayNoun}
+        </Text>
+      </Text>
+    </FeedbackNote>
+  ) : feedbackText !== '' ? (
+    <FeedbackNote tone="info" singleLine style={styles.feedbackNote}>
+      <Text style={styles.noteText} numberOfLines={1}>{feedbackText}</Text>
+    </FeedbackNote>
+  ) : null;
+
   // ── Placeholder text ─────────────────────────────────────────────────────────
   const placeholder =
     isGerman && isNativeToTarget
@@ -316,36 +347,7 @@ export default function Card1006({
       words={[{ id: card.item.id, lemma: card.item.lemma }]}
       bottomBar={
         <View style={styles.bottomColumn}>
-          {cardState === 'correct' ? (
-            <FeedbackNote tone="correct" style={styles.feedbackNote}>
-              <CorrectText color="#38A19A" style={styles.correctLabel} />
-              {alsoCorrect.length > 0 && (
-                <Text style={styles.alsoCorrect}>
-                  Also accepted: {alsoCorrect.join(', ')}
-                </Text>
-              )}
-            </FeedbackNote>
-          ) : (cardState === 'incorrect_final' || cardState === 'flipped') &&
-            showGenderTiles &&
-            correctDisplayGender ? (
-            <FeedbackNote tone="info" style={styles.feedbackNote}>
-              <Text style={styles.noteText}>
-                {'Correct Answer: '}
-                <Text style={{ color: GenderColors[correctDisplayGender] }}>
-                  {correctDisplayNoun}
-                </Text>
-              </Text>
-              {germanErrorHints.length > 0 && (
-                <Text style={styles.errorHints}>
-                  {germanErrorHints.join(' ')}
-                </Text>
-              )}
-            </FeedbackNote>
-          ) : feedbackText !== '' ? (
-            <FeedbackNote tone="info" style={styles.feedbackNote}>
-              <Text style={styles.noteText}>{feedbackText}</Text>
-            </FeedbackNote>
-          ) : null}
+          {feedbackMain}
           <View style={studyChrome.bottomBar}>
           <StudyButton
             label="Flip"
@@ -593,6 +595,7 @@ const styles = StyleSheet.create({
     fontSize: 14.5,
     lineHeight: 20,
     textAlign: 'left',
+    includeFontPadding: false,
   },
   noteText: {
     fontFamily: HomeFonts.jakartaMedium,
@@ -600,19 +603,6 @@ const styles = StyleSheet.create({
     fontSize: 14.5,
     lineHeight: 20,
     color: '#5E51A4',
-  },
-  errorHints: {
-    fontFamily: HomeFonts.interMedium,
-    fontWeight: 'normal',
-    fontSize: 14,
-    lineHeight: 20,
-    color: 'rgba(0,0,0,0.6)',
-  },
-  alsoCorrect: {
-    fontFamily: HomeFonts.jakartaRegular,
-    fontWeight: 'normal',
-    fontSize: 13,
-    lineHeight: 18,
-    color: '#38A19A',
+    includeFontPadding: false,
   },
 });
