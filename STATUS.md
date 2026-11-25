@@ -47,6 +47,7 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-11-24: A Production sense label shows when another entry in that language's vocabulary file shares the primary English gloss or the lemma. A user-added word is also compared with the user's lists. French formal and informal labels stay.
 - 2026-11-21: The Home study-mode cards grow instead of clipping a wrapped subtitle. Android turns off extra font padding on those two lines.
 - 2026-11-20: A Production sense label shows only when another word in the same list has the same English gloss. French formal and informal labels stay.
 - 2026-11-20: Deck Options can shrink the deck. The user picks the words to remove, the card on screen stays, and those words remain in the list.

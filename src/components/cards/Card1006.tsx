@@ -2,7 +2,7 @@
  * CARD_1006 — Noun / Vocab Production
  * Direction-sensitive translation card. German uses gender tiles; FR/ES uses determiner+noun input.
  */
-import React, { useState, useCallback, useRef, useLayoutEffect } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useLayoutEffect } from 'react';
 import { View, Text, TextInput, ScrollView, StyleSheet } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -19,6 +19,8 @@ import FeedbackNote from '../ui/FeedbackNote';
 import StudyCardLayout from './StudyCardLayout';
 import SessionHeader from './SessionHeader';
 import { playCorrect, playIncorrect } from '@/src/utils/soundPlayer';
+import { sharesSenseWithAnother } from '@/src/utils/senseLabelVisibility';
+import { useAppContext } from '@/src/context/AppContext';
 import {
   studyChrome,
   actionLabelStyle,
@@ -61,11 +63,6 @@ interface Props {
   onCycleDirection: () => void;
   showDeckOptions: boolean;
   onOpenDeckOptions: () => void;
-  /**
-   * Ids in the source list that share a primary English gloss with another word.
-   * Null means this session is not one list, so the sense label stays visible.
-   */
-  sharedGlossIds: ReadonlySet<string> | null;
 }
 
 type CardState =
@@ -88,10 +85,14 @@ export default function Card1006({
   onCycleDirection,
   showDeckOptions,
   onOpenDeckOptions,
-  sharedGlossIds,
 }: Props) {
   const scheme  = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
+  const { state } = useAppContext();
+  const listItems = useMemo(
+    () => (state.languagePools[language] ?? []).flatMap(pool => pool.words.map(word => word.item)),
+    [state.languagePools, language],
+  );
 
   const [inputText, setInputText] = useState('');
   const [selectedGender, setSelectedGender] = useState<Gender | null>(null);
@@ -255,10 +256,9 @@ export default function Card1006({
       : null;
 
   // ── Sense label subtitle (shown beneath prompt when present) ─────────────────
-  const senseLabel =
-    sharedGlossIds === null || sharedGlossIds.has(card.item.id)
-      ? usableSenseLabel(card.item.senseLabel)
-      : null;
+  const senseLabel = sharesSenseWithAnother(card.item, language, listItems)
+    ? usableSenseLabel(card.item.senseLabel)
+    : null;
   const possessiveFormLabel =
     language === 'fr' &&
     card.direction === 'native_to_target' &&
