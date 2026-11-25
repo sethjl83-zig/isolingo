@@ -269,10 +269,11 @@ export default function Card1006({
         ? 'formal'
         : null
       : null;
-  const promptSubtitle =
+  const promptSubtitleText =
     senseLabel && possessiveFormLabel
       ? `${senseLabel} · ${possessiveFormLabel}`
       : possessiveFormLabel ?? senseLabel;
+  const promptSubtitle = promptSubtitleText ? `(${promptSubtitleText})` : null;
 
   // ── Feedback text (non-German answer reveal uses plain feedback string) ─────
   let feedbackText = '';
