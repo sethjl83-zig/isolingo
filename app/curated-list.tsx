@@ -139,19 +139,88 @@ const VECTOR_TOPIC_ICONS: Record<
 
 const VECTOR_ICON_SIZE = 28;
 
+// Slim figure inside the 56 pt circle. Arms rotate around their top ends.
+const BODY_HEAD = 7.5;
+const BODY_NECK = 1.5;
+const BODY_TORSO_W = 6;
+const BODY_TORSO_H = 10.5;
+const BODY_LIMB_W = 2.8;
+const BODY_ARM_L = 10.5;
+const BODY_LEG_L = 12.5;
+const BODY_SHOULDER_DOWN = 2;
+const BODY_SHOULDER_OUT = 3;
+const BODY_LEG_SPREAD = 3;
+const BODY_LEG_OVERLAP = 1;
+const BODY_H = 31;
+const BODY_W = 20;
+// Square pivot. Its center is the shoulder, and the arm hangs from that center,
+// so rotating the pivot turns the arm around its top end.
+const BODY_PIVOT = 24;
+
 function BodyFigure({ color }: { color: string }) {
+  const center = BODY_W / 2;
+  const torsoTop = BODY_HEAD + BODY_NECK;
+  const shoulderY = torsoTop + BODY_SHOULDER_DOWN;
+  const legTop = torsoTop + BODY_TORSO_H - BODY_LEG_OVERLAP;
+  const armStyle = {
+    position: 'absolute' as const,
+    top: BODY_PIVOT / 2,
+    left: (BODY_PIVOT - BODY_LIMB_W) / 2,
+    width: BODY_LIMB_W,
+    height: BODY_ARM_L,
+    borderRadius: BODY_LIMB_W / 2,
+    backgroundColor: color,
+  };
+
+  const pivot = (sign: -1 | 1) => ({
+    position: 'absolute' as const,
+    width: BODY_PIVOT,
+    height: BODY_PIVOT,
+    top: shoulderY - BODY_PIVOT / 2,
+    left: center + sign * BODY_SHOULDER_OUT - BODY_PIVOT / 2,
+    transform: [{ rotate: sign === -1 ? '-30deg' : '30deg' }],
+  });
+
   return (
     <View style={styles.bodyFigure}>
-      <View style={[styles.bodyHead, { backgroundColor: color }]} />
-      <View style={styles.bodyTrunk}>
-        <View style={[styles.bodyArm, styles.bodyArmLeft, { backgroundColor: color }]} />
-        <View style={[styles.bodyTorso, { backgroundColor: color }]} />
-        <View style={[styles.bodyArm, styles.bodyArmRight, { backgroundColor: color }]} />
+      <View
+        style={[
+          styles.bodyHead,
+          { backgroundColor: color, left: center - BODY_HEAD / 2 },
+        ]}
+      />
+      <View
+        style={[
+          styles.bodyTorso,
+          { backgroundColor: color, top: torsoTop, left: center - BODY_TORSO_W / 2 },
+        ]}
+      />
+      <View style={pivot(-1)}>
+        <View style={armStyle} />
       </View>
-      <View style={styles.bodyLegs}>
-        <View style={[styles.bodyLeg, { backgroundColor: color }]} />
-        <View style={[styles.bodyLeg, { backgroundColor: color }]} />
+      <View style={pivot(1)}>
+        <View style={armStyle} />
       </View>
+      <View
+        style={[
+          styles.bodyLeg,
+          {
+            backgroundColor: color,
+            top: legTop,
+            left: center - BODY_LEG_SPREAD / 2 - BODY_LIMB_W / 2,
+          },
+        ]}
+      />
+      <View
+        style={[
+          styles.bodyLeg,
+          {
+            backgroundColor: color,
+            top: legTop,
+            left: center + BODY_LEG_SPREAD / 2 - BODY_LIMB_W / 2,
+          },
+        ]}
+      />
     </View>
   );
 }
@@ -492,20 +561,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  bodyFigure: { height: 31, alignItems: 'center' },
-  bodyHead: { width: 8, height: 8, borderRadius: 4 },
-  bodyTrunk: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 1 },
-  bodyTorso: { width: 10, height: 13, borderRadius: 4 },
-  bodyArm: {
-    width: 3,
-    height: 11,
-    borderRadius: 1.5,
-    transformOrigin: 'top center',
+  bodyFigure: { width: BODY_W, height: BODY_H },
+  bodyHead: {
+    position: 'absolute',
+    top: 0,
+    width: BODY_HEAD,
+    height: BODY_HEAD,
+    borderRadius: BODY_HEAD / 2,
   },
-  bodyArmLeft: { marginRight: -2, transform: [{ rotate: '-30deg' }] },
-  bodyArmRight: { marginLeft: -2, transform: [{ rotate: '30deg' }] },
-  bodyLegs: { flexDirection: 'row', gap: 2, marginTop: -1 },
-  bodyLeg: { width: 3, height: 10, borderRadius: 1.5 },
+  bodyTorso: {
+    position: 'absolute',
+    width: BODY_TORSO_W,
+    height: BODY_TORSO_H,
+    borderRadius: 2.5,
+  },
+  bodyLeg: {
+    position: 'absolute',
+    width: BODY_LIMB_W,
+    height: BODY_LEG_L,
+    borderRadius: BODY_LIMB_W / 2,
+  },
   bakedWell: { width: 56, height: 56 },
   rowInfo: { flex: 1, gap: 6 },
   rowName: {
