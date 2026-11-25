@@ -181,6 +181,7 @@ export function getEnglishDeterminerPrompt(
   englishNoun: string,
   determinerType: DeterminerType,
   possessivePerson: PossessivePerson = 'first',
+  language?: Language,
 ): string {
   switch (determinerType) {
     case 'definite':
@@ -198,6 +199,12 @@ export function getEnglishDeterminerPrompt(
         case 'formal_second':
           return `your ${englishNoun}`;
         case 'third':
+          // French son/sa: "his" or "her" at random, not tied to the noun's gender.
+          // Spanish does not deal possessives; its prompt text stays "his/her".
+          if (language === 'fr') {
+            const word = Math.random() < 0.5 ? 'his' : 'her';
+            return `${word} ${englishNoun}`;
+          }
           return `his/her ${englishNoun}`;
       }
   }

@@ -329,6 +329,16 @@ function card1006TargetToNative(
   };
 }
 
+/** "female teacher" is shown as "teacher (female)". "doctor (male)" is left alone. */
+function englishNounWithGenderParen(gloss: string): string {
+  const trimmed = gloss.trim();
+  const stripped = stripEnglishGenderPrefix(trimmed);
+  if (stripped === trimmed) return trimmed;
+  const genderWord = trimmed.match(/^(male|female)\b/i)?.[1].toLowerCase();
+  if (!genderWord) return trimmed;
+  return `${stripped} (${genderWord})`;
+}
+
 function card1006NativeToTarget(
   item: VocabItem,
   language: Language,
@@ -339,7 +349,7 @@ function card1006NativeToTarget(
   const promptEnglish =
     counterpart && isAmbiguousEnglishPair(item, counterpart)
       ? buildDisambiguatedEnglishPrompt(item)
-      : englishBase;
+      : englishNounWithGenderParen(englishBase);
   // Alternate target-language forms (e.g. variant spellings). Null-safe.
   const alternates: string[] = item.alternateTargetAnswers ?? [];
 
@@ -376,6 +386,7 @@ function card1006NativeToTarget(
         promptEnglish,
         det,
         possessivePerson ?? 'first',
+        language,
       ),
       canonicalAnswer: getDisplayForm(
         language,

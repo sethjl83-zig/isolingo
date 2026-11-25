@@ -47,6 +47,7 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-11-24: French English-to-target son/sa prompts say "his" or "her" at random. A leading "male" or "female" gloss is shown in parentheses. Combined his/her answers are accepted on French-to-English cards.
 - 2026-11-24: The session direction control is a three-position slider under Exit Study and Home. It still applies from the next card and does not change the saved direction.
 - 2026-11-24: The Body topic icon is a slim figure. Its arms start at the shoulders and angle out from the torso.
 - 2026-11-24: Direction shows two summary lines: the whole list, then the current deck. The link is "Change Deck Size".

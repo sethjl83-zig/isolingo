@@ -29,6 +29,34 @@ function stripToPrefix(s: string): string {
   return s.replace(/^to\s+/i, '');
 }
 
+/** Noun inside the shown French son/sa answer, "his eyebrow/her eyebrow". */
+function frenchSonSaNoun(canonicalAnswer: string): string | null {
+  const lower = canonicalAnswer.toLowerCase();
+  const mid = '/her ';
+  if (!lower.startsWith('his ')) return null;
+  const rest = lower.slice(4);
+  const splitAt = rest.indexOf(mid);
+  if (splitAt <= 0) return null;
+  const noun = rest.slice(0, splitAt);
+  if (rest.slice(splitAt + mid.length) !== noun) return null;
+  return noun;
+}
+
+/** Combined his/her forms. Both halves have to name this noun. */
+function isFrenchSonSaCombined(userKey: string, noun: string): boolean {
+  return (
+    userKey === `his/her ${noun}` ||
+    userKey === `her/his ${noun}` ||
+    userKey === `his / her ${noun}` ||
+    userKey === `her / his ${noun}` ||
+    userKey === `his or her ${noun}` ||
+    userKey === `her or his ${noun}` ||
+    userKey === `his ${noun} or her ${noun}` ||
+    userKey === `her ${noun} or his ${noun}` ||
+    userKey === `his ${noun}/her ${noun}`
+  );
+}
+
 /** Remove combining diacritic marks while keeping base letters. */
 export function stripDiacritics(s: string): string {
   return s.normalize('NFD').replace(/\p{M}/gu, '');
@@ -146,6 +174,10 @@ export function validateAnswer(
 
   if (direction === 'target_to_native') {
     const userKey = stripToPrefix(normalized).toLowerCase();
+    const sonSaNoun = frenchSonSaNoun(canonicalAnswer);
+    if (sonSaNoun && isFrenchSonSaCombined(userKey, sonSaNoun)) {
+      return { correct: true, alsoCorrect: [] };
+    }
     const matched = allAccepted.find(
       a => stripToPrefix(normalizeInput(a)).toLowerCase() === userKey,
     );
