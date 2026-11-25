@@ -40,7 +40,7 @@ export interface Pool {
    */
   deckSize: number;
   /**
-   * True once creation or Change Size set deckSize.
+   * True once creation or Change Deck Size set deckSize.
    * Absent on lists made before that, which still ask for a size on first open.
    */
   deckSizeChosen?: boolean;

@@ -140,7 +140,7 @@ General Vocab: shows total word count per pool
 Gender: shows noun count per pool; pools with zero nouns are greyed out and disabled
 A saved deck for that list and mode is loaded, dropping words that are gone or paused. If none remain, there is no saved deck
 No saved deck and 10 or fewer eligible words: every eligible word is saved as the deck and Direction Select opens with no size choice
-No saved deck, more than 10 eligible words, and the list already has a deck size from creation or Change Size: that size is drawn once and Direction Select opens
+No saved deck, more than 10 eligible words, and the list already has a deck size from creation or Change Deck Size: that size is drawn once and Direction Select opens
 No saved deck and more than 10 eligible words on an older list with no chosen deck size: Deck Size once, then the chosen size is drawn and saved
 
 
@@ -156,8 +156,8 @@ On continue: draws that many eligible words, saves them as this list's deck, the
 
 Direction Select Screen
 
-Near the top: "List name · N words", then "Change Size" and "New Deck"
-Change Size is hidden when the list has 10 or fewer eligible words. It redraws and saves the deck at the new size
+Near the top, two lines that wrap instead of being cut off. Gender: "[List name] · X nouns (Y words total)", then "Current deck: N nouns". General Vocab: "[List name] · Y words", then "Current deck: N words". X is the eligible nouns in the whole list, not paused and with a gender. Y is every word in the list. N is the saved deck, not the list size. When the deck holds every eligible word, the second line is "Current deck: all N nouns" or "Current deck: all N words". A count of 1 says "noun" or "word". Then "Change Deck Size" and "New Deck"
+Change Deck Size is hidden when the list has 10 or fewer eligible words. It redraws and saves the deck at the new size
 New Deck redraws the deck at the current size and replaces the saved words. No confirmation. Tapping it shows "New deck drawn" under the links for about two seconds
 Shows actual language names: "[Language] to English", "English to [Language]", "Mixed"
 User selects direction and confirms to start session. The saved deck ids are passed into the session

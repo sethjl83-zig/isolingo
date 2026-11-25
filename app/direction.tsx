@@ -65,20 +65,26 @@ const MODE_LABELS: Record<StudyType, string> = {
   gender: 'Gender',
 };
 
+function countLabel(count: number, singular: string, plural: string): string {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
 function formatDeckSummary(
   listName: string,
   deckCount: number,
   totalCount: number,
+  eligibleCount: number,
   studyType: StudyType,
-): string {
-  if (deckCount === totalCount) {
-    return `${listName} · ${deckCount} ${deckCount === 1 ? 'word' : 'words'}`;
-  }
-  const totalLabel = `${totalCount} ${totalCount === 1 ? 'word' : 'words'} total`;
-  if (studyType === 'gender') {
-    return `${listName} · ${deckCount} ${deckCount === 1 ? 'noun' : 'nouns'} out of ${totalLabel}`;
-  }
-  return `${listName} · ${deckCount} ${deckCount === 1 ? 'word' : 'words'} out of ${totalLabel}`;
+): [string, string] {
+  const nouns = studyType === 'gender';
+  const line1 = nouns
+    ? `${listName} · ${countLabel(eligibleCount, 'noun', 'nouns')} (${countLabel(totalCount, 'word', 'words')} total)`
+    : `${listName} · ${countLabel(totalCount, 'word', 'words')}`;
+  const unit = nouns ? 'noun' : 'word';
+  const units = nouns ? 'nouns' : 'words';
+  const all = deckCount === eligibleCount ? 'all ' : '';
+  const line2 = `Current deck: ${all}${countLabel(deckCount, unit, units)}`;
+  return [line1, line2];
 }
 
 export default function DirectionScreen() {
@@ -128,8 +134,8 @@ export default function DirectionScreen() {
   const directionOptions = getDirectionOptions(langName);
   const totalWordCount = pool?.words.length ?? 0;
   const deckSummary = pool
-    ? formatDeckSummary(pool.name, activeDeckIds.length, totalWordCount, studyType)
-    : `${activeDeckIds.length} ${activeDeckIds.length === 1 ? 'word' : 'words'}`;
+    ? formatDeckSummary(pool.name, activeDeckIds.length, totalWordCount, eligibleCount, studyType)
+    : null;
 
   const handleChangeSize = () => {
     if (!pool || eligibleCount <= 10) return;
@@ -203,13 +209,18 @@ export default function DirectionScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.directionBlock}>
           <View style={styles.deckBlock}>
-            <Text style={styles.subheading}>
-              {deckSummary}
-            </Text>
+            <View>
+              <Text style={styles.subheading}>
+                {deckSummary
+                  ? deckSummary[0]
+                  : `${activeDeckIds.length} ${activeDeckIds.length === 1 ? 'word' : 'words'}`}
+              </Text>
+              {deckSummary ? <Text style={styles.subheading}>{deckSummary[1]}</Text> : null}
+            </View>
             <View style={styles.deckLinks}>
               {eligibleCount > 10 ? (
                 <TouchableOpacity onPress={handleChangeSize} accessibilityRole="link">
-                  <Text style={styles.deckLink}>Change Size</Text>
+                  <Text style={styles.deckLink}>Change Deck Size</Text>
                 </TouchableOpacity>
               ) : null}
               <TouchableOpacity onPress={handleNewDeck} accessibilityRole="link">
@@ -321,7 +332,7 @@ const styles = StyleSheet.create({
   },
   directionBlock: { gap: 18 },
   deckBlock: { gap: 8 },
-  deckLinks: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  deckLinks: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 16 },
   deckLink: {
     fontFamily: HomeFonts.interMedium,
     fontWeight: 'normal',

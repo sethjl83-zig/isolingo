@@ -47,6 +47,7 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-11-24: Direction shows two summary lines: the whole list, then the current deck. The link is "Change Deck Size".
 - 2026-11-24: The Production subtitle is wrapped in one pair of parentheses, such as "(platonic)" or "(platonic · formal)". The gendered prompt "doctor (male)" is unchanged.
 - 2026-11-24: A Production sense label shows when another entry in that language's vocabulary file shares the primary English gloss or the lemma. A user-added word is also compared with the user's lists. French formal and informal labels stay.
 - 2026-11-21: The Home study-mode cards grow instead of clipping a wrapped subtitle. Android turns off extra font padding on those two lines.
