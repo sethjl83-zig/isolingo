@@ -148,9 +148,10 @@ export default function BuildYourOwnScreen() {
 
   const filteredWords = useMemo(
     () =>
-      sortVocabByLemma(
-        filterVocabBySearch(categoryFiltered, searchQuery, searchMode),
-        language ?? undefined,
+      filterVocabBySearch(
+        sortVocabByLemma(categoryFiltered, language ?? undefined),
+        searchQuery,
+        searchMode,
       ),
     [categoryFiltered, searchQuery, searchMode, language],
   );

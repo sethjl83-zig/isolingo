@@ -163,9 +163,9 @@ export default function VocabBankScreen() {
 
   const listRows = useMemo((): WordListRow[] => {
     const sortLocale = pool?.language ?? language ?? undefined;
-    const sortedActive = sortVocabByLemma(
-      filterVocabBySearch(activeWords, searchQuery),
-      sortLocale,
+    const sortedActive = filterVocabBySearch(
+      sortVocabByLemma(activeWords, sortLocale),
+      searchQuery,
     );
     const rows: WordListRow[] = sortedActive.map(item => ({
       kind: 'active',
@@ -174,9 +174,9 @@ export default function VocabBankScreen() {
     }));
 
     if (pausedWords.length > 0) {
-      const sortedPaused = sortVocabByLemma(
-        filterVocabBySearch(pausedWords, searchQuery),
-        sortLocale,
+      const sortedPaused = filterVocabBySearch(
+        sortVocabByLemma(pausedWords, sortLocale),
+        searchQuery,
       );
       if (sortedPaused.length > 0) {
         rows.push({

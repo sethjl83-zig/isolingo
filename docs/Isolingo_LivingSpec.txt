@@ -120,7 +120,7 @@ Opened from a study mode: continues the same way as tapping that list on Choose 
 
 Build Your Own Screen
 
-Search bar at top
+Search bar at top. Search matches the typed text anywhere in the word, ignoring case and extra spaces. Target mode matches the lemma. English mode matches the primary English gloss and every secondary gloss, after a leading "male " or "female " is removed. Words that start with the typed text come first, then the other matches. Each group stays in the list's alphabetical order. An empty search shows the whole list. A word added with Add Missing Word stays at the top and is not filtered out. A category chip still limits the list, and the search runs inside that limit
 Category filter chips below search bar
 Scrollable multi-select word list (checkboxes)
 Counter showing selected word count (minimum 10)
@@ -190,7 +190,7 @@ Vocab Bank Manager
 Accessible from My Lists via View/Edit
 Pool mode: shows words from the specific pool (poolId param)
 Shows all words with color-coded gender for nouns
-Search bar at top
+Search bar at top. Search uses the same match as Build Your Own. This screen has no target or English switch, so a word matches on its lemma or its English glosses. The same two groups apply, inside the active words and again inside the paused words
 Static column headers: Word (left), Frequency (right)
 Per-word frequency: three-position snap slider (Low, Medium, High)
 Slider indicator color: red (Low), yellow (Medium), green (High)
@@ -201,7 +201,7 @@ Paused words section below active words, separated by a dividing line labeled "P
 Add Existing Word Screen
 
 Header: "Add Word"
-Search bar and category filter chips
+Search bar and category filter chips. Search works the same way as Build Your Own, including the category limit
 Shows all master vocab words for current language, excluding words already in the pool
 Multi-select with counter
 "Add to List" button adds selected words to pool and returns to Vocab Bank Manager

@@ -3,6 +3,10 @@ import type { VocabItem } from '../types/vocab';
 import type { StudyType, WordFrequencySetting } from '../types/state';
 
 import { getMasterDataset } from '../data';
+import {
+  getPrimaryEnglish,
+  stripEnglishGenderPrefix,
+} from '../engines/genderedCounterpartHelper';
 
 
 
@@ -85,41 +89,65 @@ export function getLanguageDisplayName(language: string): string {
   return LANGUAGE_DISPLAY_NAMES[language] ?? 'Target';
 }
 
-function englishGlosses(item: VocabItem): string[] {
-  return item.english
-    .split(',')
-    .map(s => s.trim().replace(/^to\s+/i, ''))
-    .filter(Boolean);
+/** Lowercase, trim, and collapse extra spaces so "  male   cousin " matches "cousin". */
+function normalizeSearchText(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+/** Primary gloss plus every secondary gloss, with a leading "male " or "female " removed. */
+function searchableGlosses(item: VocabItem): string[] {
+  const primary = stripEnglishGenderPrefix(getPrimaryEnglish(item));
+  const secondary = (item.secondaryGlosses ?? []).map(gloss =>
+    stripEnglishGenderPrefix(gloss),
+  );
+  return [primary, ...secondary].map(normalizeSearchText).filter(Boolean);
+}
+
+function searchableLemma(item: VocabItem): string {
+  return normalizeSearchText(item.lemma ?? '');
 }
 
 /**
- * Filter a vocab list by prefix match on lemma (target mode) or English gloss
- * (english mode). When mode is omitted, matches if either field starts with the
- * query (used by screens without a mode toggle).
+ * Match the typed text anywhere in the word. Within the matches, words that
+ * start with it come first. Each group keeps the order of `words`, so pass a
+ * list that is already in the screen's alphabetical order.
+ * Target mode uses the lemma. English mode uses the glosses. With no mode
+ * (Vocab Bank), either field matches.
+ * An empty query returns `words` unchanged.
  */
 export function filterVocabBySearch(
   words: VocabItem[],
   query: string,
   mode?: VocabSearchMode,
 ): VocabItem[] {
-  const q = query.trim().toLowerCase();
+  const q = normalizeSearchText(query);
   if (!q) return words;
 
-  if (mode === 'target') {
-    return words.filter(w => w.lemma.toLowerCase().startsWith(q));
-  }
+  const lemmaOf = (word: VocabItem) => searchableLemma(word);
+  const glossesOf = (word: VocabItem) => searchableGlosses(word);
 
-  if (mode === 'english') {
-    return words.filter(w =>
-      englishGlosses(w).some(g => g.toLowerCase().startsWith(q)),
-    );
-  }
+  const starts = (word: VocabItem) =>
+    mode === 'english'
+      ? glossesOf(word).some(gloss => gloss.startsWith(q))
+      : mode === 'target'
+        ? lemmaOf(word).startsWith(q)
+        : lemmaOf(word).startsWith(q) || glossesOf(word).some(gloss => gloss.startsWith(q));
 
-  return words.filter(
-    w =>
-      w.lemma.toLowerCase().startsWith(q) ||
-      englishGlosses(w).some(g => g.toLowerCase().startsWith(q)),
-  );
+  const contains = (word: VocabItem) =>
+    mode === 'english'
+      ? glossesOf(word).some(gloss => gloss.includes(q))
+      : mode === 'target'
+        ? lemmaOf(word).includes(q)
+        : lemmaOf(word).includes(q) || glossesOf(word).some(gloss => gloss.includes(q));
+
+  const leading: VocabItem[] = [];
+  const rest: VocabItem[] = [];
+  for (const word of words) {
+    if (!contains(word)) continue;
+    if (starts(word)) leading.push(word);
+    else rest.push(word);
+  }
+  return [...leading, ...rest];
 }
 
 const LOCALE_BY_LANGUAGE: Record<string, string> = {
