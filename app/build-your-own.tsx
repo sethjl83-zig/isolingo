@@ -471,37 +471,6 @@ export default function BuildYourOwnScreen() {
               placeholder={searchPlaceholder}
             />
           </View>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.chipScroll}
-            contentContainerStyle={styles.chipRow}
-            keyboardShouldPersistTaps="always"
-          >
-        <TouchableOpacity
-          style={[styles.chip, selectedCategory === null ? styles.chipOn : styles.chipOff]}
-          onPress={() => setSelectedCategory(null)}
-        >
-          <Text style={[styles.chipText, selectedCategory === null ? styles.chipTextOn : styles.chipTextOff]}>
-            All
-          </Text>
-        </TouchableOpacity>
-
-        {allCategories.map(cat => (
-          <TouchableOpacity
-            key={cat}
-            style={[styles.chip, selectedCategory === cat ? styles.chipOn : styles.chipOff]}
-            onPress={() =>
-              setSelectedCategory(prev => (prev === cat ? null : cat))
-            }
-          >
-            <Text style={[styles.chipText, selectedCategory === cat ? styles.chipTextOn : styles.chipTextOff]}>
-              {cat}
-            </Text>
-          </TouchableOpacity>
-        ))}
-          </ScrollView>
         </View>
       </TouchableWithoutFeedback>
 
@@ -514,6 +483,37 @@ export default function BuildYourOwnScreen() {
         contentContainerStyle={styles.listContent}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
+        ListHeaderComponent={
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.chipScroll}
+            contentContainerStyle={styles.chipRow}
+            keyboardShouldPersistTaps="always"
+          >
+            <TouchableOpacity
+              style={[styles.chip, selectedCategory === null ? styles.chipOn : styles.chipOff]}
+              onPress={() => setSelectedCategory(null)}
+            >
+              <Text style={[styles.chipText, selectedCategory === null ? styles.chipTextOn : styles.chipTextOff]}>
+                All
+              </Text>
+            </TouchableOpacity>
+            {allCategories.map(cat => (
+              <TouchableOpacity
+                key={cat}
+                style={[styles.chip, selectedCategory === cat ? styles.chipOn : styles.chipOff]}
+                onPress={() =>
+                  setSelectedCategory(prev => (prev === cat ? null : cat))
+                }
+              >
+                <Text style={[styles.chipText, selectedCategory === cat ? styles.chipTextOn : styles.chipTextOff]}>
+                  {cat}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        }
         ListEmptyComponent={
           <Text style={styles.emptyText}>
             No words match your search.
@@ -653,7 +653,7 @@ const styles = StyleSheet.create({
     gap: 15,
   },
 
-  chipScroll: { flexGrow: 0, marginTop: 15 },
+  chipScroll: { flexGrow: 0, marginBottom: 10, marginHorizontal: -16 },
   chipRow: {
     paddingHorizontal: 16,
     gap: 6,
@@ -706,22 +706,25 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     backgroundColor: '#FFFFFF',
-    padding: 15,
+    paddingVertical: 4,
+    paddingHorizontal: 15,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
   },
-  wordInfo: { flex: 1, gap: 6 },
+  wordInfo: { flex: 1 },
   lemma: {
     fontFamily: HomeFonts.interSemiBold,
-    fontSize: 18,
+    fontSize: 15,
     lineHeight: 22,
+    includeFontPadding: false,
   },
   english: {
     fontFamily: HomeFonts.interRegular,
-    fontSize: 13.5,
-    lineHeight: 16,
+    fontSize: 13,
+    lineHeight: 20,
     color: 'rgba(0,0,0,0.6)',
+    includeFontPadding: false,
   },
   checkbox: {
     width: 30,

@@ -121,7 +121,8 @@ Opened from a study mode: continues the same way as tapping that list on Choose 
 Build Your Own Screen
 
 Search bar at top. Search matches the typed text anywhere in the word, ignoring case and extra spaces. Target mode matches the lemma. English mode matches the primary English gloss and every secondary gloss, after a leading "male " or "female " is removed. Words that start with the typed text come first, then the other matches. Each group stays in the list's alphabetical order. An empty search shows the whole list. A word added with Add Missing Word stays at the top and is not filtered out. A category chip still limits the list, and the search runs inside that limit
-Category filter chips below search bar
+Category chips are the first row of the word list and scroll away with it
+Word rows are about 52 points tall, with the target word, the English line, and a circular checkbox. A first tap selects or clears the word
 Scrollable multi-select word list (checkboxes)
 Counter: "Minimum 10 words required" in red until 10 words are selected, then "N selected" in teal. The progress bar stays. "Select N more words" and "Add to My Lists (N)" stay
 While the keyboard is open, the bottom bar drops its home-indicator padding and its top shadow, so there is no gray line and no empty gap under the last button. Dragging the list still dismisses the keyboard. With the keyboard closed, the bar keeps the bottom inset
@@ -202,7 +203,7 @@ Paused words section below active words, separated by a dividing line labeled "P
 Add Existing Word Screen
 
 Header: "Add Word"
-An "Add Missing Word" outline pill sits to the right of the Target/English toggle, above the search bar. It opens Add Missing Word with this list already selected, and saving there returns here. Search bar and category filter chips. Search works the same way as Build Your Own, including the category limit. While the keyboard is open, the bottom bar drops its home-indicator padding and its top shadow. With the keyboard closed, the bar keeps the bottom inset
+The Target/English toggle is compact, each segment only as wide as its label. "+ Missing Word" is a purple outline pill on that same row, at 13 points, with a 44-point tap target. On a 328-point row at font scale 1.3 it moves to its own right-aligned line instead of shrinking below 12 points. It opens Add Missing Word with this list already selected, and saving there returns here. Category chips are the first row of the word list and scroll away with it. Search works the same way as Build Your Own, including the category limit. Word rows match Build Your Own. While the keyboard is open, the bottom bar drops its home-indicator padding and its top shadow. With the keyboard closed, the bar keeps the bottom inset
 Shows all master vocab words for current language, excluding words already in the pool
 Multi-select with counter
 "Add to List" button adds selected words to pool and returns to Vocab Bank Manager

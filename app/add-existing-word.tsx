@@ -120,12 +120,12 @@ export default function AddExistingWordScreen() {
       ? `Search ${getLanguageDisplayName(language)} words…`
       : 'Search English words…';
 
-  // Widths measured from Plus Jakarta Sans Medium 14 (toggle) and Inter SemiBold 14 (button).
+  // Compact toggle: Plus Jakarta Medium 14, 6-point side padding. "+ Missing Word": Inter SemiBold 13.
   const fontScale = PixelRatio.getFontScale();
-  const targetLabelWidth = ({ de: 71.4, fr: 63.1, es: 72.5 }[language ?? 'es'] ?? 72.5) * fontScale;
-  const toggleWidth = targetLabelWidth + 24 + 6 + 65.9 * fontScale + 24;
-  const missingTextRoom = windowWidth - 32 - toggleWidth - 8 - 22 - 4;
-  const missingLabelSize = Math.min(14 * fontScale, (14 * Math.max(missingTextRoom, 0)) / 160.8);
+  const targetLabelWidth = ({ de: 71.8, fr: 61.8, es: 70.9 }[language ?? 'de'] ?? 71.8) * fontScale;
+  const toggleWidth = targetLabelWidth + 14 + 6 + 63.7 * fontScale + 14;
+  const missingButtonWidth = 131.9 * fontScale + 14;
+  const missingOnOwnLine = toggleWidth + 8 + missingButtonWidth > windowWidth - 32;
 
   const selectedCount = selectedIds.size;
   const canAdd = selectedCount > 0;
@@ -223,28 +223,27 @@ export default function AddExistingWordScreen() {
           </View>
 
           <View style={styles.searchWrap}>
-            <View style={styles.modeRow}>
-              <View style={styles.modeToggle}>
-                <SearchModeToggle
-                  mode={searchMode}
-                  onModeChange={setSearchMode}
-                  language={language!}
-                />
-              </View>
+            <View style={missingOnOwnLine ? styles.modeStack : styles.modeRow}>
+              <SearchModeToggle
+                compact
+                mode={searchMode}
+                onModeChange={setSearchMode}
+                language={language}
+              />
               <TouchableOpacity
-                style={[styles.missingBtn, { borderColor: palette.primary }]}
+                style={[
+                  styles.missingBtn,
+                  missingOnOwnLine && styles.missingBtnEnd,
+                  { borderColor: palette.primary },
+                ]}
                 onPress={() =>
                   router.push({ pathname: '/add-word', params: { poolId: poolId ?? '' } } as never)
                 }
                 accessibilityRole="button"
                 accessibilityLabel="Add Missing Word"
               >
-                <Text
-                  style={[styles.missingLabel, { color: palette.primary, fontSize: missingLabelSize }]}
-                  numberOfLines={1}
-                  allowFontScaling={false}
-                >
-                  Add Missing Word
+                <Text style={[styles.missingLabel, { color: palette.primary }]} numberOfLines={1}>
+                  + Missing Word
                 </Text>
               </TouchableOpacity>
             </View>
@@ -254,7 +253,18 @@ export default function AddExistingWordScreen() {
               placeholder={searchPlaceholder}
             />
           </View>
+        </View>
+      </TouchableWithoutFeedback>
 
+      <FlatList
+        data={filteredWords}
+        keyExtractor={item => item.id}
+        renderItem={renderWord}
+        style={styles.list}
+        contentContainerStyle={styles.listContent}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        ListHeaderComponent={
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -270,7 +280,6 @@ export default function AddExistingWordScreen() {
                 All
               </Text>
             </TouchableOpacity>
-
             {allCategories.map(cat => (
               <TouchableOpacity
                 key={cat}
@@ -285,17 +294,7 @@ export default function AddExistingWordScreen() {
               </TouchableOpacity>
             ))}
           </ScrollView>
-        </View>
-      </TouchableWithoutFeedback>
-
-      <FlatList
-        data={filteredWords}
-        keyExtractor={item => item.id}
-        renderItem={renderWord}
-        style={styles.list}
-        contentContainerStyle={styles.listContent}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
+        }
         ListEmptyComponent={
           <Text style={styles.emptyText}>
             {masterWords.length === 0
@@ -392,25 +391,28 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 8,
   },
-  modeToggle: { flexShrink: 0 },
+  modeStack: {
+    gap: 8,
+  },
   missingBtn: {
     height: 44,
-    flexShrink: 1,
-    minWidth: 0,
-    paddingHorizontal: 10,
+    paddingHorizontal: 6,
     borderRadius: 22,
     borderWidth: 1,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
+  missingBtnEnd: { alignSelf: 'flex-end' },
   missingLabel: {
     fontFamily: HomeFonts.interSemiBold,
     fontWeight: 'normal',
+    fontSize: 13,
+    lineHeight: 18,
     includeFontPadding: false,
   },
 
-  chipScroll: { flexGrow: 0, marginTop: 15 },
+  chipScroll: { flexGrow: 0, marginBottom: 10, marginHorizontal: -16 },
   chipRow: {
     paddingHorizontal: 16,
     gap: 6,
@@ -463,22 +465,25 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     backgroundColor: '#FFFFFF',
-    padding: 15,
+    paddingVertical: 4,
+    paddingHorizontal: 15,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
   },
-  wordInfo: { flex: 1, gap: 6 },
+  wordInfo: { flex: 1 },
   lemma: {
     fontFamily: HomeFonts.interSemiBold,
-    fontSize: 18,
+    fontSize: 15,
     lineHeight: 22,
+    includeFontPadding: false,
   },
   english: {
     fontFamily: HomeFonts.interRegular,
-    fontSize: 13.5,
-    lineHeight: 16,
+    fontSize: 13,
+    lineHeight: 20,
     color: 'rgba(0,0,0,0.6)',
+    includeFontPadding: false,
   },
   checkbox: {
     width: 30,
