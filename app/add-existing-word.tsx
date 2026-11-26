@@ -11,7 +11,7 @@ import { View, Text, Image, TouchableOpacity, FlatList, ScrollView, StyleSheet, 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Colors, GenderColors } from '@/constants/theme';
 import { HomeFonts } from '@/constants/homeFonts';
 import { useAppContext } from '@/src/context/AppContext';
@@ -31,6 +31,7 @@ import SearchBar from '@/src/components/ui/SearchBar';
 import SearchModeToggle from '@/src/components/ui/SearchModeToggle';
 import StudyButton from '@/src/components/ui/StudyButton';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
+import { queueAddedWordsNote, syncListDecks, takeAddedWordsNote } from '@/src/utils/listDeckLaunch';
 
 const backChevron = require('@/assets/images/lists/back-chevron.png');
 const checkIcon = require('@/assets/images/lists/check-white.png');
@@ -52,6 +53,7 @@ export default function AddExistingWordScreen() {
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
   const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const [addedNote, setAddedNote] = useState<string | null>(null);
 
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
@@ -143,19 +145,33 @@ export default function AddExistingWordScreen() {
     });
   }, []);
 
-  const handleAdd = useCallback(() => {
-    if (!pool || !canAdd) return;
+  const handleAdd = useCallback(async () => {
+    if (!pool || !canAdd || !language) return;
 
     const newPoolWords: PoolWord[] = masterWords
       .filter(w => selectedIds.has(w.id))
       .map(item => ({ item, frequency: 'normal' as const }));
+    const words = [...pool.words, ...newPoolWords];
 
-    updatePool(pool.id, {
-      words: [...pool.words, ...newPoolWords],
-    });
-
+    updatePool(pool.id, { words });
+    try {
+      await syncListDecks(language, { ...pool, words });
+    } catch {
+      // The words stay in the list. The deck catch-up can happen the next time it opens.
+    }
+    queueAddedWordsNote([{ ...pool, words }]);
     router.back();
-  }, [pool, canAdd, masterWords, selectedIds, updatePool, router]);
+  }, [pool, canAdd, language, masterWords, selectedIds, updatePool, router]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const note = takeAddedWordsNote();
+      if (!note) return undefined;
+      setAddedNote(note);
+      const timer = setTimeout(() => setAddedNote(null), 3000);
+      return () => clearTimeout(timer);
+    }, []),
+  );
 
   useAndroidBackHandler(
     useCallback(() => {
@@ -307,6 +323,9 @@ export default function AddExistingWordScreen() {
         }
       />
 
+      {addedNote ? (
+        <Text style={[styles.addedNote, { color: palette.subtext }]}>{addedNote}</Text>
+      ) : null}
       <KeyboardCollapseTab
         backgroundColor={palette.background}
         chevronColor={palette.primary}
@@ -518,6 +537,15 @@ const styles = StyleSheet.create({
   bottomBarOpen: {
     shadowOpacity: 0,
     elevation: 0,
+  },
+  addedNote: {
+    fontFamily: HomeFonts.interRegular,
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: 'center',
+    marginBottom: 6,
+    paddingHorizontal: 24,
+    includeFontPadding: false,
   },
   counter: {
     fontFamily: HomeFonts.jakartaRegular,

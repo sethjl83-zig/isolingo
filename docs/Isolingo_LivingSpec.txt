@@ -140,7 +140,7 @@ Header: "Choose What to Study"
 Shows all pools for the current language. Tapping one list continues it
 General Vocab: shows total word count per pool
 Gender: shows noun count per pool; pools with zero nouns are greyed out and disabled
-A saved deck for that list and mode is loaded, dropping words that are gone or paused. If none remain, there is no saved deck
+A saved deck for that list and mode is loaded after both modes are brought in line with the list. Ten or fewer eligible words: the saved deck becomes every eligible word, in list order. More than ten, and a deck is already saved: words that are no longer eligible are removed from storage, and new words are not added. A deck longer than the list's chosen size is not cut down. No saved deck is left unset until the first draw. If every remaining id was removed, the stored deck is empty and stays empty
 No saved deck and 10 or fewer eligible words: every eligible word is saved as the deck and Direction Select opens with no size choice
 No saved deck, more than 10 eligible words, and the list already has a deck size from creation or Change Deck Size: that size is drawn once and Direction Select opens
 No saved deck and more than 10 eligible words on an older list with no chosen deck size: Deck Size once, then the chosen size is drawn and saved
@@ -170,7 +170,7 @@ Infinite loop of flashcards
 Card pool drawn from selected pools combined, subset to deck size, using existing repetition/frequency logic
 A session studies one list. Opening that list loads its per-list, per-mode deck. There is no resume prompt
 When a session starts, that deck’s word ids are still written to the older combination store. Nothing reads that store for launch. Start Over clears both stores
-Words that are gone or paused are left out of a loaded deck. If every saved id is gone or paused, the list is treated as having no saved deck. A deck emptied with Remove or Pause stays empty
+Remove and Unpause in Vocab Bank, and Pause on the study card, update the stored deck for Gender and for General Vocab. A removed or paused word is deleted from storage, so adding that word back on a longer list does not put it back in the deck. On a list of 10 or fewer eligible words, the deck is every eligible word again, so an unpaused word returns. The session keeps its live deck. Pause writes the stored decks first, then the session saves the deck it is using
 Remove, Replace, and Pause edit the saved deck when the session is one list. Remove takes the word out of the deck and the live session; it stays in the list. Replace swaps in a random eligible word from the same list that is not paused and not already in the deck, or says “No other words are available in this list.” and changes nothing. Pause still pauses the word for both modes, and also takes it out of this mode’s deck. The Direction count is that saved deck’s current size. In a one-list session, Remove or Pause that leaves 1 to 4 words shows “Your Deck Is Small” once, until the deck is back to 5 or more and drops below 5 again. Keep Studying closes it. New Deck redraws from the whole list at the list’s deck size. At 0 words, “Your Deck Is Empty” stays up until New Deck or Exit Study. If the list has no eligible words, the only button is Exit Study
 Card types for V0: Card 1001 (Gender Matching), Card 1002 (Word Relationships), Card 1006 (Production)
 Card distribution: set in Settings under Card Frequency. Recommended is Production 70%, Word Relationships 20%, Gender Matching 10%. The three percentages are chosen independently and saved only when they total 100%. Gender Matching is still Gender mode and mixed direction only. Word Relationships is General Vocab and mixed direction only. When a type cannot appear, the session splits its share across the types that can.
@@ -206,7 +206,7 @@ Header: "Add Word"
 The Target/English toggle is compact, each segment only as wide as its label. "+ Missing Word" is a purple outline pill on that same row, at 13 points, with a 44-point tap target. On a 328-point row at font scale 1.3 it moves to its own right-aligned line instead of shrinking below 12 points. It opens Add Missing Word with this list already selected, and saving there returns here. Category chips are pinned under the search bar and stay put while the list scrolls. Search works the same way as Build Your Own, including the category limit. Word rows match Build Your Own. While the keyboard is open, the same keyboard tab sits on the top-left edge of the bottom bar, and the list adds 28 points so the last row can scroll clear of it. The bottom bar drops its home-indicator padding and its top shadow. With the keyboard closed, the tab is gone and the bar keeps the bottom inset
 Shows all master vocab words for current language, excluding words already in the pool
 Multi-select with counter
-"Add to List" button adds selected words to pool and returns to Vocab Bank Manager
+"Add to List" button adds selected words to the pool, updates both saved decks, and returns to Vocab Bank Manager. Above that bar, for about three seconds: "Added to your list and your deck." when the list has 10 or fewer eligible words in both modes, or "Added to your list. It will appear in your deck the next time you tap New Deck." when either mode has more than 10. The same line shows on this screen when Add Missing Word returns here
 
 Add Missing Word Screen (formerly Add Custom Word)
 
@@ -214,7 +214,7 @@ Accessible from Add Word, with that list already selected, and from Build Your O
 Fields: target language word, English translation, additional accepted English meanings (optional), additional accepted target language answers (optional), part of speech (dropdown), gender (if applicable), plural (if applicable), category (multi-select chips)
 Bare lemma only — no articles or determiners
 Pool selection section: multi-select checklist of user's existing pools for current language (must select at least one)
-Custom words are saved only to selected pools — never added to master vocab dataset
+Custom words are saved only to selected pools — never added to master vocab dataset. Each selected list's saved decks are updated the same way as Add Word. The note shows on the screen you return to, for about three seconds
 If no pools exist: message prompts user to create a list first, Save button disabled
 
 Stats Screen

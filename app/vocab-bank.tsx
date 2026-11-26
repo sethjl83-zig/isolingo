@@ -10,7 +10,7 @@ import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, ActivityIndi
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Colors } from '@/constants/theme';
 import { HomeFonts } from '@/constants/homeFonts';
 import { useAppContext } from '@/src/context/AppContext';
@@ -19,6 +19,7 @@ import type { VocabItem } from '@/src/types/vocab';
 import type { WordFrequencySetting } from '@/src/types/state';
 import type { Pool, PoolWord } from '@/src/types/pool';
 import { filterVocabBySearch, sortVocabByLemma } from '@/src/utils/vocabBank';
+import { syncListDecks, takeAddedWordsNote } from '@/src/utils/listDeckLaunch';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 import ConfirmSheet, { type ConfirmSheetRequest } from '@/src/components/ui/ConfirmSheet';
 import StudyButton from '@/src/components/ui/StudyButton';
@@ -79,6 +80,7 @@ export default function VocabBankScreen() {
   const [sheet, setSheet] = useState<ConfirmSheetRequest | null>(null);
   const [draft, setDraft] = useState<Record<string, WordFrequencySetting>>({});
   const [savedNote, setSavedNote] = useState(false);
+  const [addedNote, setAddedNote] = useState<string | null>(null);
   const savedNoteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [displayWords, setDisplayWords] = useState<DisplayWords | null>(null);
   const [loadingWords, setLoadingWords] = useState(true);
@@ -279,22 +281,30 @@ export default function VocabBankScreen() {
   }, []);
 
   const handleUnpause = useCallback(
-    (id: string) => {
-      if (!pool) return;
-      updatePool(pool.id, {
-        pausedWordIds: pool.pausedWordIds.filter(pid => pid !== id),
-      });
+    async (id: string) => {
+      if (!pool || !language) return;
+      const pausedWordIds = pool.pausedWordIds.filter(pid => pid !== id);
+      updatePool(pool.id, { pausedWordIds });
+      try {
+        await syncListDecks(language, { ...pool, pausedWordIds });
+      } catch {
+        // The word is unpaused. The deck catch-up can happen the next time the list opens.
+      }
     },
-    [pool, updatePool],
+    [pool, language, updatePool],
   );
 
   const removeWordFromPool = useCallback(
-    (item: VocabItem) => {
-      if (!pool) return;
-      updatePool(pool.id, {
-        words: pool.words.filter(pw => pw.item.id !== item.id),
-        pausedWordIds: pool.pausedWordIds.filter(pid => pid !== item.id),
-      });
+    async (item: VocabItem) => {
+      if (!pool || !language) return;
+      const words = pool.words.filter(pw => pw.item.id !== item.id);
+      const pausedWordIds = pool.pausedWordIds.filter(pid => pid !== item.id);
+      updatePool(pool.id, { words, pausedWordIds });
+      try {
+        await syncListDecks(language, { ...pool, words, pausedWordIds });
+      } catch {
+        // The word is off the list. The deck catch-up can happen the next time the list opens.
+      }
       setDraft(prev => {
         if (!(item.id in prev)) return prev;
         const next = { ...prev };
@@ -302,7 +312,17 @@ export default function VocabBankScreen() {
         return next;
       });
     },
-    [pool, updatePool],
+    [pool, language, updatePool],
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      const note = takeAddedWordsNote();
+      if (!note) return undefined;
+      setAddedNote(note);
+      const timer = setTimeout(() => setAddedNote(null), 3000);
+      return () => clearTimeout(timer);
+    }, []),
   );
 
   const handleRemoveActiveWord = useCallback(
@@ -448,6 +468,9 @@ export default function VocabBankScreen() {
 
       {savedNote ? (
         <Text style={[styles.savedNote, { color: palette.subtext }]}>Changes saved</Text>
+      ) : null}
+      {addedNote ? (
+        <Text style={[styles.savedNote, { color: palette.subtext }]}>{addedNote}</Text>
       ) : null}
       <KeyboardCollapseTab
         backgroundColor={palette.background}

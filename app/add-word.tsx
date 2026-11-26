@@ -22,6 +22,7 @@ import StudyButton from '@/src/components/ui/StudyButton';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 import ConfirmSheet, { type ConfirmSheetRequest } from '@/src/components/ui/ConfirmSheet';
 import { holdBuildYourOwnWord } from './build-your-own';
+import { queueAddedWordsNote, syncListDecks } from '@/src/utils/listDeckLaunch';
 
 const backChevron = require('@/assets/images/lists/back-chevron.png');
 const checkIcon = require('@/assets/images/lists/check-white.png');
@@ -201,7 +202,7 @@ export default function AddWordScreen() {
   const canSave = isFromBuild || (hasPools && selectedPoolIds.size > 0);
 
   // ── Save ──────────────────────────────────────────────────────────────────
-  const handleSave = () => {
+  const handleSave = async () => {
     const error = validateEntry(lemma, english, pos, gender, language);
     if (error) {
       setSheet({
@@ -265,11 +266,19 @@ export default function AddWordScreen() {
     }
 
     // Write directly into each selected pool — master dataset is NOT touched.
+    const updated: Pool[] = [];
     for (const pool of selectedPools) {
-      updatePool(pool.id, {
-        words: [...pool.words, { item, frequency: 'normal' }],
-      });
+      const words = [...pool.words, { item, frequency: 'normal' as const }];
+      updatePool(pool.id, { words });
+      const next = { ...pool, words };
+      updated.push(next);
+      try {
+        await syncListDecks(pool.language, next);
+      } catch {
+        // The word stays in the list. The deck catch-up can happen the next time it opens.
+      }
     }
+    queueAddedWordsNote(updated);
 
     router.back();
   };

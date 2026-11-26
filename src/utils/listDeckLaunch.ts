@@ -103,12 +103,63 @@ export function drawSizedListDeck(
   return selectSessionSubset(words, size, frequencySettings(pool)).map(word => word.id);
 }
 
+const DECK_MODES: readonly StudyType[] = ['gender', 'general_vocab'];
+
+/**
+ * Bring both saved decks in line with the list. Does not read or write session state.
+ * A missing deck is left missing. A deck longer than the list's chosen size is not cut down.
+ */
+export async function syncListDecks(language: Language, pool: Pool): Promise<void> {
+  try {
+    for (const studyType of DECK_MODES) {
+      const saved = await getListDeck(language, studyType, pool.id);
+      if (saved === null) continue;
+      const eligible = eligibleStudyWords(pool, studyType);
+      if (eligible.length <= 10) {
+        await saveListDeck(
+          language,
+          studyType,
+          pool.id,
+          eligible.map(word => word.id),
+        );
+        continue;
+      }
+      const eligibleIds = new Set(eligible.map(word => word.id));
+      const kept = saved.filter(id => eligibleIds.has(id));
+      await saveListDeck(language, studyType, pool.id, kept);
+    }
+  } catch {
+    // A failed read or save leaves the stored decks as they were.
+  }
+}
+
+const ADDED_TO_DECK = 'Added to your list and your deck.';
+const ADDED_WAITING =
+  'Added to your list. It will appear in your deck the next time you tap New Deck.';
+
+let pendingAddedNote: string | null = null;
+
+/** Note for the screen the user returns to after adding words. */
+export function queueAddedWordsNote(pools: Pool[]): void {
+  const longer = pools.some(pool =>
+    DECK_MODES.some(mode => eligibleStudyWords(pool, mode).length > 10),
+  );
+  pendingAddedNote = longer ? ADDED_WAITING : ADDED_TO_DECK;
+}
+
+export function takeAddedWordsNote(): string | null {
+  const note = pendingAddedNote;
+  pendingAddedNote = null;
+  return note;
+}
+
 export async function resolveSingleListLaunch(
   pool: Pool,
   language: Language,
   studyType: StudyType,
 ): Promise<SingleListLaunch> {
   const poolIds = JSON.stringify([pool.id]);
+  await syncListDecks(language, pool);
   const continued = await loadContinuableDeck(pool, language, studyType);
   if (continued !== null) {
     return {

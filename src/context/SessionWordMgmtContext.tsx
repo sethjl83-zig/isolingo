@@ -10,7 +10,7 @@ import type { WordFrequencySetting } from '../types/state';
 import type { Language, VocabItem } from '../types/vocab';
 import type { PoolWord } from '../types/pool';
 import { enrichVocabItemsFromMaster } from '../data';
-import { eligibleStudyWords } from '../utils/listDeckLaunch';
+import { eligibleStudyWords, syncListDecks } from '../utils/listDeckLaunch';
 
 export interface ActionResult {
   success: boolean;
@@ -170,18 +170,29 @@ export function SessionWordMgmtProvider({
         return { success: false, error: 'This word is not in your pool.' };
       }
 
-      for (const pool of poolsWithWord) {
-        if (!pool.pausedWordIds.includes(vocabId)) {
-          updatePool(pool.id, {
-            pausedWordIds: [...pool.pausedWordIds, vocabId],
-          });
+      const pausedPools = poolsWithWord.map(pool => {
+        const pausedWordIds = pool.pausedWordIds.includes(vocabId)
+          ? pool.pausedWordIds
+          : [...pool.pausedWordIds, vocabId];
+        if (pausedWordIds !== pool.pausedWordIds) {
+          updatePool(pool.id, { pausedWordIds });
         }
-      }
+        return { ...pool, pausedWordIds };
+      });
 
-      onWordRemoved?.(vocabId);
+      void (async () => {
+        try {
+          for (const pool of pausedPools) {
+            await syncListDecks(language, pool);
+          }
+        } catch {
+          // The word is paused. The other mode's deck catch-up can happen when that list opens.
+        }
+        onWordRemoved?.(vocabId);
+      })();
       return { success: true };
     },
-    [sessionPools, updatePool, onWordRemoved],
+    [sessionPools, language, updatePool, onWordRemoved],
   );
 
   const value = useMemo(
