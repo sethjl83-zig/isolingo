@@ -26,6 +26,7 @@ import {
 } from '@/src/utils/vocabBank';
 import type { VocabItem } from '@/src/types/vocab';
 import type { PoolWord } from '@/src/types/pool';
+import KeyboardCollapseTab, { KEYBOARD_COLLAPSE_TAB_HEIGHT } from '@/src/components/ui/KeyboardCollapseTab';
 import SearchBar from '@/src/components/ui/SearchBar';
 import SearchModeToggle from '@/src/components/ui/SearchModeToggle';
 import StudyButton from '@/src/components/ui/StudyButton';
@@ -253,18 +254,7 @@ export default function AddExistingWordScreen() {
               placeholder={searchPlaceholder}
             />
           </View>
-        </View>
-      </TouchableWithoutFeedback>
 
-      <FlatList
-        data={filteredWords}
-        keyExtractor={item => item.id}
-        renderItem={renderWord}
-        style={styles.list}
-        contentContainerStyle={styles.listContent}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        ListHeaderComponent={
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -294,7 +284,20 @@ export default function AddExistingWordScreen() {
               </TouchableOpacity>
             ))}
           </ScrollView>
-        }
+        </View>
+      </TouchableWithoutFeedback>
+
+      <FlatList
+        data={filteredWords}
+        keyExtractor={item => item.id}
+        renderItem={renderWord}
+        style={styles.list}
+        contentContainerStyle={[
+          styles.listContent,
+          keyboardOpen && { paddingBottom: 16 + KEYBOARD_COLLAPSE_TAB_HEIGHT },
+        ]}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         ListEmptyComponent={
           <Text style={styles.emptyText}>
             {masterWords.length === 0
@@ -304,7 +307,9 @@ export default function AddExistingWordScreen() {
         }
       />
 
-      <View
+      <KeyboardCollapseTab
+        backgroundColor={palette.background}
+        chevronColor={palette.primary}
         style={[
           styles.bottomBar,
           { paddingBottom: keyboardOpen ? 0 : Math.max(insets.bottom, 29) },
@@ -323,7 +328,7 @@ export default function AddExistingWordScreen() {
           style={styles.addBtn}
           textStyle={styles.addLabel}
         />
-      </View>
+      </KeyboardCollapseTab>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -412,7 +417,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
 
-  chipScroll: { flexGrow: 0, marginBottom: 10, marginHorizontal: -16 },
+  chipScroll: { flexGrow: 0, marginTop: 15 },
   chipRow: {
     paddingHorizontal: 16,
     gap: 6,

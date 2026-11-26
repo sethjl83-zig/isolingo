@@ -22,6 +22,7 @@ import { filterVocabBySearch, sortVocabByLemma } from '@/src/utils/vocabBank';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 import ConfirmSheet, { type ConfirmSheetRequest } from '@/src/components/ui/ConfirmSheet';
 import StudyButton from '@/src/components/ui/StudyButton';
+import KeyboardCollapseTab, { KEYBOARD_COLLAPSE_TAB_HEIGHT } from '@/src/components/ui/KeyboardCollapseTab';
 import SearchBar from '@/src/components/ui/SearchBar';
 import {
   ActiveWordRow,
@@ -425,7 +426,10 @@ export default function VocabBankScreen() {
           renderItem={renderItem}
           extraData={draft}
           style={styles.list}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[
+            styles.listContent,
+            keyboardOpen && { paddingBottom: 16 + KEYBOARD_COLLAPSE_TAB_HEIGHT },
+          ]}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
           initialNumToRender={12}
@@ -445,7 +449,9 @@ export default function VocabBankScreen() {
       {savedNote ? (
         <Text style={[styles.savedNote, { color: palette.subtext }]}>Changes saved</Text>
       ) : null}
-      <View
+      <KeyboardCollapseTab
+        backgroundColor={palette.background}
+        chevronColor={palette.primary}
         style={[
           styles.bottomBar,
           { paddingBottom: keyboardOpen ? 0 : Math.max(insets.bottom, 29) },
@@ -475,7 +481,7 @@ export default function VocabBankScreen() {
           textStyle={styles.actionLabel}
           disabled={loadingWords}
         />
-      </View>
+      </KeyboardCollapseTab>
       {sheet ? <ConfirmSheet {...sheet} onDismiss={() => setSheet(null)} /> : null}
     </KeyboardAvoidingView>
     </SafeAreaView>

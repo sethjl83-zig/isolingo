@@ -28,6 +28,7 @@ import type { VocabItem } from '@/src/types/vocab';
 import type { Pool } from '@/src/types/pool';
 import { generatePoolId } from '@/src/types/pool';
 import { deckSizeForNewList } from '@/src/utils/listDeckLaunch';
+import KeyboardCollapseTab, { KEYBOARD_COLLAPSE_TAB_HEIGHT } from '@/src/components/ui/KeyboardCollapseTab';
 import SearchBar from '@/src/components/ui/SearchBar';
 import SearchModeToggle from '@/src/components/ui/SearchModeToggle';
 import StudyButton from '@/src/components/ui/StudyButton';
@@ -414,7 +415,11 @@ export default function BuildYourOwnScreen() {
               </View>
             </ScrollView>
 
-            <View style={styles.bottomBar}>
+            <KeyboardCollapseTab
+              backgroundColor={palette.background}
+              chevronColor={palette.primary}
+              style={styles.bottomBar}
+            >
               <StudyButton
                 label="Confirm"
                 variant="primary"
@@ -424,7 +429,7 @@ export default function BuildYourOwnScreen() {
                 style={styles.primaryBtn}
                 textStyle={styles.primaryLabel}
               />
-            </View>
+            </KeyboardCollapseTab>
           </SafeAreaView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
@@ -471,19 +476,7 @@ export default function BuildYourOwnScreen() {
               placeholder={searchPlaceholder}
             />
           </View>
-        </View>
-      </TouchableWithoutFeedback>
 
-      <FlatList
-        data={listedWords}
-        keyExtractor={item => item.id}
-        renderItem={renderWord}
-        extraData={newWords}
-        style={styles.list}
-        contentContainerStyle={styles.listContent}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        ListHeaderComponent={
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -513,7 +506,21 @@ export default function BuildYourOwnScreen() {
               </TouchableOpacity>
             ))}
           </ScrollView>
-        }
+        </View>
+      </TouchableWithoutFeedback>
+
+      <FlatList
+        data={listedWords}
+        keyExtractor={item => item.id}
+        renderItem={renderWord}
+        extraData={newWords}
+        style={styles.list}
+        contentContainerStyle={[
+          styles.listContent,
+          keyboardOpen && { paddingBottom: 16 + KEYBOARD_COLLAPSE_TAB_HEIGHT },
+        ]}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         ListEmptyComponent={
           <Text style={styles.emptyText}>
             No words match your search.
@@ -521,7 +528,9 @@ export default function BuildYourOwnScreen() {
         }
       />
 
-      <View
+      <KeyboardCollapseTab
+        backgroundColor={palette.background}
+        chevronColor={palette.primary}
         style={[
           styles.bottomBar,
           { paddingBottom: keyboardOpen ? 0 : Math.max(insets.bottom, 29) },
@@ -569,7 +578,7 @@ export default function BuildYourOwnScreen() {
           style={styles.createWordBtn}
           textStyle={styles.primaryLabel}
         />
-      </View>
+      </KeyboardCollapseTab>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -653,7 +662,7 @@ const styles = StyleSheet.create({
     gap: 15,
   },
 
-  chipScroll: { flexGrow: 0, marginBottom: 10, marginHorizontal: -16 },
+  chipScroll: { flexGrow: 0, marginTop: 15 },
   chipRow: {
     paddingHorizontal: 16,
     gap: 6,
