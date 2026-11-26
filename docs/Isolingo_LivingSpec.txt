@@ -186,6 +186,7 @@ Horizontal sweep transition between cards
 Correct answer triggers scale-pop animation on "Correct!" text
 No session end — infinite loop until user exits
 Word management buttons at bottom of each card: Remove, Replace, Frequency, Pause — all fully functional. They sit under Flip and Submit/Next and lift with those buttons when the keyboard is open
+Frequency opens an on-screen sheet, not a pop-up window, so the Production keyboard stays up. It uses the same white rounded card and dimmed scrim as Remove, Replace, and Pause. Tapping outside it, or Android Back, closes it and stays in the session. Done still saves the slider the same way. The word picker for Gender Matching and Word Relationships is unchanged
 
 Vocab Bank Manager
 

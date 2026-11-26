@@ -1065,7 +1065,6 @@ export default function SessionScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: palette.background }]} edges={['top', 'left', 'right']}>
-      <WordMgmtConfirmHost>
       <SessionWordMgmtProvider
         language={language}
         poolIds={poolIds}
@@ -1073,6 +1072,7 @@ export default function SessionScreen() {
         onWordRemoved={handleWordRemoved}
         onWordReplaced={handleWordReplaced}
       >
+      <WordMgmtConfirmHost>
         <Animated.View style={cardSlideStyle}>
         <ErrorBoundary
           resetKeys={[cardKey]}
@@ -1168,8 +1168,8 @@ export default function SessionScreen() {
           )}
         </ErrorBoundary>
         </Animated.View>
-      </SessionWordMgmtProvider>
       </WordMgmtConfirmHost>
+      </SessionWordMgmtProvider>
       {deckNotice === 'small' || deckNotice === 'no-words' ? (
         <DeckNoticeDialog
           notice={deckNotice}

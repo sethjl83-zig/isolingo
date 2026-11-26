@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Modal, View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet, BackHandler } from 'react-native';
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { HomeFonts } from '@/constants/homeFonts';
@@ -14,23 +14,25 @@ export interface WordFrequencyTarget {
 }
 
 interface Props {
-  visible: boolean;
   words: WordFrequencyTarget[];
   onDismiss: () => void;
 }
 
-export default function WordFrequencyModal({ visible, words, onDismiss }: Props) {
+/**
+ * On-screen sheet, not a Modal. A Modal resigns the focused field and drops
+ * the Production keyboard. This view does not.
+ */
+export default function WordFrequencyModal({ words, onDismiss }: Props) {
   const { getFrequency, setFrequency } = useSessionWordMgmt();
   const [draft, setDraft] = useState<Record<string, WordFrequencySetting>>({});
 
   useEffect(() => {
-    if (!visible) return;
     const initial: Record<string, WordFrequencySetting> = {};
     for (const word of words) {
       initial[word.id] = getFrequency(word.id);
     }
     setDraft(initial);
-  }, [visible, words, getFrequency]);
+  }, [words, getFrequency]);
 
   const handleDismiss = useCallback(() => {
     for (const word of words) {
@@ -46,13 +48,15 @@ export default function WordFrequencyModal({ visible, words, onDismiss }: Props)
   const title =
     words.length === 1 ? `Frequency — ${words[0].lemma}` : 'Word Frequency';
 
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      handleDismiss();
+      return true;
+    });
+    return () => sub.remove();
+  }, [handleDismiss]);
+
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={handleDismiss}
-    >
       <Pressable style={styles.overlay} onPress={handleDismiss}>
         <Pressable style={styles.sheet} onPress={() => {}}>
           <View style={styles.iconBadge}>
@@ -87,16 +91,21 @@ export default function WordFrequencyModal({ visible, words, onDismiss }: Props)
           />
         </Pressable>
       </Pressable>
-    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
   overlay: {
-    flex: 1,
-    justifyContent: 'center',
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    zIndex: 20,
+    elevation: 20,
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.4)',
+    paddingTop: 24,
     paddingHorizontal: 28,
   },
   sheet: {

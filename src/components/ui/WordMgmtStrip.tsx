@@ -33,12 +33,15 @@ interface ConfirmDialog {
 }
 
 const ConfirmContext = createContext<(dialog: ConfirmDialog) => void>(() => {});
+const FrequencyContext = createContext<(words: WordFrequencyTarget[]) => void>(() => {});
 
 export function WordMgmtConfirmHost({ children }: { children: React.ReactNode }) {
   const [dialog, setDialog] = useState<ConfirmDialog | null>(null);
+  const [frequencyWords, setFrequencyWords] = useState<WordFrequencyTarget[] | null>(null);
 
   return (
     <ConfirmContext.Provider value={setDialog}>
+      <FrequencyContext.Provider value={setFrequencyWords}>
       <View style={styles.host}>
         {children}
         {dialog ? (
@@ -54,7 +57,14 @@ export function WordMgmtConfirmHost({ children }: { children: React.ReactNode })
             ]}
           />
         ) : null}
+        {frequencyWords ? (
+          <WordFrequencyModal
+            words={frequencyWords}
+            onDismiss={() => setFrequencyWords(null)}
+          />
+        ) : null}
       </View>
+      </FrequencyContext.Provider>
     </ConfirmContext.Provider>
   );
 }
@@ -63,7 +73,7 @@ export default function WordMgmtStrip({ words }: Props) {
   const insets = useSafeAreaInsets();
   const { removeWord, replaceWord, pauseWord, editsSavedDeck } = useSessionWordMgmt();
   const showConfirm = useContext(ConfirmContext);
-  const [frequencyVisible, setFrequencyVisible] = useState(false);
+  const showFrequency = useContext(FrequencyContext);
   const [pickerFlow, setPickerFlow] = useState<PickerFlow | null>(null);
 
   const showRemoveConfirm = useCallback(
@@ -167,7 +177,7 @@ export default function WordMgmtStrip({ words }: Props) {
             key={btn.id}
             style={styles.btn}
             onPress={() => {
-              if (btn.id === 'frequency') setFrequencyVisible(true);
+              if (btn.id === 'frequency') showFrequency(words);
               if (btn.id === 'remove') startFlow('remove');
               if (btn.id === 'replace') startFlow('replace');
               if (btn.id === 'pause') startFlow('pause');
@@ -179,12 +189,6 @@ export default function WordMgmtStrip({ words }: Props) {
           </TouchableOpacity>
         ))}
       </View>
-
-      <WordFrequencyModal
-        visible={frequencyVisible}
-        words={words}
-        onDismiss={() => setFrequencyVisible(false)}
-      />
 
       <WordPickerModal
         visible={pickerFlow !== null}
