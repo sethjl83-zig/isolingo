@@ -556,8 +556,8 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
   },
   inputIncorrect: {
-    backgroundColor: 'rgba(247,72,86,0.05)',
-    borderColor: '#F74856',
+    backgroundColor: 'rgba(217,48,37,0.08)',
+    borderColor: '#D93025',
   },
   tilesRow: {
     flexDirection: 'row',

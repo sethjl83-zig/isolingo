@@ -47,6 +47,7 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-11-26: A wrong Production answer outlines the text field in #D93025 with a light red tint, in all three languages.
 - 2026-11-26: Build Your Own, Add Word, and Vocab Bank show a keyboard tab on the bottom bar. Category chips on Build Your Own and Add Word are pinned under the search bar again.
 - 2026-11-25: Vocab Bank frequency sliders stay in a draft until Save Changes. Back asks before leaving unsaved changes. The word lines are tall enough for descenders.
 - 2026-11-25: Category chips on Build Your Own and Add Word scroll with the word list. Word rows are about 52 points tall. Add Word’s missing-word control reads “+ Missing Word”.
