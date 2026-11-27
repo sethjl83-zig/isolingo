@@ -103,6 +103,61 @@ export function drawSizedListDeck(
   return selectSessionSubset(words, size, frequencySettings(pool)).map(word => word.id);
 }
 
+/** Sizes the Direction "New Deck" sheet can offer. Empty when the list has 10 or fewer eligible words. */
+export function deckSizeChoices(eligibleCount: number): number[] {
+  if (eligibleCount <= 10) return [];
+  return DECK_SIZE_STEPS.filter(size => size <= eligibleCount);
+}
+
+function shuffleIds(ids: readonly string[]): string[] {
+  const copy = [...ids];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+/**
+ * A drawn deck with excluded ids swapped for other eligible words.
+ * Excluded ids fill only the slots that cannot be filled any other way.
+ */
+export function redrawDeckAvoiding(
+  drawn: readonly string[],
+  eligibleIds: readonly string[],
+  excluded: ReadonlySet<string>,
+  size: number,
+): string[] {
+  if (size <= 0) return [];
+  const eligibleSet = new Set(eligibleIds);
+  const kept: string[] = [];
+  const seen = new Set<string>();
+  const held: string[] = [];
+  for (const id of drawn) {
+    if (!eligibleSet.has(id) || seen.has(id)) continue;
+    seen.add(id);
+    if (excluded.has(id)) held.push(id);
+    else kept.push(id);
+  }
+  for (const id of shuffleIds(eligibleIds.filter(id => !seen.has(id) && !excluded.has(id)))) {
+    if (kept.length >= size) break;
+    kept.push(id);
+    seen.add(id);
+  }
+  if (kept.length < size) {
+    const fillers = [
+      ...held,
+      ...eligibleIds.filter(id => excluded.has(id) && !seen.has(id)),
+    ];
+    for (const id of fillers) {
+      if (kept.length >= size) break;
+      kept.push(id);
+      seen.add(id);
+    }
+  }
+  return kept.slice(0, size);
+}
+
 const DECK_MODES: readonly StudyType[] = ['gender', 'general_vocab'];
 
 /**

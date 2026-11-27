@@ -46,7 +46,7 @@ import { parsePoolIdsParam } from '@/src/utils/studyLaunch';
 import { saveSavedDeck } from '@/src/storage/savedDecks';
 import { saveListDeck } from '@/src/storage/listDecks';
 import { getDeckSizePref } from '@/src/storage/deckSizePrefs';
-import { drawSizedListDeck, eligibleStudyWords, resolveRedrawCount } from '@/src/utils/listDeckLaunch';
+import { drawSizedListDeck, eligibleStudyWords, redrawDeckAvoiding, resolveRedrawCount } from '@/src/utils/listDeckLaunch';
 import { loadCardFrequency } from '@/src/storage/cardFrequency';
 import { updateWordStats } from '@/src/types/stats';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
@@ -708,18 +708,30 @@ export default function SessionScreen() {
   // The view then waits off the right edge until the new card is committed.
   // Phase 2 (150 ms): that committed card sweeps to centre.
   const sweepX = useSharedValue(0);
+  const sweepOpacity = useSharedValue(1);
   const transitioningRef = useRef(false);
+  const fadeSweepRef = useRef(false);
   const awaitingFromKeyRef = useRef<string | null>(null);
   const sweepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const unlockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [sweepNonce, setSweepNonce] = useState(0);
   const transitionCardKey = currentCard
     ? getCardKey(currentCard, state.sessionCardIndex)
     : '';
 
   const cardSlideStyle = useAnimatedStyle(() => ({
     flex: 1,
+    opacity: sweepOpacity.value,
     transform: [{ translateX: sweepX.value }],
   }));
+
+  const resetSweep = useCallback(() => {
+    sweepX.value = 0;
+    sweepOpacity.value = 1;
+    fadeSweepRef.current = false;
+    awaitingFromKeyRef.current = null;
+    transitioningRef.current = false;
+  }, [sweepOpacity, sweepX]);
 
   const handleNext = useCallback(() => {
     if (transitioningRef.current) return;
@@ -747,21 +759,32 @@ export default function SessionScreen() {
     if (awaitingFromKeyRef.current === null) return;
     if (!transitionCardKey || transitionCardKey === awaitingFromKeyRef.current) {
       sweepX.value = 0;
+      sweepOpacity.value = 1;
+      fadeSweepRef.current = false;
       awaitingFromKeyRef.current = null;
       transitioningRef.current = false;
       return;
     }
+    const fade = fadeSweepRef.current;
+    fadeSweepRef.current = false;
     awaitingFromKeyRef.current = null;
     sweepX.value = SCREEN_WIDTH;
+    if (fade) sweepOpacity.value = 0;
     sweepX.value = withTiming(0, {
       duration: 150,
       easing: Easing.out(Easing.quad),
     });
+    if (fade) {
+      sweepOpacity.value = withTiming(1, {
+        duration: 150,
+        easing: Easing.out(Easing.quad),
+      });
+    }
     if (unlockTimerRef.current) clearTimeout(unlockTimerRef.current);
     unlockTimerRef.current = setTimeout(() => {
       transitioningRef.current = false;
     }, 150);
-  }, [transitionCardKey, sweepX]);
+  }, [transitionCardKey, sweepNonce, sweepOpacity, sweepX]);
 
   const markWordsRemoved = useCallback((ids: readonly string[]) => {
     if (ids.length === 0) return;
@@ -878,7 +901,8 @@ export default function SessionScreen() {
     [recordCardResult, language],
   );
 
-  const handleRedrawDeck = useCallback(async () => {
+  const handleRedrawDeck = useCallback(() => {
+    if (transitioningRef.current) return;
     if (!language || poolIds.length !== 1) {
       setDeckNotice('no-words');
       return;
@@ -889,43 +913,94 @@ export default function SessionScreen() {
       setDeckNotice('no-words');
       return;
     }
-    let requested = pool.deckSize;
-    try {
-      const saved = await getDeckSizePref(language, studyType, [pool.id]);
-      if (saved !== null) requested = saved;
-    } catch {
-      // Keep the size stored on the list.
-    }
-    const eligible = eligibleStudyWords(pool, studyType);
-    const count = resolveRedrawCount(requested, eligible.length);
-    const ids = count > 0 ? drawSizedListDeck(pool, studyType, count) : [];
-    const byId = new Map(pool.words.map(pw => [pw.item.id, pw]));
-    const items = ids.flatMap(id => {
-      const word = byId.get(id);
-      return word ? [word.item] : [];
-    });
-    if (items.length === 0) {
-      setDeckNotice('no-words');
-      return;
-    }
-    const enriched = enrichVocabItemsFromMaster(items, language);
-    const settings: Record<string, WordFrequencySetting> = {};
-    for (const item of enriched) {
-      const word = byId.get(item.id);
-      if (word) settings[item.id] = word.frequency;
-    }
-    replacementDeckRef.current = {
-      vocabBank: enriched,
-      wordFrequencySettings: settings,
-    };
-    sessionRemovedIdsRef.current = new Set();
-    sessionAddedWordsRef.current = new Map();
-    sessionRef.current = makeSessionState();
-    if (enriched.length >= 5) smallWarnedRef.current = false;
-    void saveListDeck(language, studyType, pool.id, enriched.map(word => word.id));
+    const removedIds = new Set(sessionRemovedIdsRef.current);
+    const onScreenIds = currentCard ? onScreenWordIds(currentCard) : [];
+    transitioningRef.current = true;
+    fadeSweepRef.current = true;
     setDeckNotice(null);
-    loadCard();
-  }, [language, poolIds, state.studyTypeSelected, getLanguagePools, loadCard]);
+    sweepX.value = withTiming(-SCREEN_WIDTH, {
+      duration: 140,
+      easing: Easing.in(Easing.quad),
+    });
+    sweepOpacity.value = withTiming(0, {
+      duration: 140,
+      easing: Easing.in(Easing.quad),
+    });
+    if (sweepTimerRef.current) clearTimeout(sweepTimerRef.current);
+    sweepTimerRef.current = setTimeout(() => {
+      void (async () => {
+        sweepX.value = SCREEN_WIDTH;
+        sweepOpacity.value = 0;
+        try {
+          let requested = pool.deckSize;
+          try {
+            const saved = await getDeckSizePref(language, studyType, [pool.id]);
+            if (saved !== null) requested = saved;
+          } catch {
+            // Keep the size stored on the list.
+          }
+          const eligible = eligibleStudyWords(pool, studyType);
+          const count = resolveRedrawCount(requested, eligible.length);
+          const excluded = new Set(removedIds);
+          for (const id of onScreenIds) excluded.add(id);
+          const drawn = count > 0 ? drawSizedListDeck(pool, studyType, count) : [];
+          const ids = redrawDeckAvoiding(
+            drawn,
+            eligible.map(word => word.id),
+            excluded,
+            count,
+          );
+          const byId = new Map(pool.words.map(pw => [pw.item.id, pw]));
+          const items = ids.flatMap(id => {
+            const word = byId.get(id);
+            return word ? [word.item] : [];
+          });
+          if (items.length === 0) {
+            resetSweep();
+            setDeckNotice('no-words');
+            return;
+          }
+          const enriched = enrichVocabItemsFromMaster(items, language);
+          const settings: Record<string, WordFrequencySetting> = {};
+          for (const item of enriched) {
+            const word = byId.get(item.id);
+            if (word) settings[item.id] = word.frequency;
+          }
+          replacementDeckRef.current = {
+            vocabBank: enriched,
+            wordFrequencySettings: settings,
+          };
+          sessionRemovedIdsRef.current = new Set();
+          sessionAddedWordsRef.current = new Map();
+          sessionRef.current = makeSessionState();
+          if (enriched.length >= 5) smallWarnedRef.current = false;
+          void saveListDeck(language, studyType, pool.id, enriched.map(word => word.id));
+          awaitingFromKeyRef.current = cardKeyRef.current;
+          loadCard();
+          setSweepNonce(nonce => nonce + 1);
+          if (deckResultTimerRef.current) clearTimeout(deckResultTimerRef.current);
+          setDeckResult(`New deck · ${enriched.length} ${wordCountLabel(enriched.length)}`);
+          deckResultTimerRef.current = setTimeout(() => {
+            setDeckResult(null);
+            deckResultTimerRef.current = null;
+          }, 3000);
+        } catch {
+          resetSweep();
+          setDeckNotice('no-words');
+        }
+      })();
+    }, 145);
+  }, [
+    language,
+    poolIds,
+    state.studyTypeSelected,
+    getLanguagePools,
+    currentCard,
+    loadCard,
+    resetSweep,
+    sweepOpacity,
+    sweepX,
+  ]);
 
   const growDeckTo = useCallback((size: number) => {
     if (!language || poolIds.length !== 1) return;

@@ -5,7 +5,7 @@
  * Lets the user pick a study direction, then starts the session.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, ScrollView, TouchableOpacity, Pressable, StyleSheet } from 'react-native';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -17,9 +17,11 @@ import type { Language } from '@/src/types/vocab';
 import { parsePoolIdsParam } from '@/src/utils/studyLaunch';
 import { saveListDeck } from '@/src/storage/listDecks';
 import {
+  deckSizeChoices,
   drawSizedListDeck,
   eligibleStudyWords,
   loadContinuableDeck,
+  resolveRedrawCount,
 } from '@/src/utils/listDeckLaunch';
 import { useAndroidBackHandler } from '@/src/hooks/useAndroidBackHandler';
 
@@ -89,7 +91,7 @@ function formatDeckSummary(
 
 export default function DirectionScreen() {
   const router = useRouter();
-  const { state, setDirectionMode, getLanguagePools } = useAppContext();
+  const { state, setDirectionMode, getLanguagePools, updatePool } = useAppContext();
   // Pool IDs and the current deck are forwarded from list launch / deck-size to the session.
   const { poolIds, deckIds } = useLocalSearchParams<{
     poolIds?: string;
@@ -152,16 +154,44 @@ export default function DirectionScreen() {
   const [deckNote, setDeckNote] = useState<string | null>(null);
   const deckNoteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleNewDeck = () => {
-    if (!pool || !state.languageSelected || activeDeckIds.length === 0) return;
-    const next = drawSizedListDeck(pool, studyType, activeDeckIds.length);
-    if (next.length === 0) return;
+  const [newDeckOpen, setNewDeckOpen] = useState(false);
+  const [newDeckSize, setNewDeckSize] = useState<number | null>(null);
+  const newDeckOpenRef = useRef(false);
+  newDeckOpenRef.current = newDeckOpen;
+  const newDeckChoices = deckSizeChoices(eligibleCount);
+
+  const applyDrawnDeck = (next: string[], chosenSize: number | null) => {
+    if (!pool || !state.languageSelected || next.length === 0) return;
     deckRevision.current += 1;
     setActiveDeckIds(next);
     void saveListDeck(state.languageSelected, studyType, pool.id, next);
+    if (chosenSize !== null) {
+      updatePool(pool.id, { deckSize: chosenSize, deckSizeChosen: true });
+    }
+    setNewDeckOpen(false);
     setDeckNote('New deck drawn');
     if (deckNoteTimer.current) clearTimeout(deckNoteTimer.current);
     deckNoteTimer.current = setTimeout(() => setDeckNote(null), 2000);
+  };
+
+  const handleNewDeck = () => {
+    if (!pool || !state.languageSelected) return;
+    if (newDeckChoices.length === 0) {
+      if (activeDeckIds.length === 0) return;
+      applyDrawnDeck(drawSizedListDeck(pool, studyType, activeDeckIds.length), null);
+      return;
+    }
+    const requested = activeDeckIds.length > 0 ? activeDeckIds.length : pool.deckSize;
+    const snapped = newDeckChoices.includes(requested)
+      ? requested
+      : resolveRedrawCount(requested, eligibleCount);
+    setNewDeckSize(newDeckChoices.includes(snapped) ? snapped : newDeckChoices[newDeckChoices.length - 1]);
+    setNewDeckOpen(true);
+  };
+
+  const confirmNewDeck = () => {
+    if (!pool || newDeckSize === null) return;
+    applyDrawnDeck(drawSizedListDeck(pool, studyType, newDeckSize), newDeckSize);
   };
 
   useEffect(() => () => {
@@ -181,6 +211,10 @@ export default function DirectionScreen() {
 
   useAndroidBackHandler(
     useCallback(() => {
+      if (newDeckOpenRef.current) {
+        setNewDeckOpen(false);
+        return true;
+      }
       router.back();
       return true;
     }, [router]),
@@ -276,6 +310,50 @@ export default function DirectionScreen() {
           <Image source={continueArrow} style={styles.primaryArrow} accessibilityIgnoresInvertColors />
         </TouchableOpacity>
       </ScrollView>
+      {newDeckOpen ? (
+        <Pressable style={styles.sheetScrim} onPress={() => setNewDeckOpen(false)}>
+          <Pressable style={styles.sheet} onPress={() => {}}>
+            <Text style={styles.sheetTitle}>New Deck</Text>
+            <View style={styles.pills}>
+              {newDeckChoices.map(size => {
+                const selected = size === newDeckSize;
+                return (
+                  <TouchableOpacity
+                    key={size}
+                    style={[styles.pill, selected ? styles.pillOn : styles.pillOff]}
+                    onPress={() => setNewDeckSize(size)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    accessibilityLabel={`${size} words`}
+                  >
+                    <Text style={[styles.pillText, selected ? styles.pillTextOn : styles.pillTextOff]}>
+                      {size}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <View style={styles.sheetActions}>
+              <TouchableOpacity
+                style={styles.sheetFilled}
+                onPress={confirmNewDeck}
+                activeOpacity={0.75}
+                accessibilityRole="button"
+              >
+                <Text style={styles.sheetFilledLabel}>Draw Deck</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.sheetOutline}
+                onPress={() => setNewDeckOpen(false)}
+                activeOpacity={0.75}
+                accessibilityRole="button"
+              >
+                <Text style={styles.sheetOutlineLabel}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -425,4 +503,94 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   primaryArrow: { width: 12, height: 12 },
+
+  sheetScrim: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    zIndex: 20,
+    elevation: 20,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    paddingTop: 48,
+    paddingBottom: 24,
+  },
+  sheet: {
+    width: 313,
+    maxWidth: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    padding: 20,
+    alignItems: 'center',
+    gap: 20,
+  },
+  sheetTitle: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 22,
+    color: '#25262B',
+    textAlign: 'center',
+  },
+  pills: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  pill: {
+    minWidth: 44,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pillOn: { backgroundColor: '#5E51A4' },
+  pillOff: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#5E51A4',
+  },
+  pillText: {
+    fontFamily: HomeFonts.interMedium,
+    fontWeight: 'normal',
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  pillTextOn: { color: '#FFFFFF' },
+  pillTextOff: { color: '#5E51A4' },
+  sheetActions: { gap: 10, alignItems: 'center' },
+  sheetFilled: {
+    width: 220,
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#5E51A4',
+  },
+  sheetFilledLabel: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#FFFFFF',
+  },
+  sheetOutline: {
+    width: 220,
+    height: 48,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#5E51A4',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  sheetOutlineLabel: {
+    fontFamily: HomeFonts.interSemiBold,
+    fontWeight: 'normal',
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#5E51A4',
+  },
 });
