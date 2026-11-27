@@ -2,8 +2,8 @@
  * CARD_1006 — Noun / Vocab Production
  * Direction-sensitive translation card. German uses gender tiles; FR/ES uses determiner+noun input.
  */
-import React, { useState, useCallback, useMemo, useRef, useLayoutEffect } from 'react';
-import { View, Text, TextInput, ScrollView, StyleSheet } from 'react-native';
+import React, { useState, useCallback, useMemo, useRef, useEffect, useLayoutEffect } from 'react';
+import { View, Text, TextInput, ScrollView, StyleSheet, Platform } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { Colors, GenderColors } from '@/constants/theme';
@@ -63,6 +63,8 @@ interface Props {
   onSelectDirection: (mode: DirectionMode) => void;
   showDeckOptions: boolean;
   onOpenDeckOptions: () => void;
+  headerNotice?: string | null;
+  focusRequest?: number;
 }
 
 type CardState =
@@ -85,6 +87,8 @@ export default function Card1006({
   onSelectDirection,
   showDeckOptions,
   onOpenDeckOptions,
+  headerNotice,
+  focusRequest,
 }: Props) {
   const scheme  = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
@@ -111,6 +115,12 @@ export default function Card1006({
     attemptRef.current = 0;
     inputRef.current?.focus();
   }, [cardId]);
+
+  useEffect(() => {
+    if (!focusRequest) return;
+    const timer = setTimeout(() => inputRef.current?.focus(), Platform.OS === 'android' ? 300 : 100);
+    return () => clearTimeout(timer);
+  }, [focusRequest]);
 
   const isGerman = language === 'de';
   const isNativeToTarget = card.direction === 'native_to_target';
@@ -403,6 +413,7 @@ export default function Card1006({
         onHome={onHome}
         showDeckOptions={showDeckOptions}
         onOpenDeckOptions={onOpenDeckOptions}
+        headerNotice={headerNotice}
       />
       <ScrollView
         style={studyChrome.scroll}

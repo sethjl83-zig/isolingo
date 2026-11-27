@@ -43,6 +43,7 @@ interface Props {
   onSelectDirection: (mode: DirectionMode) => void;
   showDeckOptions: boolean;
   onOpenDeckOptions: () => void;
+  headerNotice?: string | null;
 }
 
 type AnswerState = 'idle' | 'correct' | 'incorrect' | 'flipped';
@@ -104,6 +105,7 @@ export default function Card1002({
   onSelectDirection,
   showDeckOptions,
   onOpenDeckOptions,
+  headerNotice,
 }: Props) {
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
@@ -186,6 +188,7 @@ export default function Card1002({
         onHome={onHome}
         showDeckOptions={showDeckOptions}
         onOpenDeckOptions={onOpenDeckOptions}
+        headerNotice={headerNotice}
       />
       <ScrollView
         style={studyChrome.scroll}

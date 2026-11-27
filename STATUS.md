@@ -47,6 +47,7 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-11-26: Deck Options asks before a larger size, confirms leaving a word selection, and shows the new deck size on the direction caption. The Production keyboard returns when the sheet closes.
 - 2026-11-26: Frequency on a study card is an on-screen sheet, so the Production keyboard stays up.
 - 2026-11-26: Adding, removing, pausing, or unpausing a word updates the saved deck for Gender and General Vocab. A short list's deck stays the whole eligible list.
 - 2026-11-26: A wrong Production answer outlines the text field in #D93025 with a light red tint, in all three languages.

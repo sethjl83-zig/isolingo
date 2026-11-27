@@ -3,7 +3,7 @@
  * Infinite study loop: generates cards, delivers them, updates repetition state.
  */
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { View, Text, Image, StyleSheet, ActivityIndicator, Dimensions, Modal, Pressable, ScrollView, TouchableOpacity, BackHandler } from 'react-native';
+import { View, Text, Image, StyleSheet, ActivityIndicator, Dimensions, Modal, Pressable, ScrollView, TouchableOpacity, BackHandler, Keyboard, PixelRatio } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import Animated, {
@@ -146,6 +146,11 @@ function DeckNoticeDialog({
   );
 }
 
+function wordCountLabel(count: number, capital = false): string {
+  const word = count === 1 ? 'word' : 'words';
+  return capital ? word.charAt(0).toUpperCase() + word.slice(1) : word;
+}
+
 function DeckOptionsSheet({
   deckLength,
   sizes,
@@ -176,18 +181,37 @@ function DeckOptionsSheet({
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set());
+  const [pendingGrow, setPendingGrow] = useState<number | null>(null);
+  const [discardAction, setDiscardAction] = useState<'back' | 'close' | null>(null);
+  const selectedCountRef = useRef(0);
+  const discardActionRef = useRef<'back' | 'close' | null>(null);
+  selectedCountRef.current = selectedIds.size;
+  discardActionRef.current = discardAction;
+
+  const fontScale = PixelRatio.getFontScale();
+  const shrinkRowHeight = Math.max(44, 22 * fontScale + 2 + 16 * fontScale);
+  const shrinkListHeight = shrinkRowHeight * 5 + 8 * 4;
 
   useEffect(() => {
     setSelectedIds(new Set());
+    setDiscardAction(null);
   }, [shrinkSize]);
 
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (discardActionRef.current) {
+        setDiscardAction(null);
+        return true;
+      }
+      if (shrinkSize !== null && selectedCountRef.current > 0) {
+        setDiscardAction('close');
+        return true;
+      }
       onHardwareBack();
       return true;
     });
     return () => sub.remove();
-  }, [onHardwareBack]);
+  }, [onHardwareBack, shrinkSize]);
 
   const showSizes = sizes.some(size => size !== deckLength);
   const removeCount = shrinkSize === null ? 0 : deckLength - shrinkSize;
@@ -208,16 +232,34 @@ function DeckOptionsSheet({
     });
   };
 
+  const requestLeave = (action: 'back' | 'close') => {
+    if (selectedIds.size > 0) {
+      setDiscardAction(action);
+      return;
+    }
+    if (action === 'back') onBack();
+    else onDismiss();
+  };
+
+  const confirmDiscard = () => {
+    const action = discardAction;
+    setSelectedIds(new Set());
+    setDiscardAction(null);
+    if (action === 'back') onBack();
+    else onDismiss();
+  };
+
   if (shrinkSize !== null) {
     return (
-      <Pressable style={styles.shrinkScrim} onPress={onDismiss}>
+      <>
+      <Pressable style={styles.shrinkScrim} onPress={() => requestLeave('close')}>
         <Pressable style={[styles.dialogSheet, styles.shrinkSheet]} onPress={() => {}}>
           <Text style={styles.dialogTitle}>Choose Words to Remove</Text>
           <Text style={styles.dialogMessage}>
             {`Remove ${removeCount} words to reach ${shrinkSize}.`}
           </Text>
           <ScrollView
-            style={styles.shrinkList}
+            style={[styles.shrinkList, { height: shrinkListHeight, maxHeight: shrinkListHeight }]}
             contentContainerStyle={styles.shrinkListContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
@@ -272,7 +314,7 @@ function DeckOptionsSheet({
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.dialogOutline}
-              onPress={onBack}
+              onPress={() => requestLeave('back')}
               activeOpacity={0.75}
               accessibilityRole="button"
             >
@@ -281,6 +323,35 @@ function DeckOptionsSheet({
           </View>
         </Pressable>
       </Pressable>
+      {discardAction ? (
+        <Pressable
+          style={[styles.deckOptionsScrim, styles.discardScrim]}
+          onPress={() => setDiscardAction(null)}
+        >
+          <Pressable style={styles.dialogSheet} onPress={() => {}}>
+            <Text style={styles.dialogTitle}>Discard your selection?</Text>
+            <View style={styles.dialogActions}>
+              <TouchableOpacity
+                style={styles.dialogFilled}
+                onPress={() => setDiscardAction(null)}
+                activeOpacity={0.75}
+                accessibilityRole="button"
+              >
+                <Text style={styles.dialogFilledLabel}>Keep Editing</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.dialogOutline}
+                onPress={confirmDiscard}
+                activeOpacity={0.75}
+                accessibilityRole="button"
+              >
+                <Text style={styles.dialogOutlineLabel}>Discard</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      ) : null}
+      </>
     );
   }
 
@@ -294,17 +365,29 @@ function DeckOptionsSheet({
             <View style={styles.deckOptionsPills}>
               {sizes.map(size => {
                 const current = size === deckLength;
+                const picked = pendingGrow === size;
                 return (
                   <TouchableOpacity
                     key={size}
-                    style={[styles.deckSizePill, current ? styles.deckSizePillOn : styles.deckSizePillOff]}
+                    style={[
+                      styles.deckSizePill,
+                      current ? styles.deckSizePillOn : styles.deckSizePillOff,
+                      picked && styles.deckSizePillPick,
+                    ]}
                     onPress={() => {
-                      if (size < deckLength) onOpenShrink(size);
-                      else onGrow(size);
+                      if (size < deckLength) {
+                        setPendingGrow(null);
+                        onOpenShrink(size);
+                        return;
+                      }
+                      if (current) {
+                        setPendingGrow(null);
+                        return;
+                      }
+                      setPendingGrow(size);
                     }}
-                    disabled={current}
                     accessibilityRole="button"
-                    accessibilityState={{ selected: current }}
+                    accessibilityState={{ selected: current || picked }}
                     accessibilityLabel={`${size} words`}
                   >
                     <Text style={[styles.deckSizePillText, current ? styles.deckSizePillTextOn : styles.deckSizePillTextOff]}>
@@ -314,12 +397,35 @@ function DeckOptionsSheet({
                 );
               })}
             </View>
+            {pendingGrow !== null ? (
+              <Text style={styles.dialogMessage}>
+                {`Adds ${pendingGrow - deckLength} random ${wordCountLabel(pendingGrow - deckLength)} to reach ${pendingGrow}.`}
+              </Text>
+            ) : null}
           </View>
         ) : null}
         <Text style={styles.dialogMessage}>
           Larger sizes add random words. Smaller sizes ask which words to remove. Your progress is kept.
         </Text>
         <View style={styles.dialogActions}>
+          {showSizes ? (
+            <TouchableOpacity
+              style={[styles.dialogFilled, pendingGrow === null && styles.deckOptionsDisabled]}
+              onPress={() => {
+                if (pendingGrow !== null) onGrow(pendingGrow);
+              }}
+              disabled={pendingGrow === null}
+              activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: pendingGrow === null }}
+            >
+              <Text style={styles.dialogFilledLabel}>
+                {pendingGrow === null
+                  ? 'Add Words'
+                  : `Add ${pendingGrow - deckLength} ${wordCountLabel(pendingGrow - deckLength, true)}`}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
           <TouchableOpacity
             style={styles.dialogFilled}
             onPress={onNewDeck}
@@ -379,6 +485,27 @@ export default function SessionScreen() {
   const deckOptionsOpenRef = useRef(false);
   const [shrinkSize, setShrinkSize] = useState<number | null>(null);
   const shrinkSizeRef = useRef<number | null>(null);
+  const keyboardOpenRef = useRef(false);
+  const restoreKeyboardRef = useRef(false);
+  const cardTypeRef = useRef<CardData['type'] | null>(null);
+  const [focusRequest, setFocusRequest] = useState(0);
+  const [deckResult, setDeckResult] = useState<string | null>(null);
+  const deckResultTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  cardTypeRef.current = currentCard?.type ?? null;
+
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', () => {
+      keyboardOpenRef.current = true;
+    });
+    const hide = Keyboard.addListener('keyboardDidHide', () => {
+      keyboardOpenRef.current = false;
+    });
+    return () => {
+      show.remove();
+      hide.remove();
+      if (deckResultTimerRef.current) clearTimeout(deckResultTimerRef.current);
+    };
+  }, []);
 
   const language = state.languageSelected;
   const sessionDirectionRef = useRef<DirectionMode>(state.directionMode);
@@ -887,41 +1014,13 @@ export default function SessionScreen() {
     });
   }, [navigation, router]);
 
-  const retreatDeckOptions = useCallback(() => {
-    if (shrinkSizeRef.current !== null) {
-      shrinkSizeRef.current = null;
-      setShrinkSize(null);
-      return;
-    }
-    deckOptionsOpenRef.current = false;
-    shrinkSizeRef.current = null;
-    setShrinkSize(null);
-    setDeckOptionsOpen(false);
-  }, []);
-
-  useAndroidBackHandler(
-    useCallback(() => {
-      if (deckOptionsOpenRef.current) {
-        retreatDeckOptions();
-        return true;
-      }
-      if (blockingNoticeRef.current) return true;
-      if (smallNoticeRef.current) {
-        setDeckNotice(null);
-        return true;
-      }
-      handleExit();
-      return true;
-    }, [handleExit, retreatDeckOptions]),
-  );
-
-  const handleHome = useCallback(() => {
-    router.replace('/dashboard');
-  }, [router]);
-
-  const openDeckOptions = useCallback(() => {
-    deckOptionsOpenRef.current = true;
-    setDeckOptionsOpen(true);
+  const showDeckResult = useCallback((text: string) => {
+    if (deckResultTimerRef.current) clearTimeout(deckResultTimerRef.current);
+    setDeckResult(text);
+    deckResultTimerRef.current = setTimeout(() => {
+      setDeckResult(null);
+      deckResultTimerRef.current = null;
+    }, 3000);
   }, []);
 
   const closeDeckOptions = useCallback(() => {
@@ -929,7 +1028,64 @@ export default function SessionScreen() {
     shrinkSizeRef.current = null;
     setShrinkSize(null);
     setDeckOptionsOpen(false);
+    if (restoreKeyboardRef.current && cardTypeRef.current === 'CARD_1006') {
+      setFocusRequest(request => request + 1);
+    }
+    restoreKeyboardRef.current = false;
   }, []);
+
+  const retreatDeckOptions = useCallback(() => {
+    if (shrinkSizeRef.current !== null) {
+      shrinkSizeRef.current = null;
+      setShrinkSize(null);
+      return;
+    }
+    closeDeckOptions();
+  }, [closeDeckOptions]);
+
+  useAndroidBackHandler(
+    useCallback(() => {
+      if (deckOptionsOpenRef.current) return false;
+      if (blockingNoticeRef.current) return true;
+      if (smallNoticeRef.current) {
+        setDeckNotice(null);
+        return true;
+      }
+      handleExit();
+      return true;
+    }, [handleExit]),
+  );
+
+  const handleHome = useCallback(() => {
+    router.replace('/dashboard');
+  }, [router]);
+
+  const openDeckOptions = useCallback(() => {
+    restoreKeyboardRef.current = keyboardOpenRef.current || Keyboard.isVisible();
+    deckOptionsOpenRef.current = true;
+    setDeckOptionsOpen(true);
+    Keyboard.dismiss();
+  }, []);
+
+  const applyGrow = useCallback((size: number) => {
+    const before = getSessionDeckIds().size;
+    growDeckTo(size);
+    const after = getSessionDeckIds().size;
+    const added = after - before;
+    if (added <= 0) return;
+    closeDeckOptions();
+    showDeckResult(`Added ${added} ${wordCountLabel(added)} · deck now ${after}`);
+  }, [getSessionDeckIds, growDeckTo, closeDeckOptions, showDeckResult]);
+
+  const applyShrink = useCallback((ids: readonly string[]) => {
+    const before = getSessionDeckIds().size;
+    shrinkDeckTo(ids);
+    const after = getSessionDeckIds().size;
+    const removed = before - after;
+    if (removed <= 0) return;
+    closeDeckOptions();
+    showDeckResult(`Removed ${removed} ${wordCountLabel(removed)} · deck now ${after}`);
+  }, [getSessionDeckIds, shrinkDeckTo, closeDeckOptions, showDeckResult]);
 
   const openShrink = useCallback((size: number) => {
     shrinkSizeRef.current = size;
@@ -1102,6 +1258,7 @@ export default function SessionScreen() {
               onSelectDirection={selectSessionDirection}
               showDeckOptions={singleList}
               onOpenDeckOptions={openDeckOptions}
+              headerNotice={deckResult}
               onSubmit={correct =>
                 handleSubmit(
                   null,
@@ -1128,6 +1285,7 @@ export default function SessionScreen() {
               onSelectDirection={selectSessionDirection}
               showDeckOptions={singleList}
               onOpenDeckOptions={openDeckOptions}
+              headerNotice={deckResult}
               onSubmit={correct =>
                 handleSubmit(
                   null,
@@ -1155,6 +1313,8 @@ export default function SessionScreen() {
               onSelectDirection={selectSessionDirection}
               showDeckOptions={singleList}
               onOpenDeckOptions={openDeckOptions}
+              headerNotice={deckResult}
+              focusRequest={focusRequest}
               onSubmit={(correct, isFirstAttempt) =>
                 handleSubmit(
                   currentCard.item.id,
@@ -1186,9 +1346,9 @@ export default function SessionScreen() {
           words={deckWords}
           lockedIds={lockedIds}
           shrinkSize={shrinkSize}
-          onGrow={growDeckTo}
+          onGrow={applyGrow}
           onOpenShrink={openShrink}
-          onConfirmShrink={shrinkDeckTo}
+          onConfirmShrink={applyShrink}
           onBack={retreatDeckOptions}
           onHardwareBack={retreatDeckOptions}
           onNewDeck={() => {
@@ -1351,7 +1511,7 @@ const styles = StyleSheet.create({
     elevation: 20,
     backgroundColor: 'rgba(0,0,0,0.4)',
     alignItems: 'center',
-    paddingTop: 243,
+    paddingTop: 48,
     paddingBottom: 24,
   },
   deckOptionsSizes: { gap: 10, alignItems: 'center', alignSelf: 'stretch' },
@@ -1382,6 +1542,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#5E51A4',
   },
+  deckSizePillPick: { borderWidth: 2 },
   deckSizePillText: {
     fontFamily: HomeFonts.interMedium,
     fontWeight: 'normal',
@@ -1391,6 +1552,7 @@ const styles = StyleSheet.create({
   deckSizePillTextOn: { color: '#FFFFFF' },
   deckSizePillTextOff: { color: '#5E51A4' },
   deckOptionsDisabled: { opacity: 0.4 },
+  discardScrim: { zIndex: 21, elevation: 21 },
   shrinkScrim: {
     position: 'absolute',
     top: 0,
@@ -1401,16 +1563,16 @@ const styles = StyleSheet.create({
     elevation: 20,
     backgroundColor: 'rgba(0,0,0,0.4)',
     alignItems: 'center',
-    paddingTop: 48,
-    paddingBottom: 24,
+    paddingTop: 12,
+    paddingBottom: 12,
   },
   shrinkSheet: {
     alignItems: 'stretch',
-    maxHeight: SCREEN_HEIGHT - 96,
+    gap: 12,
+    maxHeight: SCREEN_HEIGHT - 44,
   },
   shrinkList: {
     alignSelf: 'stretch',
-    maxHeight: 180,
   },
   shrinkListContent: { gap: 8 },
   shrinkRow: {
@@ -1434,6 +1596,7 @@ const styles = StyleSheet.create({
     fontWeight: 'normal',
     fontSize: 18,
     lineHeight: 22,
+    includeFontPadding: false,
   },
   shrinkEnglish: {
     fontFamily: HomeFonts.interRegular,
@@ -1441,5 +1604,6 @@ const styles = StyleSheet.create({
     fontSize: 13.5,
     lineHeight: 16,
     color: 'rgba(0,0,0,0.6)',
+    includeFontPadding: false,
   },
 });

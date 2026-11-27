@@ -69,6 +69,7 @@ interface Props {
   onHome: () => void;
   showDeckOptions: boolean;
   onOpenDeckOptions: () => void;
+  headerNotice?: string | null;
 }
 
 export default function SessionHeader({
@@ -79,6 +80,7 @@ export default function SessionHeader({
   onHome,
   showDeckOptions,
   onOpenDeckOptions,
+  headerNotice,
 }: Props) {
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
@@ -282,18 +284,19 @@ export default function SessionHeader({
           androidFont,
           {
             color: palette.subtext,
-            opacity: captionOpacity,
+            opacity: headerNotice ? 1 : captionOpacity,
             height: captionLine,
             fontSize: 13 * fontScale,
             lineHeight: captionLine,
           },
         ]}
+        numberOfLines={1}
         pointerEvents="none"
         allowFontScaling={false}
-        accessibilityElementsHidden={!captionVisible}
-        importantForAccessibility={captionVisible ? 'yes' : 'no-hide-descendants'}
+        accessibilityElementsHidden={!headerNotice && !captionVisible}
+        importantForAccessibility={headerNotice || captionVisible ? 'yes' : 'no-hide-descendants'}
       >
-        Applies from the next card
+        {headerNotice ?? 'Applies from the next card'}
       </Animated.Text>
     </View>
   );
