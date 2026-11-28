@@ -14,11 +14,11 @@ interface SenseLabelIndex {
 const cache = new Map<string, SenseLabelIndex>();
 
 /** Primary English gloss: lowercase, trimmed, with a leading "male " or "female " removed. */
-function primaryGlossKey(item: VocabItem): string {
+export function primaryGlossKey(item: VocabItem): string {
   return stripEnglishGenderPrefix(getPrimaryEnglish(item)).toLowerCase().trim();
 }
 
-function lemmaKey(item: VocabItem): string {
+export function lemmaKey(item: VocabItem): string {
   return item.lemma.trim().toLowerCase();
 }
 

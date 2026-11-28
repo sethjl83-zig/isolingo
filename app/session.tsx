@@ -528,6 +528,20 @@ export default function SessionScreen() {
     [poolIdsParam],
   );
 
+  const sessionSenseList = useMemo(() => {
+    if (!language || poolIds.length !== 1) return null;
+    const pool = (state.languagePools[language] ?? []).find(item => item.id === poolIds[0]);
+    if (!pool) return null;
+    return {
+      name: pool.name,
+      createdVia: pool.createdVia,
+      items: enrichVocabItemsFromMaster(
+        pool.words.map(word => word.item),
+        language,
+      ),
+    };
+  }, [language, poolIds, state.languagePools]);
+
   const explicitDeckIds = useMemo<string[]>(
     () => parsePoolIdsParam(deckIdsParam),
     [deckIdsParam],
@@ -1390,6 +1404,7 @@ export default function SessionScreen() {
               onOpenDeckOptions={openDeckOptions}
               headerNotice={deckResult}
               focusRequest={focusRequest}
+              sessionList={sessionSenseList}
               onSubmit={(correct, isFirstAttempt) =>
                 handleSubmit(
                   currentCard.item.id,

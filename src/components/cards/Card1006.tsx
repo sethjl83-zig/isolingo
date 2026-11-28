@@ -20,6 +20,7 @@ import StudyCardLayout from './StudyCardLayout';
 import SessionHeader from './SessionHeader';
 import { playCorrect, playIncorrect } from '@/src/utils/soundPlayer';
 import { sharesSenseWithAnother } from '@/src/utils/senseLabelVisibility';
+import { hiddenSenseLabelIds, type TopicSenseList } from '@/src/utils/topicSenseLabels';
 import { useAppContext } from '@/src/context/AppContext';
 import {
   studyChrome,
@@ -65,6 +66,8 @@ interface Props {
   onOpenDeckOptions: () => void;
   headerNotice?: string | null;
   focusRequest?: number;
+  /** The one list in this session. Null when the session has more than one list. */
+  sessionList?: TopicSenseList | null;
 }
 
 type CardState =
@@ -89,6 +92,7 @@ export default function Card1006({
   onOpenDeckOptions,
   headerNotice,
   focusRequest,
+  sessionList = null,
 }: Props) {
   const scheme  = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
@@ -96,6 +100,10 @@ export default function Card1006({
   const listItems = useMemo(
     () => (state.languagePools[language] ?? []).flatMap(pool => pool.words.map(word => word.item)),
     [state.languagePools, language],
+  );
+  const hiddenSenseIds = useMemo(
+    () => hiddenSenseLabelIds(sessionList),
+    [sessionList],
   );
 
   const [inputText, setInputText] = useState('');
@@ -266,9 +274,11 @@ export default function Card1006({
       : null;
 
   // ── Sense label subtitle (shown beneath prompt when present) ─────────────────
-  const senseLabel = sharesSenseWithAnother(card.item, language, listItems)
-    ? usableSenseLabel(card.item.senseLabel)
-    : null;
+  const senseLabel =
+    sharesSenseWithAnother(card.item, language, listItems) &&
+    !hiddenSenseIds.has(card.item.id)
+      ? usableSenseLabel(card.item.senseLabel)
+      : null;
   const possessiveFormLabel =
     language === 'fr' &&
     card.direction === 'native_to_target' &&
