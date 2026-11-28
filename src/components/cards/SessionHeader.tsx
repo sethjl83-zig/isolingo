@@ -22,19 +22,19 @@ import type { DirectionMode } from '@/src/types/state';
 import type { Language } from '@/src/types/vocab';
 
 const MODES: DirectionMode[] = ['target_to_native', 'native_to_target', 'mixed'];
-const TRACK_WIDTH = 216;
+const TRACK_WIDTH = 194;
 const SEGMENT = TRACK_WIDTH / MODES.length;
-const TRACK_HEIGHT = 32;
-/** Widest segment label, "Ge → En", at Inter Medium 13. Measured from the font file. */
-const WIDEST_LABEL_AT_13 = 57.7;
-const LABEL_ROOM = SEGMENT - 8;
+const TRACK_HEIGHT = 29;
+const KNOB_INSET = 2;
+/** A press that moves less than this is a tap on the segment under the finger. */
+const TAP_MOVE = 8;
 
 /** Text is shorter than 44. hitSlop brings the tap target up to 44 points. */
 const LABEL_HIT_SLOP = { top: 12, bottom: 12, left: 8, right: 8 };
 /** The glyph is 20 points. 12 points of hitSlop on each side makes the target 44. */
 const ICON_HIT_SLOP = { top: 12, bottom: 12, left: 12, right: 12 };
-/** The track is 32 points. 6 points of hitSlop on each side makes the target 44. */
-const SLIDER_HIT_SLOP = { top: 6, bottom: 6, left: 0, right: 0 };
+/** The track is 29 points. 8 points of hitSlop on each side makes the target 45. */
+const SLIDER_HIT_SLOP = { top: 8, bottom: 8, left: 0, right: 0 };
 
 const androidFont = Platform.OS === 'android' ? { includeFontPadding: false as const } : null;
 
@@ -48,13 +48,6 @@ function segmentLabel(mode: DirectionMode, code: string): string {
   if (mode === 'native_to_target') return `En → ${code}`;
   if (mode === 'mixed') return 'Mixed';
   return `${code} → En`;
-}
-
-function labelFontSize(): number {
-  const fontScale = PixelRatio.getFontScale();
-  const natural = WIDEST_LABEL_AT_13 * fontScale;
-  if (natural <= LABEL_ROOM) return 13 * fontScale;
-  return (13 * fontScale * LABEL_ROOM) / natural;
 }
 
 function nearestIndex(value: number): number {
@@ -85,7 +78,8 @@ export default function SessionHeader({
   const scheme = useColorScheme() ?? 'light';
   const palette = Colors[scheme];
   const code = languageCode(language);
-  const fontSize = labelFontSize();
+  const fontScale = PixelRatio.getFontScale();
+  const fontSize = 13 * fontScale;
   const lineHeight = fontSize * (18 / 13);
   const directionRef = useRef(direction);
   const onSelectRef = useRef(onSelectDirection);
@@ -99,8 +93,15 @@ export default function SessionHeader({
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [knobIndex, setKnobIndex] = useState(MODES.indexOf(direction));
   const [captionVisible, setCaptionVisible] = useState(false);
-  const fontScale = PixelRatio.getFontScale();
   const captionLine = 16 * fontScale;
+  const trackRef = useRef<View>(null);
+  const trackPageX = useRef(0);
+
+  const rememberTrackX = () => {
+    trackRef.current?.measureInWindow(x => {
+      trackPageX.current = x;
+    });
+  };
 
   useEffect(() => {
     setKnobIndex(MODES.indexOf(direction));
@@ -149,12 +150,14 @@ export default function SessionHeader({
       onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: () => {
         dragging.current = true;
+        dragOrigin.current = MODES.indexOf(directionRef.current);
+        rememberTrackX();
         position.stopAnimation(value => {
           dragOrigin.current = value;
         });
       },
       onPanResponderMove: (_, gesture) => {
-        if (Math.abs(gesture.dx) < 4) return;
+        if (Math.hypot(gesture.dx, gesture.dy) < TAP_MOVE) return;
         const next = Math.min(
           MODES.length - 1,
           Math.max(0, dragOrigin.current + gesture.dx / SEGMENT),
@@ -165,22 +168,21 @@ export default function SessionHeader({
       },
       onPanResponderRelease: (event, gesture) => {
         dragging.current = false;
-        const tapped = Math.abs(gesture.dx) < 4 && Math.abs(gesture.dy) < 4;
+        const tapped = Math.hypot(gesture.dx, gesture.dy) < TAP_MOVE;
+        const touchedX = event.nativeEvent.locationX;
+        const localX = touchedX >= 0 && touchedX <= TRACK_WIDTH
+          ? touchedX
+          : gesture.x0 - trackPageX.current;
         const index = tapped
-          ? Math.min(
-              MODES.length - 1,
-              Math.max(0, Math.floor(event.nativeEvent.locationX / SEGMENT)),
-            )
+          ? Math.min(MODES.length - 1, Math.max(0, Math.floor(localX / SEGMENT)))
           : nearestIndex(dragOrigin.current + gesture.dx / SEGMENT);
         setKnobIndex(index);
-        if (MODES[index] === directionRef.current) {
-          Animated.timing(position, {
-            toValue: index,
-            duration: 180,
-            useNativeDriver: true,
-          }).start();
-          return;
-        }
+        Animated.timing(position, {
+          toValue: index,
+          duration: 180,
+          useNativeDriver: true,
+        }).start();
+        if (MODES[index] === directionRef.current) return;
         commit(index);
       },
       onPanResponderTerminate: () => {
@@ -198,12 +200,16 @@ export default function SessionHeader({
 
   const knobShift = position.interpolate({
     inputRange: [0, 1, 2],
-    outputRange: [0, SEGMENT, SEGMENT * 2],
+    outputRange: [KNOB_INSET, SEGMENT + KNOB_INSET, SEGMENT * 2 + KNOB_INSET],
   });
   const labelStyle = [
     styles.segmentText,
-    androidFont,
     { fontSize, lineHeight, color: palette.primary },
+  ];
+  const selectedLabelStyle = [
+    styles.segmentText,
+    styles.selectedText,
+    { fontSize, lineHeight, color: palette.buttonPrimaryText },
   ];
 
   return (
@@ -229,6 +235,8 @@ export default function SessionHeader({
 
       <View style={styles.sliderRow}>
         <View
+          ref={trackRef}
+          onLayout={rememberTrackX}
           style={[styles.track, { backgroundColor: palette.badgeFill }]}
           hitSlop={SLIDER_HIT_SLOP}
           accessibilityRole="adjustable"
@@ -237,7 +245,13 @@ export default function SessionHeader({
           {...pan.panHandlers}
         >
           {MODES.map(mode => (
-            <Text key={mode} style={labelStyle} numberOfLines={1} allowFontScaling={false}>
+            <Text
+              key={mode}
+              style={labelStyle}
+              numberOfLines={1}
+              allowFontScaling={false}
+              pointerEvents="none"
+            >
               {segmentLabel(mode, code)}
             </Text>
           ))}
@@ -249,11 +263,7 @@ export default function SessionHeader({
             ]}
           >
             <Text
-              style={[
-                styles.segmentText,
-                androidFont,
-                { fontSize, lineHeight, color: palette.buttonPrimaryText },
-              ]}
+              style={selectedLabelStyle}
               numberOfLines={1}
               allowFontScaling={false}
             >
@@ -314,7 +324,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sliderRow: {
-    marginTop: 4,
+    marginTop: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -350,18 +360,23 @@ const styles = StyleSheet.create({
   knob: {
     position: 'absolute',
     left: 0,
-    top: 0,
-    width: SEGMENT,
-    height: TRACK_HEIGHT,
-    borderRadius: TRACK_HEIGHT / 2,
+    top: KNOB_INSET,
+    width: SEGMENT - KNOB_INSET * 2,
+    height: TRACK_HEIGHT - KNOB_INSET * 2,
+    borderRadius: (TRACK_HEIGHT - KNOB_INSET * 2) / 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
   segmentText: {
     flex: 1,
     textAlign: 'center',
+    textAlignVertical: 'center',
     fontFamily: HomeFonts.interMedium,
     fontWeight: 'normal',
+    includeFontPadding: false,
+  },
+  selectedText: {
+    fontFamily: HomeFonts.interSemiBold,
   },
   caption: {
     marginTop: 2,

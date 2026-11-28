@@ -47,6 +47,7 @@ Every session: read this first, update it before you finish.
 - Vocab Bank Manager: version 2 (slider layout)
 
 ## Session log
+- 2026-11-28: A tap on the direction slider selects that segment. The track is smaller, the knob sits inside it, and the slider row sits lower.
 - 2026-11-26: New Deck in a session leaves out words just removed and the words on screen, then slides the next card in. On Direction, a longer list asks for a size first.
 - 2026-11-26: Deck Options asks before a larger size, confirms leaving a word selection, and shows the new deck size on the direction caption. The Production keyboard returns when the sheet closes.
 - 2026-11-26: Frequency on a study card is an on-screen sheet, so the Production keyboard stays up.
